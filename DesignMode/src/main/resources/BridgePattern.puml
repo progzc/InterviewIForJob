@@ -1,0 +1,79 @@
+@startuml
+/'设备和远程控制之间的桥接'/
+/'所有设备的通用接口'/
+interface Device{
+  + boolean isEnabled();
+  + void enable();
+  + void disable();
+  + int getVolume();
+  + void setVolume(int percent);
+  + int getChannel();
+  + void setChannel(int channel);
+  + void printStatus();
+}
+/'收音机'/
+class Radio{
+  - boolean on = false;
+  - int volume = 30;
+  - int channel = 1;
+
+  + boolean isEnabled();
+  + void enable();
+  + void disable();
+  + int getVolume();
+  + void setVolume(int volume);
+  + int getChannel();
+  + void setChannel(int channel);
+  + void printStatus();
+}
+Radio ..|> Device
+/'电视机'/
+class Tv{
+  - boolean on = false;
+  - int volume = 30;
+  - int channel = 1;
+
+  + boolean isEnabled();
+  + void enable();
+  + void disable();
+  + int getVolume();
+  + void setVolume(int volume);
+  + int getChannel();
+  + void setChannel(int channel);
+  + void printStatus();
+}
+Tv ..|> Device
+
+/'所有远程控制器的通用接口'/
+abstract Remote{
+  # Device device;
+
+  + {abstract} void power();
+  + {abstract} void volumeDown();
+  + {abstract} void volumeUp();
+  + {abstract} void channelDown();
+  + {abstract} void channelUp();
+}
+Remote o--> Device
+note right of Remote: 抽象类，方法全部是抽象方法；改为接口\n则不能实现Remote和Device之间的关联关系！
+/'基础远程控制器'/
+class BasicRemote{
+  + void power();
+  + void volumeDown();
+  + void volumeUp();
+  + void channelDown();
+  + void channelUp();
+}
+BasicRemote --|> Remote
+/'高级远程控制器'/
+class AdvancedRemote{
+  + void mute();
+}
+AdvancedRemote --|> BasicRemote
+/'客户端'/
+class Client{
+}
+Client ..> AdvancedRemote
+Client ..> BasicRemote
+
+@enduml

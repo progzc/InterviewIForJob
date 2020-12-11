@@ -1,0 +1,138 @@
+@startuml
+/'分步制造汽车'/
+/'建造者'/
+interface Builder {
+  + void setCarType(CarType type);
+  + void setSeats(int seats);
+  + void setEngine(Engine engine);
+  + void setTransmission(Transmission transmission);
+  + void setTripComputer(TripComputer tripComputer);
+  + void setGPSNavigator(GPSNavigator gpsNavigator);
+}
+class CarBuilder{
+  - CarType type;
+  - int seats;
+  - Engine engine;
+  - Transmission transmission;
+  - TripComputer tripComputer;
+  - GPSNavigator gpsNavigator;
+
+  + void setCarType(CarType type);
+  + void setSeats(int seats);
+  + void setEngine(Engine engine);
+  + void setTransmission(Transmission transmission);
+  + void setTripComputer(TripComputer tripComputer);
+  + void setGPSNavigator(GPSNavigator gpsNavigator);
+  + Car getResult();
+}
+class CarManualBuilder{
+  - CarType type;
+  - int seats;
+  - Engine engine;
+  - Transmission transmission;
+  - TripComputer tripComputer;
+  - GPSNavigator gpsNavigator;
+
+  + void setCarType(CarType type);
+  + void setSeats(int seats);
+  + void setEngine(Engine engine);
+  + void setTransmission(Transmission transmission);
+  + void setTripComputer(TripComputer tripComputer);
+  + void setGPSNavigator(GPSNavigator gpsNavigator);
+  + Manual getResult();
+}
+CarBuilder ..|> Builder
+CarBuilder ..> Car
+CarManualBuilder ..|> Builder
+CarManualBuilder ..> Manual
+
+
+/'汽车'/
+class Car{
+  - CarType carType;
+  - int seats;
+  - Engine engine;
+  - Transmission transmission;
+  - TripComputer tripComputer;
+  - GPSNavigator gpsNavigator;
+  - double fuel = 0;
+
+  + CarType getCarType();
+  + int getSeats();
+  + Engine getEngine();
+  + Transmission getTransmission();
+  + TripComputer getTripComputer();
+  + GPSNavigator getGpsNavigator();
+  + double getFuel();
+  + void setFuel(double fuel);
+}
+Car o-- CarType
+Car o-- Engine
+Car o-- Transmission
+Car o-- TripComputer
+Car o-- GPSNavigator
+
+class Manual{
+  - CarType carType;
+  - int seats;
+  - Engine engine;
+  - Transmission transmission;
+  - TripComputer tripComputer;
+  - GPSNavigator gpsNavigator;
+}
+Manual o-- CarType
+Manual o-- Engine
+Manual o-- Transmission
+Manual o-- TripComputer
+Manual o-- GPSNavigator
+
+enum CarType{
+  CITY_CAR,
+  SPORTS_CAR,
+  SUV
+}
+
+/'组件'/
+class Engine{
+  - double volume;
+  - double mileage;
+  - boolean started;
+
+  + void on();
+  + void off();
+  + boolean isStarted();
+  + void go(double mileage);
+  + double getVolume();
+  + double getMileage();
+}
+class GPSNavigator{
+  - String route;
+  + String getRoute();
+}
+enum Transmission{
+   SINGLE_SPEED,
+   MANUAL,
+   AUTOMATIC,
+   SEMI_AUTOMATIC
+}
+class TripComputer{
+  - Car car;
+  + void setCar(Car car);
+  + void showFuelLevel();
+  + void showStatus();
+}
+
+/'主管控制生成器'/
+class Director{
+  + Car/Manual constructSportsCar(Builder builder);
+  + Car/Manual constructCityCar(Builder builder);
+  + Car/Manual constructSUV(Builder builder);
+}
+Director o..> Builder
+
+/'客户'/
+class Client{
+}
+Client ..> Director
+
+@enduml

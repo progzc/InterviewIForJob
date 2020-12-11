@@ -1,0 +1,29 @@
+@startuml
+/'通用形状接口'/
+class Shape{
+  + int x;
+  + int y;
+  + String color;
+
+  + {abstract} Shape clone();
+}
+class Circle{
+  + int radius;
+
+  + Shape clone();
+}
+class Rectangle{
+  + int width;
+  + int height;
+
+  + Shape clone();
+}
+
+Circle --|> Shape
+Rectangle --|> Shape
+
+class Client{
+}
+Client ..> Shape
+
+@enduml

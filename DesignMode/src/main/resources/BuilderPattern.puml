@@ -66,11 +66,11 @@ class Car{
   + double getFuel();
   + void setFuel(double fuel);
 }
-Car o-- CarType
-Car o-- Engine
-Car o-- Transmission
-Car o-- TripComputer
-Car o-- GPSNavigator
+Car o--> CarType
+Car o--> Engine
+Car o--> Transmission
+Car o--> TripComputer
+Car o--> GPSNavigator
 
 class Manual{
   - CarType carType;
@@ -80,11 +80,11 @@ class Manual{
   - TripComputer tripComputer;
   - GPSNavigator gpsNavigator;
 }
-Manual o-- CarType
-Manual o-- Engine
-Manual o-- Transmission
-Manual o-- TripComputer
-Manual o-- GPSNavigator
+Manual o--> CarType
+Manual o--> Engine
+Manual o--> Transmission
+Manual o--> TripComputer
+Manual o--> GPSNavigator
 
 enum CarType{
   CITY_CAR,

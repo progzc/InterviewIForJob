@@ -306,6 +306,163 @@ class InnerClassSingleton{
 
 
 
+## ## 设计模式
+
+**本部分图表使用IDEA+PlantUML+Graphviz制作：**
+
+设计模式概览：
+
+![image-20201211163413123](README.assets/image-20201211163413123.png)
+
+### ### 工厂方法模式
+
+**工厂方法模式：**一种创建型设计模式， 其在父类中提供一个创建对象的方法， 允许子类决定实例化对象的类型。
+
+作为抽象工厂模式的孪生兄弟，工厂方法模式定义了一个创建对象的接口，但由子类决定要实例化的类是哪一个，也就是说工厂方法模式让实例化推迟到子类。工厂方法模式非常符合"开闭原则"，当需要增加一个新的产品时，我们只需要增加一个具体的产品类和与之对应的具体工厂即可，无须修改原有系统。同时在工厂方法模式中用户只需要知道生产产品的具体工厂即可，无须关系产品的创建过程，甚至连具体的产品类名称都不需要知道。虽然他很好的符合了“开闭原则”，但是由于每新增一个新产品时就需要增加两个类，这样势必会导致系统的复杂度增加。
+
+**Java类库中的应用：**
+
+- `java.util.Calendar#getInstance()`
+- `java.util.ResourceBundle#getBundle()`
+- `java.text.NumberFormat#getInstance()`
+- `java.nio.charset.Charset#forName()`
+- `java.net.URLStreamHandlerFactory#createURLStreamHandler(String)`
+- `java.util.EnumSet#of()`
+- `javax.xml.bind.JAXBContext#createMarshaller()`
+
+![image-20201211132921630](README.assets/image-20201211132921630.png)
+
+### ### 抽象工厂模式
+
+**抽象工厂模式**：一种创建型设计模式， 它能创建一系列相关的对象， 而无需指定其具体类。
+
+提供一个接口，用于创建相关或者依赖对象的家族，而不需要明确指定具体类。他允许客户端使用抽象的接口来创建一组相关的产品，而不需要关系实际产出的具体产品是什么。这样一来，客户就可以从具体的产品中被解耦。它的优点是隔离了具体类的生成，使得客户端不需要知道什么被创建了，而缺点就在于新增新的行为会比较麻烦，因为当添加一个新的产品对象时，需要更加需要更改接口及其下所有子类。
+
+**Java类库中的应用：**
+
+- `javax.xml.parsers.DocumentBuilderFactory#newInstance()`
+- `javax.xml.transform.TransformerFactory#newInstance()`
+- `javax.xml.xpath.XPathFactory#newInstance()`
+
+![image-20201211120728931](README.assets/image-20201211120728931.png)
+
+### ### 建造者模式
+
+**建造者模式（也称为生成器模式）：**一种创建型设计模式， 使你能够分步骤创建复杂对象。 该模式允许你使用相同的创建代码生成不同类型和形式的对象。
+
+对于建造者模式而言，它主要是将一个复杂对象的构建与表示分离，使得同样的构建过程可以创建不同的表示。适用于那些产品对象的内部结构比较复杂。建造者模式将复杂产品的构建过程封装分解在不同的方法中，使得创建过程非常清晰，能够让我们更加精确的控制复杂产品对象的创建过程，同时它隔离了复杂产品对象的创建和使用，使得相同的创建过程能够创建不同的产品。但是如果某个产品的内部结构过于复杂，将会导致整个系统变得非常庞大，不利于控制，同时若几个产品之间存在较大的差异，则不适用建造者模式，毕竟这个世界上存在相同点大的两个产品并不是很多，所以它的使用范围有限。
+
+**Java类库中的应用：**
+
+- `java.lang.StringBuilder#append()`
+- `java.lang.StringBuffer#append()`
+- `java.nio.ByteBuffer#put()`
+- `javax.swing.GroupLayout.Group#addComponent()`
+- `java.lang.Appendable的所有实现`
+
+![image-20201211153912563](README.assets/image-20201211153912563.png)
+
+**建造者模式的一种简化（去掉Director）：**
+
+```java
+public class Car {
+    private String carType;
+    private int seats;
+    private String engine;
+    private String transmission;
+    private String tripComputer;
+    private String gpsNavigator;
+
+    /* 禁止无参构造 */
+    private Car(){
+        throw new RuntimeException("Can't init...");
+    }
+    private Car(Builder builder){
+        this.carType = builder.carType;
+        this.seats = builder.seats;
+        this.engine = builder.engine;
+        this.transmission = builder.transmission;
+        this.tripComputer = builder.tripComputer;
+        this.gpsNavigator = builder.gpsNavigator;
+    }
+
+    @Override
+    public String toString() {
+        return "Car{" +
+                "carType='" + carType + '\'' +
+                ", seats=" + seats +
+                ", engine='" + engine + '\'' +
+                ", transmission='" + transmission + '\'' +
+                ", tripComputer='" + tripComputer + '\'' +
+                ", gpsNavigator='" + gpsNavigator + '\'' +
+                '}';
+    }
+
+    public static final class Builder{
+        private String carType;
+        private int seats;
+        private String engine;
+        private String transmission;
+        private String tripComputer;
+        private String gpsNavigator;
+
+        public Builder(){ }
+        public Builder setCarType(String carType){
+            this.carType = carType;
+            return this;
+        }
+        public Builder setSeats(int seats){
+            this.seats = seats;
+            return this;
+        }
+        public Builder setEngine(String engine){
+            this.engine = engine;
+            return this;
+        }
+        public Builder setTransmission(String transmission){
+            this.transmission = transmission;
+            return this;
+        }
+        public Builder setTripComputer(String tripComputer){
+            this.tripComputer = tripComputer;
+            return this;
+        }
+        public Builder setGpsNavigator(String gpsNavigator){
+            this.gpsNavigator = gpsNavigator;
+            return this;
+        }
+        public Car build(){
+            return new Car(this);
+        }
+    }
+
+    public static void main(String[] args) {
+        Car car = new Builder()
+                .setCarType("SUV")
+                .setSeats(6)
+                .setEngine("1.6T")
+                .setTransmission("混合动力")
+                .setTripComputer("12.9寸液晶大屏")
+                .setGpsNavigator("北斗")
+                .build();
+        System.out.println(car);
+    }
+}
+```
+
+### ### 原型模式
+
+**原型模式：**一种创建型设计模式， 使你能够复制已有对象， 而又无需使代码依赖它们所属的类。
+
+在我们应用程序可能有某些对象的结构比较复杂，但是我们又需要频繁的使用它们，如果这个时候我们来不断的新建这个对象势必会大大损耗系统内存的，这个时候我们需要使用原型模式来对这个结构复杂又要频繁使用的对象进行克隆。所以原型模式就是用原型实例指定创建对象的种类，并且通过复制这些原型创建新的对象。它主要应用与那些创建新对象的成本过大时。它的主要优点就是简化了新对象的创建过程，提高了效率，同时原型模式提供了简化的创建结构。
+
+根据拷贝方式不同，原型模式又可以分为：浅克隆和深克隆。
+
+**Java类库中的应用：**
+
+- `java.lang.Object#clone() `
+
+![image-20201211174210511](README.assets/image-20201211174210511.png)
 
 
 
@@ -314,7 +471,45 @@ class InnerClassSingleton{
 
 
 
-> 参考文章博客：[JDK里的设计模式](https://stackoverflow.com/questions/1673841/examples-of-gof-design-patterns-in-javas-core-libraries)、[HeadFirst设计模式]()
+
+## ## UML类图
+
+1. 泛化关系（继承关系）：**带三角箭头的实线，箭头指向父类**。
+
+2. 实现关系：**带三角箭头的虚线，箭头指向接口**。
+
+3. 关联关系：
+   - 双向关联：**有两个普通箭头或者没有箭头的实线。**
+   - 单向关联：**带普通箭头的实线，指向被拥有者。**
+
+4. 聚合关系：是整体与部分的关系，且部分可以离开整体而单独存在。聚合是一种强的关联关系。
+   - **带空心菱形的实心线，菱形指向整体**。
+
+5. 组合关系：是整体与部分的关系，但部分不能离开整体而单独存在。组合是一种比聚合还要强的关联关系。
+   - **带实心菱形的实线，菱形指向整体**。
+
+6. 依赖关系：是一种使用的关系，即一个类的实现需要另一个类的协助。
+   - **带普通箭头的虚线，指向被使用者**。
+
+7. 可见性：
+   - public：+
+   - protected：#
+   - private：-
+   - package：~
+
+## ## 绘制UML类图
+
+1. IDEA安装PlantUML-integration插件。
+2. 安装Graphviz软件。
+3. 学习PlantUML语法。
+   - 依赖关系：`..>`
+   - 继承关系：`--|>`
+   - 实现关系：`..|>`
+   - 关联关系：`Computer --> Mouse`
+   - 聚合关系：`Person o-- IDCard`
+   - 组合关系：`Person *-- Head`
+
+> 参考文章博客：[JDK里的设计模式](https://stackoverflow.com/questions/1673841/examples-of-gof-design-patterns-in-javas-core-libraries)、**[《HeadFirst设计模式》]()**、[UML类图](https://blog.csdn.net/qq_40138785/article/details/81065979)、[设计模式总结](https://www.cnblogs.com/pony1223/p/7608955.html)、[PlantUML使用教程](https://www.cnblogs.com/mikisakura/p/12978402.html)、**[PlantUML官方教程](https://plantuml.com/zh/class-diagram)**、**[设计模式的学习](https://refactoringguru.cn/design-patterns/)**
 
 # 2 多线程
 
@@ -4562,6 +4757,332 @@ public class RuntimeConstantPoolOOM_1 {
 
 - 直接内存的容量大小可以通过`-XX:MaxDirectMemorySize`参数来指定；若不指定，则默认与Java堆最大值（由-Xmx指定）一致。
 
+```java
+// VM options
+// -Xmx20M -XX:MaxDirectMemorySize=10M
+// java.lang.OutOfMemoryError
+public class DirectMemoryOOM {
+    private static final int _1MB = 1024 * 1024;
+    public static void main(String[] args) throws Exception {
+        Field unsafeField = Unsafe.class.getDeclaredFields()[0];
+        unsafeField.setAccessible(true);
+        Unsafe unsafe = (Unsafe) unsafeField.get(null);
+        while (true) {
+            unsafe.allocateMemory(_1MB);
+        }
+    }
+}
+```
+
+## 9.3 垃圾收集器与内存分配策略
+
+### 9.3.1 垃圾收集
+
+**1. 哪些区域需要进行垃圾收集？**
+
+- **程序计数器、虚拟机栈和本地方法栈**3个区域随线程而生、随线程而灭，不需要进行垃圾回收（当方法结束或线程结束时，内存就会自动被回收了）。
+- Java堆和方法区只有处于运行时期，虚拟机才会知道程序会创建哪些对象、创建多少对象，这部分内存分配和回收是动态的，所以Java堆和方法区需要进行垃圾收集。
+
+**2. 垃圾收集需要解决的几个问题：**
+
+1. 哪些内存需要回收？
+2. 什么时候回收？
+3. 如何回收？
+
+### 9.3.2 对象已死
+
+**1. 如何确定哪些对象已死？主要有两种方法：**
+
+1. **引用计数算法：**在对象中添加一个引用计数器，每当有一个地方引用它时，计数器就加一；当引用失效时，计数器就减一；任何时刻计数器为零的对象就是不可能再被使用的。
+   - 优点：效率很高。
+   - 缺点：需要占用额外的内存空间来计数；无法解决对象之间的循环引用问题。**故主流的Java虚拟机均未使用"引用计数法"来管理内存**。
+
+2. **可达性分析算法：**通过一系列称为"GC Roots"的根对象作为起始节点集，从这些节点开始，根据引用关系向下搜索，搜索过程所走过的路径称为"引用链"，如果某个对象到GC Roots间没有任何引用链相连（或者用图论的话说就是**从GC Roots到这个对象不可达时，则证明此对象是不可能再被使用的**）。**主流的Java虚拟机均未使用"可达性分析算法"来管理内存**。GC Roots包括以下几种：
+   - 虚拟机栈中引用的对象（方法堆栈中使用到的参数、局部变量、临时变量）。
+   - 本地方法栈中本地方法引用的对象。
+   - 在方法区中类静态属性引用的对象、常量引用的对象。
+   - 虚拟机内部的引用：如基本数据类型对应的Class对象、一些常驻的异常对象、系统加载器...。
+   - 所有被同步锁持有的对象。
+
+**2. 引用的类型：**
+
+- 强引用：类似于`Object obj = new Object()`这种引用关系。**在任何情况下，只要强引用关系存在，垃圾收集器就永远不会回收掉被引用的对象。**
+- 软引用（SoftReference类）：用来描述一些还有用，但非必须的对象。**在系统将要发生内存溢出异常时，虚拟机会将被软引用关联的对象列进回收范围之中进行二次回收。**
+- 弱引用（WeakReference类）：用来描述非必须的对象，强度比软引用更弱。**无论内存是否足够，只被软引用关联的对象在垃圾收集器开始工作时都会被回收。**
+- 虚引用（PhantomReference类）：也称为"幽灵引用"或"幻影引用"。**为一个对象设置虚拟引用的唯一目的只是为了在这个对象被收集器回收时收到一个系统通知。**
+
+**3. 如何判断一个对象非死不可？**
+
+采用两次标记过程：
+
+1. 第一次标记：对象在进行可达性分析后发现没有与GC Roots相连接的引用链，对象会被第一次标记；标记后会进行一次筛选，将**有必要执行finalize()方法的对象**放入一个名为F-Queue的队列中。
+   - 没有必要执行finalize()方法的情况：对象没有覆盖finalize()方法，或finalize()方法已经被虚拟机调用过。没有必要执行finalize()方法的对象不会进行第二次标记，在第一次标记后就会被收集器收集。
+2. 第二次标记：收集器在F-Queue队列中进行小规模的标记，若对象在finalize()方法中仍然未将该对象重新与引用链上的任何一个对象建立起关联，那么对象就会被回收。
+   - 任何一个对象的finalize()方法只会被系统自动调用一次。
+
+**4. 关于回收方法区：**
+
+- 《Java虚拟机规范》中提到过可以不要求虚拟机在方法区中实现垃圾收集（如：JDK 11中的ZGC收集器就不支持类卸载）。
+- 方法区垃圾收集的"性价比"比较低，而堆内存进行一次垃圾收集通常可以回收70%-99%的内存空间。
+- 方法区的垃圾回收主要包括两部分内容：
+  1. 废弃的常量。
+  2. 不再使用的类型。判断一个类型不再使用必须满足以下三个条件：
+     - 该类所有的实例（包括任何派生子类的实例）都已经被回收。
+     - 加载该类的类加载器已经被回收。
+     - 该类对应的Class对象没有在任何地方被引用，无法在任何地方通过反射访问该类的方法。
+
+- 类型不再使用才**被允许**回收，但不是一定被回收，HotSpot提供了`-Xnoclassgc`参数来控制是否对类型进行回收。
+
+### 9.3.3 垃圾收集算法
+
+所介绍的垃圾收集算法均是基于可达性分析算法实现。
+
+#### 9.3.3.1 分代收集理论
+
+分代收集理论建立在以下假说之上：
+
+1. 弱分代假说：绝大多数对象都是朝生夕灭的。
+2. 强分代假说：熬过越多次垃圾收集过程的对象就越难以消亡。
+3. 跨代引用假说：跨代引用相对于同代引用来说仅占极少数。
+
+分代收集理论：兼顾了**垃圾收集的时间开销**和**内存的空间有效利用**。
+
+1. 针对弱分代区，以较低代价回收到大量的空间。
+2. 针对强分代区，以较低频率来回收该区域的内存。
+3. 针对对象之间存在的跨代引用，可以在强分代区划分出若干块**记忆集**，用以标识出老年代的哪一块内存会存在跨代引用。
+4. **典型的分代收集算法："标记-复制算法"、"标记-清除算法"、"标记-整理算法"。**
+
+常见的分代名词：
+
+1. 部分收集（Partial GC）：指目标不是整个Java堆的垃圾收集。
+   - 新生代收集（Minor GC/Young GC）：指目标只是新生代的垃圾收集。
+   - 老年代收集（Major GC/Old GC）：指目标只是老年代的垃圾收集。
+     - 目前只有CMS收集器具有单独收集老年代的行为。
+     - "Major GC"有些资料上也指整堆收集。
+   - 混合收集（Mixed GC）：指目标是收集整个新生代以及部分老年代的垃圾收集。
+     - 目前只有G1收集器有这种行为。
+
+2. 整堆收集（Full GC）：收集整个Java堆和方法区的垃圾收集。
+
+#### 9.3.3.2 标记-清除算法
+
+"标记-清除"（Mark-Sweep）算法：首先标记出所有需要回收的对象，在标记完成后，统一回收掉所有被标记的对象。
+
+缺点：
+
+1. 执行效率不高：若Java堆中有大量对象，且其中大部分都需要被回收，这时必须进行大量标记和清除的动作，导致标记和清除两个过程的执行效率都随着对象数量增长而降低。
+2. 内存空间的碎片化问题：标记清除后会存在大量不连续的内存碎片，导致当程序分配较大对象时又会提前触发另一次垃圾收集动作。
+
+#### 9.3.3.3 标记-复制算法
+
+"标记-复制"（Mark-Copy）算法：也简称为复制算法。标记-复制算法的思想是半区复制：将可用内存按容量划分为大小相等的两块，每次只使用其中一块。当这一块的内存用完了，就将还存活着的对象复制到另外一块上面，然后再把已使用过的内存空间一次清理掉。
+
+缺点：
+
+1. 若内存中多数对象都是存活的，将产生大量的内存间**复制开销**。
+2. 将可用内存缩小为原来的一半，**空间浪费比较多**。
+
+优点：
+
+1. 若内存中多数对象都是可回收的，标记-复制算法比较简单和高效。
+2. 没有空间碎片。
+
+**Appel式回收：基于标记-复制算法，将新生代分为一块较大的Eden区和两块较小的Survivor区，大小比为`Eden:Survivor1:Survivor2=8:1:1`。**
+
+#### 9.3.3.4 标记-整理算法
+
+"标记-整理"（Mark-Compact）算法：和标记-清除算法类似，不同的是，标记后不是直接对可回收对象进行清理，而是让所有存活的对象都向内存空间一端移动，然后直接清理掉边界以外的内存。
+
+缺点：
+
+1. 若是在每次回收都有大量存活对象的老年代，使用标记-整理算法会带来很大的移动开销。
+2. 移动时需要Stop the World。
+
+优点：
+
+1. 会解决空间碎片化问题。
+
+对比"标记-清除"算法和"标记-整理"算法：
+
+1. "标记-清除"算法不需要移动对象，会导致内存分配时更复杂；"标记-整理"算法需要移动对象，会导致内存回收时更复杂。
+2. "标记-清除"算法不需要停顿时间；"标记-整理"算法需要停顿时间。
+3. 综合考虑**移动**和**停顿**，从整个程序的吞吐量来说，移动对象更划算（**原因是内存分配和访问相比垃圾收集频率要高得多**）。
+
+### 9.3.4 HotSpot的算法细节实现
+
+**根节点枚举**：即查找GC Roots。
+
+- 需要Stop The World。原因：不会出现分析过程中，根节点集合的对象引用关系还在不断变化的情况。
+- CMS、G1、ZGC等收集器的根节点枚举都必须要停顿。
+- OopMap使得HotSpot可以快速完成GC Roots枚举，缩短Stop The World的持续时间。
+- 安全点（作用是解决如何停顿用户线程）使收集器等待时间不至于过长，也不能过于频繁以至于过分增大运行时的内存负担。
+- 安全区域（作用是确保在一段代码片段中，引用关系不会发生变化。）
+
+记忆集：一种用于记录从非收集区域指向收集区域的指针集合的抽象数据结构，作用是缩短GC Roots扫描范围。常见的记忆集实现方式：
+
+1. 字长精度。
+2. 对象精度。
+3. 卡精度：每个记录精确到一块内存区域，该区域内有对象含有跨代指针。
+   - 卡表是基于卡精度的一种方式，是目前最常用的一种记忆集的实现。
+   - 在HotSpot里，卡表的状态是由"写屏障"技术维护的。
+   - 卡表的缺点：
+     - "写屏障"开销。
+     - 在高并发下存在"伪共享"问题：解决方法是写屏障增加一次判断，只有当卡表元素未被标记过时才将其变脏。
+
+**可达性分析**：即对象图的遍历。
+
+- 需要Stop The World，且比根节点枚举停顿的时间要长得多。
+- 采用**三色标记（Tri-color Marking）算法**来进行对象图的遍历，以降低用户线程的停顿。
+  - 白色：表示对象尚未被垃圾收集器访问过。在分析结束时，仍然是白色的对象不可达。
+  - 黑色：表示对象已经被垃圾收集器访问过，且对象的所有引用都扫描过。黑色对象是安全存活的；且黑色对象不可能直接（不经过灰色对象）指向某个白色对象。
+  - 灰色：表示对象已经被垃圾收集器访问过，但这个对象上至少存在一个引用还没有被扫描过。
+
+**并发的可达性：**并发过程中使用三色标记算法进行对象图的遍历，会带来2个问题：
+
+1. 把原本消亡的对象错误标记为存活（问题不致命）。
+
+2. 把原本存活的对象错误标记为已消亡（问题致命）。
+
+   - 出现对象消亡的两个必要条件：
+     - 条件一：赋值器插入了一条或多条从黑色对象到白色对象的新引用。
+     - 条件二：赋值器删除了全部从灰色对象到该白色对象的直接或间接引用。
+
+   - 解决对象消亡的措施：
+     - 增量更新：破坏条件一（如CMS）。黑色对象一旦新插入了指向白色对象的引用之后，它就变回灰色对象了。
+     - 原始快照：破坏条件二（如G1）。无论引用关系删除与否，都会按照刚刚开始扫描的那一刻的对象图快照来进行搜索。
+
+### 9.3.5 经典垃圾收集器
+
+#### 9.3.5.1 Serial收集器
+
+Serial收集器：JDK1.3.1之前是HotSpot虚拟机新生代收集器的唯一选择，**原理是标记-复制算法**。
+
+- 单线程工作。
+- **常用于新生代。**
+- 进行垃圾收集时，会Stop The World。
+- 适用于内存资源受限的环境、单核处理器或处理器核心数较少的环境；**对于运行在客户端模式下的虚拟机来说是一个很好的选择**。
+
+#### 9.3.5.2 ParNew收集器
+
+ParNew收集器：是Serial收集器的多线程版本，JDK 7之前首选的新生代收集器；**原理是标记-复制算法**。
+
+- 多线程并发收集，可以使用`-XX:ParallelGCThreads`参数来限制垃圾收集的线程数。
+- **常用于新生代。**
+- 进行垃圾收集时，会Stop The World。
+- 适用于运行在服务端模式下的虚拟机；除了Serial收集器外，ParNew收集器是唯一能与CMS配合使用的收集器。
+
+- 合并入CMS，成为专门处理新生代的组成部分；是HotSpot中第一款退出历史舞台的垃圾收集器。
+
+#### 9.3.5.3 Parallel Scavenge收集器
+
+Parallel Scavenge收集器：与ParNew收集器类似，被称作"吞吐量优先收集器"；**原理是标记-复制算法**。
+
+- 多线程并发收集。
+
+- 常用于新生代。
+
+- 具有自适应调节策略。
+
+- 适用于精确控制吞吐量的应用（控制最大垃圾收集的停顿时间：`-XX:MaxGCPauseMillis`；设置垃圾收集时间占总时间比率：`-XX:GCTimeRatio`）。
+
+  - `吞吐量=运行用户代码时间/(运行用户代码时间+运行垃圾收集时间)`
+
+  - `-XX:MaxGCPauseMillis`：停顿时间的缩短是以牺牲吞吐量和新生代空间为代价换取的。
+  - `-XX:GCTimeRatio`：值范围为0~100的整数，默认为99。例如：把`-XX:GCTimeRatio`设置为19，则垃圾搜集时间占总时间的5%(=1/(1+19))。
+  - `-XX:+UseAdaptiveSizePolicy`：一个开关参数，激活之后就不用设置新生代大小（`-Xmm`）、Eden与Survivor区的比例（`-XX:SurvivorRatio`）及晋升老年代对象的大小（`-XX:PretenureSizeThreshold`）等细节参数了（但需要设置最大堆的大小（`-Xmx`））。虚拟机会根据当前系统的运行情况收集性能监控信息、动态调整这些参数以提供最合适的停顿时间或者最大的吞吐量，这种方式称为**垃圾收集的自适应调节策略**。
+
+#### 9.3.5.4 Serial Old收集器
+
+Serial Old收集器：是Serial收集器的老年代版本；**原理是标记-整理算法**。
+
+- 单线程工作。
+- 用于老年代。
+- 适用于客户端模式下的HotSpot虚拟机使用；若用于服务端，则一般是作为CMS收集器发生失败后的后备预案（在并发收集失败时使用）。
+
+#### 9.3.5.5 Parallel Old收集器
+
+Parallel Old收集器：是Parallel Scavenge收集器的老年代版本；**原理是标记-整理算法**。
+
+-  多线程并发收集。
+- 用于老年代。
+- 使用Parallel Scavenge收集器+Parallel Old收集器，作为名副其实的"吞吐量优先"的垃圾收集系统。
+
+#### 9.3.5.6 CMS收集器
+
+CMS（Concurrent Mark Sweep）收集器：以获取最短回收停顿时间为目标的收集器；**原理是标记-清除算法**。
+
+- 多线程并发收集。
+- 适用于B/S系统的服务端，重点在于提高系统的响应速度。
+- 原理：
+  1. 初始标记：Stop The World。标记GC Roots能直接关联到的对象，速度很快。
+  2. 并发标记：不需要停顿。对象图的遍历。
+  3. 重新标记：Stop The World，停顿时间比初始标记长，但远比并发标记短。修正并发标记时因用户程序继续运行导致标记变动。
+  4. 并发清除：不需要停顿。清除掉标记阶段判断的已经死亡的对象。
+
+- 缺点：
+  - 对处理器资源敏感。CMS默认启动的回收线程数=(处理器核心数量+3)/4；CMS最好用于处理器核数在4个以上的应用。
+  - 无法处理浮动垃圾，可能会出现收集失败，导致另一次完全Stop The World的Full GC的产生（一般是使用Serial Old收集器作为后备预案）。
+    - `-XX:CMSInitiatingOccu-pancyFraction`：设置CMS的触发百分比。
+  - 会有大量空间碎片产生，导致大对象分配时提前触发一次Full GC。
+    - `-XX:+UseCMSCompactAtFullCollection`：开发参数，用于Full GC时开启内存碎片的合并整理过程（JDK 9已废弃）。
+    - `-XX:CMSFullGCsBeforeCompaction`：默认值是0。表示执行若干次不整理的Full GC后，下一次Full GC时会进行整理（JDK 9已废弃）。
+
+#### 9.3.5.7 G1收集器
+
+G1（Garbage First）收集器：开创了收集器面向局部收集的设计思路和基于Region的内存布局形式。
+
+- 面向于服务端应用的垃圾收集器。
+
+
+
+
+
+
+
+
+
+### 9.3.6 低延迟收集器
+
+#### 9.3.6.1 Shenandoah收集器
+
+
+
+
+
+#### 9.3.6.2 ZGC收集器
+
+
+
+
+
+
+
+### 9.3.7 选择合适的收集器
+
+#### 9.3.7.1 Epsilon收集器
+
+
+
+
+
+#### 9.3.7.2 收集器的权衡
+
+
+
+
+
+
+
+#### 9.3.7.3 虚拟机及垃圾收集器日志
+
+
+
+
+
+
+
+### 9.3.8 实战：内存分配与回收策略
+
 
 
 
@@ -4820,11 +5341,11 @@ public static void main(String[] args){
 20. **类层次优于标签类**
     
 - 标签类过于冗长，容易出错，并且效率低下。
-    
+  
 21. **用函数对象表示策略**
     
 - 最典型的示例是**策略模式**，如利用Comparator的实现类来实现元素的排序。当一个策略只使用一次时，通常使用匿名类来声明和实例化这个具体策略类；当一个具体的策略是设计用来重复使用时，它的类通常就要被实现为私有的静态成员类，并通过公有的静态final域被导出。
-    
+  
 22. **优先考虑静态成员类**
 
     - 嵌套类的四种形式：静态成员类、非静态成员类、匿名类、局部类；后三种统一被称为内部类。

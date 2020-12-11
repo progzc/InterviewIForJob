@@ -237,7 +237,7 @@ class InnerClassSingleton{
 
 
 
-## ## HeadFirst设计模式
+## ## 设计模式(HeadFirst)
 
 **OO设计原则：**
 
@@ -306,13 +306,29 @@ class InnerClassSingleton{
 
 
 
-## ## 设计模式
+## ## 设计模式（GURU）
 
 **本部分图表使用IDEA+PlantUML+Graphviz制作：**
 
 设计模式概览：
 
 ![image-20201211163413123](README.assets/image-20201211163413123.png)
+
+### ### 单例模式
+
+**单例模式：**一种创建型设计模式， 让你能够保证一个类只有一个实例， 并提供一个访问该实例的全局节点。
+
+当系统中只需要一个实例对象或者系统中只允许一个公共访问点，除了这个公共访问点外，不能通过其他访问点访问该实例时，可以使用单例模式。单例模式的主要优点就是节约系统资源、提高了系统效率，同时也能够严格控制客户对它的访问。也许就是因为系统中只有一个实例，这样就导致了单例类的职责过重，违背了“单一职责原则”，同时也没有抽象类，所以扩展起来有一定的困难。其UML结构图非常简单，就只有一个类。
+
+**Java类库中的应用：**
+
+- `java.lang.Runtime#getRuntime()`
+- `java.awt.Desktop#getDesktop()`
+- `java.lang.System#getSecurityManager()`
+
+**识别方法：** 单例可以通过返回相同缓存对象的静态构建方法来识别。
+
+详见`1.1`。
 
 ### ### 工厂方法模式
 
@@ -330,6 +346,8 @@ class InnerClassSingleton{
 - `java.util.EnumSet#of()`
 - `javax.xml.bind.JAXBContext#createMarshaller()`
 
+**识别方法：** 工厂方法可通过构建方法来识别， 它会创建具体类的对象， 但以抽象类型或接口的形式返回这些对象。
+
 ![image-20201211132921630](README.assets/image-20201211132921630.png)
 
 ### ### 抽象工厂模式
@@ -343,6 +361,8 @@ class InnerClassSingleton{
 - `javax.xml.parsers.DocumentBuilderFactory#newInstance()`
 - `javax.xml.transform.TransformerFactory#newInstance()`
 - `javax.xml.xpath.XPathFactory#newInstance()`
+
+**识别方法：** 我们可以通过方法来识别该模式——其会返回一个工厂对象。 接下来， 工厂将被用于创建特定的子组件。
 
 ![image-20201211120728931](README.assets/image-20201211120728931.png)
 
@@ -359,6 +379,8 @@ class InnerClassSingleton{
 - `java.nio.ByteBuffer#put()`
 - `javax.swing.GroupLayout.Group#addComponent()`
 - `java.lang.Appendable的所有实现`
+
+**识别方法：** 生成器模式可以通过类来识别， 它拥有一个构建方法和多个配置结果对象的方法。 生成器方法通常支持方法链 （例如 `someBuilder->setValueA(1)->setValueB(2)->create()` ）。
 
 ![image-20201211153912563](README.assets/image-20201211153912563.png)
 
@@ -456,15 +478,46 @@ public class Car {
 
 在我们应用程序可能有某些对象的结构比较复杂，但是我们又需要频繁的使用它们，如果这个时候我们来不断的新建这个对象势必会大大损耗系统内存的，这个时候我们需要使用原型模式来对这个结构复杂又要频繁使用的对象进行克隆。所以原型模式就是用原型实例指定创建对象的种类，并且通过复制这些原型创建新的对象。它主要应用与那些创建新对象的成本过大时。它的主要优点就是简化了新对象的创建过程，提高了效率，同时原型模式提供了简化的创建结构。
 
-根据拷贝方式不同，原型模式又可以分为：浅克隆和深克隆。
+根据拷贝方式不同，原型模式又可以分为：浅克隆和深克隆。一般实现的是浅克隆方式。
 
 **Java类库中的应用：**
 
 - `java.lang.Object#clone() `
 
+**识别方法：** 原型可以简单地通过 `clone`或 `copy`等方法来识别。
+
 ![image-20201211174210511](README.assets/image-20201211174210511.png)
 
+### ### 适配器模式
 
+**适配器模式：**一种结构型设计模式， 它能使接口不兼容的对象能够相互合作。
+
+在应用程序中我们可能需要将两个不同接口的类来进行通信，在不修改这两个的前提下我们可能会需要某个中间件来完成这个衔接的过程。这个中间件就是适配器。所谓适配器模式就是将一个类的接口，转换成客户期望的另一个接口。它可以让原本两个不兼容的接口能够无缝完成对接。作为中间件的适配器将目标类和适配者解耦，增加了类的透明性和可复用性。
+
+**Java类库中的应用：**
+
+- `java.util.Arrays#asList()`
+- `java.util.Collections#list()`
+- `java.util.Collections#enumeration()`
+- `java.io.InputStreamReader(InputStream) `
+- `java.io.OutputStreamWriter(OutputStream)`
+- `javax.xml.bind.annotation.adapters.XmlAdapter#marshal()`
+
+**识别方法：**适配器可以通过以不同抽象或接口类型实例为参数的构造函数来识别。 当适配器的任何方法被调用时， 它会将参数转换为合适的格式， 然后将调用定向到其封装对象中的一个或多个方法。
+
+![image-20201211220902106](README.assets/image-20201211220902106.png)
+
+### ### 桥接模式
+
+**桥接模式：**一种结构型设计模式， 可将一个大类或一系列紧密相关的类拆分为抽象和实现两个独立的层次结构， 从而能在开发时分别使用。
+
+如果说某个系统能够从多个角度来进行分类，且每一种分类都可能会变化，那么我们需要做的就是讲这多个角度分离出来，使得他们能独立变化，减少他们之间的耦合，这个分离过程就使用了桥接模式。所谓桥接模式就是讲抽象部分和实现部分隔离开来，使得他们能够独立变化。**桥接模式将继承关系转化成关联关系（组合优于继承）**，封装了变化，完成了解耦，减少了系统中类的数量，也减少了代码量。
+
+**使用示例：** 桥接模式在处理跨平台应用、支持多种类型的数据库服务器或与多个特定种类（例如云平台和社交网络等）的API供应商协作时会特别有用。
+
+**识别方法：** 桥接可以通过一些控制实体及其所依赖的多个不同平台之间的明确区别来进行识别。
+
+![image-20201212004457559](README.assets/image-20201212004457559.png)
 
 
 
@@ -509,7 +562,7 @@ public class Car {
    - 聚合关系：`Person o-- IDCard`
    - 组合关系：`Person *-- Head`
 
-> 参考文章博客：[JDK里的设计模式](https://stackoverflow.com/questions/1673841/examples-of-gof-design-patterns-in-javas-core-libraries)、**[《HeadFirst设计模式》]()**、[UML类图](https://blog.csdn.net/qq_40138785/article/details/81065979)、[设计模式总结](https://www.cnblogs.com/pony1223/p/7608955.html)、[PlantUML使用教程](https://www.cnblogs.com/mikisakura/p/12978402.html)、**[PlantUML官方教程](https://plantuml.com/zh/class-diagram)**、**[设计模式的学习](https://refactoringguru.cn/design-patterns/)**
+> 参考文章博客：[JDK里的设计模式](https://stackoverflow.com/questions/1673841/examples-of-gof-design-patterns-in-javas-core-libraries)、**[《HeadFirst设计模式》]()**、[UML类图](https://blog.csdn.net/qq_40138785/article/details/81065979)、[设计模式总结](https://www.cnblogs.com/pony1223/p/7608955.html)、[PlantUML使用教程](https://www.cnblogs.com/mikisakura/p/12978402.html)、**[PlantUML官方教程](https://plantuml.com/zh/class-diagram)**、**[设计模式的学习](https://refactoringguru.cn/design-patterns/)**、[设计模式英文教程](https://www.journaldev.com/1827/java-design-patterns-example-tutorial)
 
 # 2 多线程
 

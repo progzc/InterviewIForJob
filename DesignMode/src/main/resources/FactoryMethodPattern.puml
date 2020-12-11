@@ -1,0 +1,39 @@
+@startuml
+/'产品'/
+interface Button{
+  + void render();
+  + void onClick();
+}
+class HtmlButton {
+  + void render();
+  + void onClick();
+}
+class WindowsButton {
+  + void render();
+  + void onClick();
+}
+HtmlButton ..|> Button
+WindowsButton ..|> Button
+
+/'工厂'/
+interface Dialog{
+  + Button createButton();
+}
+class HtmlDialog{
+  + Button createButton();
+}
+class WindowsDialog{
+  + Button createButton();
+}
+HtmlDialog ..|> Dialog
+WindowsDialog ..|> Dialog
+HtmlDialog ..> HtmlButton
+WindowsDialog ..> WindowsButton
+
+/'客户端'/
+class Client{
+}
+Client ..> HtmlDialog
+Client ..> WindowsDialog
+
+@enduml

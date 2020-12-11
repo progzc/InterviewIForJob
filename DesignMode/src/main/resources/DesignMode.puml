@@ -1,0 +1,42 @@
+@startmindmap
+<style>
+mindmapDiagram {
+  .Orange {
+    BackgroundColor Orange
+  }
+  .green {
+    BackgroundColor lightgreen
+  }
+  .rose {
+    BackgroundColor #FFBBCC
+  }
+}
+</style>
++ 设计模式（23种）<<Orange>>
+++ 创建型模式（5种）<<green>>
++++ 单例模式 <<rose>>
++++ 工厂方法模式 <<rose>>
++++ 抽象工厂模式 <<rose>>
++++ 建造者模式 <<rose>>
++++ 原型模式 <<rose>>
+++ 结构型模式（7种）<<green>>
++++ 适配器模式 <<rose>>
++++ 桥接模式 <<rose>>
++++ 组合模式 <<rose>>
++++ 装饰模式 <<rose>>
++++ 外观模式 <<rose>>
++++ 享元模式 <<rose>>
++++ 代理模式 <<rose>>
+-- 行为型模式（11种）<<green>>
+--- 访问者模式 <<rose>>
+--- 模板模式 <<rose>>
+--- 策略模式 <<rose>>
+--- 状态模式 <<rose>>
+--- 观察者模式 <<rose>>
+--- 备忘录模式 <<rose>>
+--- 中介者模式 <<rose>>
+--- 迭代器模式 <<rose>>
+--- 解释器模式 <<rose>>
+--- 命令模式 <<rose>>
+--- 责任链模式 <<rose>>
+@endmindmap

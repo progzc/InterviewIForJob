@@ -1,0 +1,34 @@
+@startuml
+/'让方钉适配圆孔'/
+/'圆孔'/
+class RoundHole{
+  - double radius;
+
+  + double getRadius();
+  + boolean fits(RoundPeg peg);
+}
+RoundHole ..> RoundPeg
+note left of RoundHole: Client
+/'圆钉'/
+class RoundPeg{
+  - double radius;
+
+  + double getRadius();
+}
+/'方钉'/
+class SquarePeg{
+  - double width;
+
+  + double getWidth();
+}
+
+/'方钉到圆孔的适配器'/
+class SquarePegAdapter{
+  - SquarePeg peg;
+
+  + double getRadius();
+}
+SquarePegAdapter --|> RoundPeg
+SquarePegAdapter --> SquarePeg
+
+@enduml

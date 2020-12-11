@@ -53,8 +53,8 @@ MacOSFactory ..> MacOSCheckbox
 WindowsOSFactory ..> WindowsOSCheckbox
 
 /'客户端'/
-class client{
+class Client{
 }
-client ..> WindowsOSFactory
-client ..> MacOSFactory
+Client ..> WindowsOSFactory
+Client ..> MacOSFactory
 @enduml

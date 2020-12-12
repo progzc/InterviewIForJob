@@ -1,0 +1,52 @@
+@startuml
+/'渲染一片森林'/
+/'每颗树的特殊状态'/
+class Tree{
+  - int x;
+  - int y;
+  - TreeType type;
+
+  + void draw(Graphics g);
+}
+Tree *--> TreeType
+
+/'多棵树共享的状态'/
+class TreeType{
+  - String name;
+  - Color color;
+  - String otherTreeData;
+
+  + void draw(Graphics g, int x, int y);
+}
+
+/'封装创建享元的复杂机制'/
+class TreeFactory{
+  ~ static Map<String, TreeType> treeTypes = new HashMap<>;
+
+  + static TreeType getTreeType(String name, Color color, String otherTreeData);
+}
+TreeFactory o--> TreeType
+
+/'森林'/
+class Forest{
+  - List<Tree> trees = new ArrayList<>;
+
+  + void plantTree(int x, int y, String name, Color color, String otherTreeData);
+  + void paint(Graphics graphics);
+}
+Forest --|> JFrame
+Forest *--> Tree
+Forest --> TreeFactory
+
+/'客户端'/
+class Client{
+}
+Client -down-> Forest
+
+note left of Tree: 非享元类
+note left of TreeType: 享元类
+note top of TreeFactory: 非享元类工厂
+note left of Forest: 由非享元类组成的产品
+
+
+@enduml

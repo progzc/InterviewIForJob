@@ -1,0 +1,47 @@
+@startuml
+/'缓存代理'/
+/'远程服务接口'/
+interface ThirdPartyYouTubeLib{
+  + HashMap<String, Video> popularVideos();
+  + Video getVideo(String videoId);
+}
+ThirdPartyYouTubeLib o--> Video
+/'远程服务实现'/
+class ThirdPartyYouTubeClass{
+  + HashMap<String, Video> popularVideos();
+  + Video getVideo(String videoId);
+  - int random(int min, int max);
+  - void experienceNetworkLatency();
+  - void connectToServer(String server);
+  - HashMap<String, Video> getRandomVideos();
+  - Video getSomeVideo(String videoId);
+}
+ThirdPartyYouTubeClass ..|> ThirdPartyYouTubeLib
+/'视频文件'/
+class Video{
+  + String id;
+  + String title;
+  + String data;
+}
+/'缓存代理'/
+class YouTubeCacheProxy{
+  - ThirdPartyYouTubeLib youtubeService;
+  - HashMap<String, Video> cachePopular = new HashMap<String, Video>;
+  - HashMap<String, Video> cacheAll = new HashMap<String, Video>;
+
+  + HashMap<String, Video> popularVideos();
+  + Video getVideo(String videoId);
+  + void reset();
+}
+YouTubeCacheProxy ..|> ThirdPartyYouTubeLib
+YouTubeCacheProxy --> ThirdPartyYouTubeLib
+/'媒体下载应用'/
+class YouTubeDownloader{
+  - ThirdPartyYouTubeLib api;
+
+  + void renderVideoPage(String videoId);
+  + void renderPopularVideos();
+}
+YouTubeDownloader --> ThirdPartyYouTubeLib
+note right of YouTubeDownloader: 相当于Client
+@enduml

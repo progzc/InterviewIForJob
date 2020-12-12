@@ -1,0 +1,70 @@
+@startuml
+/'复杂视频转换库的简单接口'/
+class VideoFile{
+  - String name;
+  - String codecType;
+
+  + String getCodecType();
+  + String getName();
+}
+
+interface Codec{
+}
+
+class MPEG4CompressionCodec{
+  + String type = "mp4";
+}
+
+class OggCompressionCodec{
+  + String type = "ogg";
+}
+
+class CodecFactory{
+  + static Codec extract(VideoFile file);
+}
+
+class BitrateReader{
+  + static VideoFile read(VideoFile file, Codec codec);
+  + static VideoFile convert(VideoFile buffer, Codec codec);
+}
+
+class AudioMixer{
+  + File fix(VideoFile result);
+}
+
+
+interface VideoConversionFacade{
+  + File convertVideo(String fileName, String format);
+}
+
+class VideoConversion4MpegOgg{
+  + File convertVideo(String fileName, String format);
+}
+
+class Client{
+}
+Client -down-> VideoConversionFacade
+
+/'分组'/
+namespace module #DDDDDD{
+  MPEG4CompressionCodec ..|> Codec
+  OggCompressionCodec ..|> Codec
+  CodecFactory --> VideoFile
+  CodecFactory --> Codec
+  BitrateReader --> VideoFile
+  BitrateReader --> Codec
+  AudioMixer --> VideoFile
+}
+VideoConversion4MpegOgg .up.|> VideoConversionFacade
+VideoConversion4MpegOgg ..> module.VideoFile
+VideoConversion4MpegOgg ..> module.CodecFactory
+VideoConversion4MpegOgg ..> module.Codec
+VideoConversion4MpegOgg ..> module.OggCompressionCodec
+VideoConversion4MpegOgg ..> module.MPEG4CompressionCodec
+VideoConversion4MpegOgg ..> module.BitrateReader
+VideoConversion4MpegOgg ..> module.AudioMixer
+/'布局调整'/
+VideoConversion4MpegOgg -[hidden]> module
+note top of module: 门面模式封装的复杂子系统
+
+@enduml

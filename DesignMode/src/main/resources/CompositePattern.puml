@@ -1,0 +1,116 @@
+@startuml
+/'简单和复合图形'/
+/'通用形状接口'/
+interface Shape{
+  + int getX();
+  + int getX();
+  + int getWidth();
+  + int getHeight();
+  + void move(int x, int y);
+  + boolean isInsideBounds(int x, int y);
+  + void select();
+  + void unSelect();
+  + boolean isSelected();
+  + void paint(Graphics graphics);
+}
+/'提供基本功能的抽象形状'/
+abstract class BaseShape{
+  + int x;
+  + int y;
+  + Color color;
+  - boolean selected = false;
+
+  + int getX();
+  + int getY();
+  + int getWidth();
+  + int getHeight();
+  + void move(int x, int y);
+  + boolean isInsideBounds(int x, int y);
+  + void select();
+  + void unSelect();
+  + boolean isSelected();
+  + void paint(Graphics graphics);
+  # void enableSelectionStyle(Graphics graphics);
+  # void disableSelectionStyle(Graphics graphics);
+}
+BaseShape ..|> Shape
+/'点'/
+class Dot{
+  - final int DOT_SIZE = 3;
+  + int getWidth();
+  + int getHeight();
+  + void paint(Graphics graphics);
+}
+Dot --|> BaseShape
+/'圆形'/
+class Circle{
+  + int radius;
+
+  + int getWidth();
+  + int getHeight();
+  + void paint(Graphics graphics);
+}
+Circle --|> BaseShape
+/'矩形'/
+class Rectangle{
+  + int width;
+  + int height;
+
+  + int getWidth();
+  + int getHeight();
+  + void paint(Graphics graphics);
+}
+Rectangle --|> BaseShape
+/'由其他形状对象组成的复合形状'/
+class CompoundShape{
+  # List<Shape> children = new ArrayList<>;
+
+  + int getX();
+  + int getY();
+  + int getWidth();
+  + int getHeight();
+  + void move(int x, int y);
+  + boolean isInsideBounds(int x, int y);
+  + void unSelect();
+  + void paint(Graphics graphics);
+  + void add(Shape component);
+  + void add(Shape... components);
+  + void remove(Shape child);
+  + void remove(Shape... components);
+  + void clear();
+  + boolean selectChildAt(int x, int y);
+}
+CompoundShape --|> BaseShape
+CompoundShape o--> Shape
+/'形状编辑器'/
+class ImageEditor{
+  - EditorCanvas canvas;
+  - CompoundShape allShapes = new CompoundShape;
+
+  + void loadShapes(Shape... shapes);
+}
+ImageEditor --> EditorCanvas
+ImageEditor --> CompoundShape
+note left of ImageEditor: 相当于Client
+/'ImageEditor内的私有内部类抽取出来'/
+class EditorCanvas{
+  ~ JFrame frame;
+  - static final int PADDING = 10;
+
+  ~ void createFrame();
+  + int getWidth();
+  + int getHeight();
+  ~ void refresh();
+  + void paint(Graphics graphics);
+}
+note right of EditorCanvas: ImageEditor内的私有\n内部类抽取出来
+class Canvas{
+}
+note right of Canvas: 来自于标准类库
+class JFrame{
+}
+note right of JFrame: 来自于标准类库
+EditorCanvas o--> JFrame
+EditorCanvas --|> Canvas
+
+@enduml

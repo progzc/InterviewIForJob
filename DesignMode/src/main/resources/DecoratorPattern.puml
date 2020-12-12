@@ -1,0 +1,49 @@
+@startuml
+/'编码和压缩装饰'/
+/'定义了读取和写入操作的通用数据接口'/
+interface DataSource{
+  + void writeData(String data);
+  + String readData();
+}
+/'简单数据读写器'/
+class FileDataSource{
+  - String name;
+  + void writeData(String data);
+  + String readData();
+}
+FileDataSource ..|> DataSource
+/'抽象基础装饰'/
+class DataSourceDecorator{
+  - DataSource wrappee;
+
+  + void writeData(String data);
+  + String readData();
+}
+DataSourceDecorator ..|> DataSource
+DataSourceDecorator o--> DataSource
+/'加密装饰'/
+class EncryptionDecorator{
+  + void writeData(String data);
+  + String readData();
+  - String encode(String data);
+  - String decode(String data);
+}
+EncryptionDecorator --|> DataSourceDecorator
+
+/'压缩装饰'/
+class CompressionDecorator{
+  - int compLevel = 6;
+
+  + void writeData(String data);
+  + String readData();
+  - String compress(String stringData);
+  - String decompress(String stringData);
+  + int getCompressionLevel();
+  + void setCompressionLevel(int value);
+}
+CompressionDecorator --|> DataSourceDecorator
+class Client{
+}
+Client --> DataSource
+note top of Client:DataSource encoded = new CompressionDecorator(\nnew EncryptionDecorator(new FileDataSource(path)));
+@enduml

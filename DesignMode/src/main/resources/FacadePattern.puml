@@ -32,7 +32,6 @@ class AudioMixer{
   + File fix(VideoFile result);
 }
 
-
 interface VideoConversionFacade{
   + File convertVideo(String fileName, String format);
 }

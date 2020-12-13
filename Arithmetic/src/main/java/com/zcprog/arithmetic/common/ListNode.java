@@ -1,5 +1,7 @@
 package com.zcprog.arithmetic.common;
 
+import java.util.Objects;
+
 /**
  * @Description 链表节点
  * @Author zhaochao
@@ -20,6 +22,11 @@ public class ListNode {
         this.next = next;
     }
 
+    /**
+     * 根据数组生成链表
+     * @param nums
+     * @return
+     */
     public static ListNode init(int[] nums) {
         if (nums == null || nums.length < 1) {
             return null;
@@ -31,6 +38,42 @@ public class ListNode {
             listTemp = listTemp.next;
         }
         return listNode;
+    }
+
+    /**
+     * 扩展相交部分
+     * @param listNode1
+     * @param listNode2
+     * @param nums
+     * @return
+     */
+    public static ListNode[] extendCommon(ListNode listNode1, ListNode listNode2, int[] nums) {
+        ListNode[] list = new ListNode[2];
+        ListNode commonListNode = init(nums);
+        if (commonListNode != null) {
+            listNode1.next = commonListNode;
+            listNode2.next = commonListNode;
+        }
+        list[0] = listNode1;
+        list[1] = listNode2;
+        return list;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ListNode listNode = (ListNode) o;
+        return val == listNode.val && Objects.equals(next, listNode.next);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(val, next);
     }
 
     @Override

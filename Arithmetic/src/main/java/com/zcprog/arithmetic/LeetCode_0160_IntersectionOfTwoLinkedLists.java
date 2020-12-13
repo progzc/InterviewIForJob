@@ -32,8 +32,6 @@ public class LeetCode_0160_IntersectionOfTwoLinkedLists {
         System.out.println(listNode);
 
         System.out.println("-----------双指针解法-----------");
-        System.out.println(listNode1);
-        System.out.println(listNode2);
         ListNode anotherListNode = doublePointerSolve(listNode1, listNode2);
         System.out.println(anotherListNode);
 

@@ -1,0 +1,117 @@
+@startuml
+/'迭代访问社交网络档案'/
+/'定义档案接口'/
+interface ProfileIterator{
+  + boolean hasNext();
+  + Profile getNext();
+  + void reset();
+}
+
+/'在Facebook档案上实现迭代'/
+class FacebookIterator{
+  - Facebook facebook;
+  - String type;
+  - String email;
+  - int currentPosition = 0;
+  - List<String> emails = new ArrayList<>;
+  - List<Profile> profiles = new ArrayList<>;
+
+  - void lazyLoad();
+  + boolean hasNext();
+  + Profile getNext();
+  + void reset();
+}
+FacebookIterator .up.|> ProfileIterator
+FacebookIterator o-right->  Facebook
+FacebookIterator o--> Profile
+
+/'在领英档案上实现迭代'/
+class LinkedInIterator{
+  - LinkedIn linkedIn;
+  - String type;
+  - String email;
+  - int currentPosition = 0;
+  - List<String> emails = new ArrayList<>;
+  - List<Profile> contacts = new ArrayList<>;
+
+  - void lazyLoad();
+  + boolean hasNext();
+  + Profile getNext();
+  + void reset();
+}
+LinkedInIterator .up.|> ProfileIterator
+LinkedInIterator o-right-> LinkedIn
+LinkedInIterator o--> Profile
+
+/'定义通用的社交网络接口'/
+interface SocialNetwork{
+  + ProfileIterator createFriendsIterator(String profileEmail);
+  + ProfileIterator createCoworkersIterator(String profileEmail);
+}
+SocialNetwork .left.> ProfileIterator
+
+/'Facebook'/
+class Facebook{
+  - List<Profile> profiles;
+
+  - Profile findProfile(String profileEmail);
+  - void simulateNetworkLatency();
+  + Profile requestProfileFromFacebook(String profileEmail);
+  + List<String> requestProfileFriendsFromFacebook(String profileEmail, String contactType);
+  + ProfileIterator createFriendsIterator(String profileEmail);
+  + ProfileIterator createCoworkersIterator(String profileEmail);
+}
+Facebook .up.|> SocialNetwork
+Facebook o--> Profile
+
+/'领英'/
+class LinkedIn{
+  - List<Profile> contacts;
+
+  - Profile findContact(String profileEmail);
+  - void simulateNetworkLatency();
+  + Profile requestContactInfoFromLinkedInAPI(String profileEmail);
+  + List<String> requestRelatedContactsFromLinkedInAPI(String profileEmail, String contactType);
+  + ProfileIterator createFriendsIterator(String profileEmail);
+  + ProfileIterator createCoworkersIterator(String profileEmail);
+}
+LinkedIn .up.|> SocialNetwork
+LinkedIn o--> Profile
+
+/'社交档案'/
+class Profile{
+  - String name;
+  - String email;
+  - Map<String, List<String>> contacts = new HashMap<>;
+
+  + String getName();
+  + String getEmail();
+  + List<String> getContacts(String contactType);
+}
+
+/'消息发送应用'/
+class SocialSpammer{
+  + SocialNetwork network;
+  + ProfileIterator iterator;
+
+  + void sendSpamToFriends(String profileEmail, String message);
+  + void sendSpamToCoworkers(String profileEmail, String message);
+  + void sendMessage(String email, String message);
+}
+SocialSpammer --> SocialNetwork
+SocialSpammer --> ProfileIterator
+
+/'辅助布局'/
+Facebook -[hidden]>  LinkedIn
+Facebook -[hidden]> SocialNetwork
+ProfileIterator -[hidden]>  SocialNetwork
+FacebookIterator -[hidden]> LinkedInIterator
+Facebook -[hidden]> FacebookIterator
+LinkedIn -[hidden]> LinkedInIterator
+
+/'客户端'/
+class Client{
+}
+Client --> SocialSpammer
+
+@enduml

@@ -15,7 +15,7 @@ public class TreeNode {
     public TreeNode left;
     public TreeNode right;
 
-    TreeNode(int x) {
+    public TreeNode(int x) {
         this.val = x;
     }
 
@@ -28,6 +28,7 @@ public class TreeNode {
         if (nums == null || nums.length < 1 || nums[0] == null) {
             return null;
         }
+
         TreeNode root = new TreeNode(nums[0]);
         Queue<TreeNode> queue = new LinkedList<>();
         queue.offer(root);
@@ -35,9 +36,9 @@ public class TreeNode {
             if (!queue.isEmpty()) {
                 TreeNode node = queue.poll();
                 if (node != null) {
-                    node.left = nums[i + 1] != null ? new TreeNode(nums[i + 1]) : null;
+                    node.left = nums[i + 1] != null ? new TreeNode(nums[i + 1]) : new TreeNode(Integer.MIN_VALUE);
                     queue.offer(node.left);
-                    node.right = nums[i + 2] != null ? new TreeNode(nums[i + 2]) : null;
+                    node.right = nums[i + 2] != null ? new TreeNode(nums[i + 2]) : new TreeNode(Integer.MIN_VALUE);
                     queue.offer(node.right);
                 }
             }
@@ -53,7 +54,7 @@ public class TreeNode {
     }
 
     /**
-     * 层次遍历
+     * 层次遍历: BFS
      * @param treeNode
      * @return
      */
@@ -64,19 +65,41 @@ public class TreeNode {
         StringBuilder sb = new StringBuilder();
         Queue<TreeNode> queue = new LinkedList<>();
         queue.offer(treeNode);
+
+        Queue<TreeNode> temp = new LinkedList<>();
+        sb.append(treeNode.val).append(",");
+
         while (!queue.isEmpty()) {
-            TreeNode node = queue.poll();
-            if (node != null) {
-                sb.append(node.val).append(",");
-                if (node.left != null || node.right != null) {
+            // 当前层的节点数
+            int size = queue.size();
+            while (size > 0) {
+                TreeNode node = queue.poll();
+                if (node.left != null) {
                     queue.offer(node.left);
-                    queue.offer(node.right);
+                    temp.offer(node.left);
+                } else {
+                    temp.offer(null);
                 }
-            } else {
-                sb.append("null").append(",");
+                if (node.right != null) {
+                    queue.offer(node.right);
+                    temp.offer(node.right);
+                } else {
+                    temp.offer(null);
+                }
+                size--;
+            }
+            // 打印每一层的节点
+            if (!queue.isEmpty()) {
+                while (!temp.isEmpty()) {
+                    TreeNode tempNode = temp.poll();
+                    if (tempNode != null) {
+                        sb.append(tempNode.val).append(",");
+                    } else {
+                        sb.append("null").append(",");
+                    }
+                }
             }
         }
-        return sb.toString().replaceFirst("[,]$", "");
+        return sb.toString().replaceFirst("[,]$", "").replaceAll(Integer.MIN_VALUE + "", "null");
     }
-
 }

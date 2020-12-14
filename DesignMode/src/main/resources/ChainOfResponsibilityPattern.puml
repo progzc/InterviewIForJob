@@ -1,0 +1,55 @@
+@startuml
+/'过滤访问'/
+/'基础验证抽象接口'/
+abstract class Middleware{
+  - Middleware next;
+
+  + Middleware linkWith(Middleware next);
+  + {abstract} boolean check(String email, String password);
+  # boolean checkNext(String email, String password);
+}
+Middleware --> Middleware
+
+/'检查请求数量限制'/
+class ThrottlingMiddleware{
+  - int requestPerMinute;
+  - int request;
+  - long currentTime;
+
+  + boolean check(String email, String password);
+}
+ThrottlingMiddleware --|> Middleware
+
+/'检查用户登录信息'/
+class UserExistsMiddleware{
+  - Server server;
+
+  + boolean check(String email, String password);
+}
+UserExistsMiddleware --|> Middleware
+UserExistsMiddleware --> Server
+
+/'检查用户角色'/
+class RoleCheckMiddleware{
+  + boolean check(String email, String password);
+}
+RoleCheckMiddleware --|> Middleware
+
+/'授权目标'/
+class Server{
+  - Map<String, String> users = new HashMap<>;
+  - Middleware middleware;
+
+  + void setMiddleware(Middleware middleware);
+  + boolean logIn(String email, String password);
+  + void register(String email, String password);
+  + boolean hasEmail(String email);
+  + boolean isValidPassword(String email, String password);
+}
+Server --> Middleware
+
+class Client{
+}
+Client -up-> Middleware
+
+@enduml

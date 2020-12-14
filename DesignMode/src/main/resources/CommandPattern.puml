@@ -1,0 +1,60 @@
+@startuml
+/'文字编辑器和撤销'/
+/'抽象基础命令'/
+abstract class Command{
+  + Editor editor;
+  - String backup;
+
+  ~ void backup();
+  + void undo();
+  + {abstract} boolean execute();
+}
+Command --> Editor
+
+/'将所选文字复制到剪贴板'/
+class CopyCommand{
+  + boolean execute();
+}
+CopyCommand --|> Command
+
+/'从剪贴板粘贴文字'/
+class PasteCommand{
+  + boolean execute();
+}
+PasteCommand --|> Command
+
+/'将文字剪切到剪贴板'/
+class CutCommand{
+  + boolean execute();
+  - String cutString(String source);
+}
+CutCommand --|> Command
+
+/'命令历史'/
+class CommandHistory{
+  - Stack<Command> history = new Stack<>;
+
+  + void push(Command c);
+  + Command pop();
+  + boolean isEmpty();
+}
+CommandHistory o--> Command
+
+/'文字编辑器的 GUI'/
+class Editor{
+  + JTextArea textField;
+  + String clipboard;
+  - CommandHistory history = new CommandHistory;
+
+  + void init();
+  - void executeCommand(Command command);
+  - void undo();
+}
+Editor --> CommandHistory
+
+/'客户端'/
+class Client{
+}
+Client -right-> Editor
+
+@enduml

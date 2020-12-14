@@ -1,0 +1,164 @@
+@startuml
+/'组件接口'/
+interface Component{
+  + void setMediator(Mediator mediator);
+  + String getName();
+}
+
+/'Add按钮'/
+class AddButton{
+  - Mediator mediator;
+
+  + void setMediator(Mediator mediator)；
+  + void fireActionPerformed(ActionEvent actionEvent);
+  + String getName();
+}
+AddButton .up.|> Component
+AddButton -down-> Mediator
+
+
+/'删除按钮'/
+class DeleteButton{
+  - Mediator mediator;
+
+  + void setMediator(Mediator mediator);
+  # void fireActionPerformed(ActionEvent actionEvent);
+  + String getName();
+}
+DeleteButton .up.|> Component
+DeleteButton -down-> Mediator
+
+/'过滤器'/
+class Filter{
+  - Mediator mediator;
+  - ListModel listModel;
+
+  - void searchElements(String s);
+  + void setMediator(Mediator mediator);
+  # void processComponentKeyEvent(KeyEvent keyEvent);
+  + void setList(ListModel listModel);
+  + String getName();
+}
+Filter .up.|> Component
+Filter -down-> Mediator
+
+/'列表'/
+class List{
+  - Mediator mediator;
+  - final DefaultListModel LIST_MODEL;
+
+  + void setMediator(Mediator mediator);
+  + void addElement(Note note);
+  + void deleteElement();
+  + Note getCurrentElement();
+  + String getName();
+}
+List .up.|> Component
+List -down-> Mediator
+
+/'保存按钮'/
+class SaveButton{
+  - Mediator mediator;
+
+  + void setMediator(Mediator mediator);
+  # void fireActionPerformed(ActionEvent actionEvent);
+  + String getName();
+}
+SaveButton .up.|> Component
+SaveButton -down-> Mediator
+
+/'测试盒'/
+class TextBox{
+  - Mediator mediator;
+
+  + void setMediator(Mediator mediator);
+  # void processComponentKeyEvent(KeyEvent keyEvent);
+  + String getName();
+}
+TextBox .up.|> Component
+TextBox -down-> Mediator
+
+/'标题'/
+class Title{
+  - Mediator mediator;
+
+  + void setMediator(Mediator mediator);
+  # void processComponentKeyEvent(KeyEvent keyEvent);
+  + String getName();
+}
+Title .up.|> Component
+Title -down-> Mediator
+
+/'定义通用的中介者接口'/
+interface Mediator{
+  + void addNewNote(Note note);
+  + void deleteNote();
+  + void getInfoFromList(Note note);
+  + void saveChanges();
+  + void markNote();
+  + void clear();
+  + void sendToFilter(ListModel listModel);
+  + void setElementsList(ListModel list);
+  + void registerComponent(Component component);
+  + void hideElements(boolean flag);
+  + void createGUI();
+}
+
+/'编辑器中介'/
+class Editor{
+  - Title title;
+  - TextBox textBox;
+  - AddButton add;
+  - DeleteButton del;
+  - SaveButton save;
+  - List list;
+  - Filter filter;
+  - JLabel titleLabel = new JLabel;
+  - JLabel textLabel = new JLabel;
+  - JLabel label = new JLabel;
+
+  + void registerComponent(Component component);
+  + void addNewNote(Note note);
+  + void deleteNote();
+  + void getInfoFromList(Note note);
+  + void saveChanges();
+  + void markNote();
+  + void clear();
+  + void sendToFilter(ListModel listModel);
+  + void setElementsList(ListModel list);
+  + void hideElements(boolean flag);
+  + void createGUI();
+}
+Editor ..up.|> Mediator
+Editor .down.> Note
+Editor -up-> Title
+Editor -up-> TextBox
+Editor -up-> AddButton
+Editor -up-> DeleteButton
+Editor -up-> SaveButton
+Editor -up-> List
+Editor -up-> Filter
+note right of Editor: 中介者实现类
+
+/'笔记'/
+class Note{
+  - String name;
+  - String text;
+
+  + void setName(String name);
+  + void setText(String text);
+  + String getName();
+  + String getText();
+  + String toString();
+}
+
+/'客户端代码'/
+class Client{
+
+}
+Client -right-> Editor
+
+/'布局'/
+Client -[hidden]> Editor
+
+@enduml

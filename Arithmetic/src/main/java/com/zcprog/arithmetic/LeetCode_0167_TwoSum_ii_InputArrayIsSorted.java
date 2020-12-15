@@ -24,8 +24,11 @@ public class LeetCode_0167_TwoSum_ii_InputArrayIsSorted {
      * 解释: 2 与 7 之和等于目标数 9 。因此 index1 = 1, index2 = 2 。
      */
     public static void main(String[] args) {
-//        int[] numbers = {2, 3, 7, 15}; // target:9
-//        int[] numbers = {2, 3, 4}; // target:6
+//        // target:9
+//        int[] numbers = {2, 3, 7, 15};
+//        // target:6
+//        int[] numbers = {2, 3, 4};
+        // target:8
         int[] numbers = {1, 2, 3, 4, 4, 9, 56, 90};
 
         System.out.println("-----------双指针----------");

@@ -49,7 +49,7 @@ public class LeetCode_0190_ReverseBits {
 
     /**
      * 逐位颠倒
-     * 时间复杂度：O(log(n))
+     * 时间复杂度：O(1)
      * 空间复杂度：O(1)
      */
     private static int reversalSolve(int n) {

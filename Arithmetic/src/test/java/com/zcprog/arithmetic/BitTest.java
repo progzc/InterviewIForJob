@@ -88,7 +88,7 @@ public class BitTest {
         System.out.println("a:" + a); // 2147483647
         int b = a >> 2;
         System.out.println("a>>2:" + b); // 536870911
-        System.out.println("a/2:" + a / 2 / 2); // 536870911
+        System.out.println("a/2/2:" + a / 2 / 2); // 536870911
     }
 
     /**
@@ -110,8 +110,22 @@ public class BitTest {
         System.out.println("a:" + a); // 2147483647
         int b = a >>> 2;
         System.out.println("a>>>2:" + b); // 536870911
-        System.out.println("a/2:" + a / 2 / 2); // 536870911
+        System.out.println("a/2/2:" + a / 2 / 2); // 536870911
     }
 
-
+    /**
+     * 二进制与数字的转化
+     */
+    @Test
+    public void test5() {
+        // 整数转化为二进制
+        int i = -10;
+        System.out.println(Integer.toBinaryString(i)); // 11111111111111111111111111110110
+        System.out.println(Integer.toBinaryString(Integer.MAX_VALUE)); // 1111111111111111111111111111111
+        // 二进制字符串转化为整数
+        System.out.println(Integer.parseInt("1100110", 2));
+        // 若二进制太大会超出int范围，从而报错
+//        System.out.println(Integer.parseInt("11111111111111111111111111110110", 2)); // 报错
+        System.out.println(Long.parseLong("11111111111111111111111111110110", 2)); // 4294967286
+    }
 }

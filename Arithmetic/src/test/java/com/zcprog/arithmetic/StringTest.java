@@ -27,4 +27,9 @@ public class StringTest {
 //        int j = i;
 //        System.out.println("j:" + j);
     }
+
+    @Test
+    public void test3() {
+        System.out.println('0' - 'P'); // 输出-32
+    }
 }

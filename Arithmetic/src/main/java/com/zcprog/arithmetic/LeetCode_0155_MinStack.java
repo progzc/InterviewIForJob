@@ -47,8 +47,6 @@ public class LeetCode_0155_MinStack {
         minStack.pop();
         System.out.println(minStack.top());
         System.out.println(minStack.getMin());
-
-
     }
 
     static class MinStack {

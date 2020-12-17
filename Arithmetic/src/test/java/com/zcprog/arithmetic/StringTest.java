@@ -32,4 +32,10 @@ public class StringTest {
     public void test3() {
         System.out.println('0' - 'P'); // 输出-32
     }
+
+    @Test
+    public void test4() {
+        System.out.println(Integer.MAX_VALUE / 2);  // 1073741823
+        System.out.println(Integer.MIN_VALUE / 2); // -1073741824
+    }
 }

@@ -671,6 +671,10 @@ public class Car {
 
 ![image-20201214221633035](README.assets/image-20201214221633035.png)
 
+### ### 备忘录模式
+
+**备忘录模式：**一种行为设计模式， 允许在不暴露对象实现细节的情况下保存和恢复对象之前的状态。
+
 
 
 
@@ -4693,18 +4697,60 @@ ACOS( COS(latA) * COS(latB) * COS(lonA-lonB) + SIN(latA) * SIN(latB) ) * R
 
 # 8 算法解题
 
-|                             题目                             |          思路          |  时间复杂度   |   空间复杂度   |
-| :----------------------------------------------------------: | :--------------------: | :-----------: | :------------: |
-| [0088.合并两个有序数组](https://leetcode-cn.com/problems/merge-sorted-array/) |         三指针         |    O(m+n)     |      O(1)      |
-|    [0066.加一](https://leetcode-cn.com/problems/plus-one)    |     数组的反向遍历     |     O(n)      |      O(1)      |
-| [0053.最大连续子序列/子序列和](https://leetcode-cn.com/problems/maximum-subarray/) | 动态规划/贪心法/分治法 |     O(n)      |      O(1)      |
-| [0026.删除排序数组中的重复项](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-array/description/) |        快慢指针        |     O(n)      |      O(1)      |
-| [0020.有效的括号](https://leetcode-cn.com/problems/valid-parentheses/description) |     栈/正则表达式      |   O(n)/很快   |   O(1)/O(n)    |
-|  [0001.两数之和](https://leetcode-cn.com/problems/two-sum)   |         哈希表         |     O(n)      |      O(n)      |
-| [0021.合并两个有序链表](https://leetcode-cn.com/problems/merge-two-sorted-lists) |          递归          |    O(n+m)     |     O(n+m)     |
-| [0160.相交链表](https://leetcode-cn.com/problems/intersection-of-two-linked-lists/) |     双指针/哈希表      | O(m+n)/O(m+n) |   O(1)/O(m)    |
-| [0101.对称二叉树](https://leetcode-cn.com/problems/symmetric-tree/) |  递归(DFS)/迭代(BFS)   |   O(n)/O(n)   | O(height)/O(n) |
-| [0104.二叉树的最大深度](https://leetcode-cn.com/problems/maximum-depth-of-binary-tree/description/) |  递归(DFS)/迭代(BFS)   |   O(n)/O(n)   | O(hight)/O(n)  |
+队列：`offer：入队`、`poll：出队`。
+
+栈：`peek：取`、`pop：出栈`、`push：入栈`。
+
+Java中栈和队列都可以用LinkedList来模拟；此外，栈还可以用Stack来模拟。
+
+|                             题目                             |             思路              |       时间复杂度       |     空间复杂度      |
+| :----------------------------------------------------------: | :---------------------------: | :--------------------: | :-----------------: |
+| [0088.合并两个有序数组](https://leetcode-cn.com/problems/merge-sorted-array/) |            三指针             |         O(m+n)         |        O(1)         |
+|    [0066.加一](https://leetcode-cn.com/problems/plus-one)    |        数组的反向遍历         |          O(n)          |        O(1)         |
+| [0053.最大连续子序列/子序列和](https://leetcode-cn.com/problems/maximum-subarray/) |   动态规划/贪心算法/分治法    |          O(n)          |        O(1)         |
+| [0026.删除排序数组中的重复项](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-array/description/) |           快慢指针            |          O(n)          |        O(1)         |
+| [0020.有效的括号](https://leetcode-cn.com/problems/valid-parentheses/description) |         栈/正则表达式         |       O(n)/很快        |      O(1)/O(n)      |
+|  [0001.两数之和](https://leetcode-cn.com/problems/two-sum)   |            哈希表             |          O(n)          |        O(n)         |
+| [0021.合并两个有序链表](https://leetcode-cn.com/problems/merge-two-sorted-lists) |             递归              |         O(n+m)         |       O(n+m)        |
+| [0160.相交链表](https://leetcode-cn.com/problems/intersection-of-two-linked-lists/) |         双指针/哈希表         |     O(m+n)/O(m+n)      |      O(1)/O(m)      |
+| [0101.对称二叉树](https://leetcode-cn.com/problems/symmetric-tree/) |      递归(DFS)/迭代(BFS)      |       O(n)/O(n)        |   O(height)/O(n)    |
+| [0104.二叉树的最大深度](https://leetcode-cn.com/problems/maximum-depth-of-binary-tree/description/) |      递归(DFS)/迭代(BFS)      |       O(n)/O(n)        |    O(hight)/O(n)    |
+| [0108.将有序数组转换为二叉搜索树](https://leetcode-cn.com/problems/convert-sorted-array-to-binary-search-tree/) |           递归(LDR)           |          O(n)          |      O(log(n))      |
+| [0121.买卖股票的最佳时机](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock/description/) |        数组遍历/双指针        |       O(n)/O(n)        |      O(1)/O(1)      |
+| [0122.买卖股票的最佳时机 II](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-ii/description/) |       贪心算法/动态规划       |       O(n)/O(n)        |      O(1)/O(1)      |
+| [0125.验证回文串](https://leetcode-cn.com/problems/valid-palindrome/description/) |     双指针及常用api的使用     |          O(n)          |        O(1)         |
+| [0136.只出现一次的数字](https://leetcode-cn.com/problems/single-number/) |            位运算             |          O(n)          |        O(1)         |
+|  [0155.最小栈](https://leetcode-cn.com/problems/min-stack/)  |            辅助栈             |          O(1)          |        O(n)         |
+| [0167.两数之和II输入有序数组](https://leetcode-cn.com/problems/two-sum-ii-input-array-is-sorted/) |       双指针/二分查找法       |    O(n)/O(nlog(n))     |      O(1)/O(1)      |
+| [0169.多数元素](https://leetcode-cn.com/problems/majority-element/) |     投票法/哈希表/排序法      |  O(n)/O(n)/O(nlog(n))  | O(1)/O(n)/O(log(n)) |
+| [0172.阶乘后的零](https://leetcode-cn.com/problems/factorial-trailing-zeroes/) |             迭代              |       O(log(n))        |        O(1)         |
+| [0190.颠倒二进制位](https://leetcode-cn.com/problems/reverse-bits/) |          位运算+移位          |          O(1)          |        O(1)         |
+| [0191.位1的个数](https://leetcode-cn.com/problems/number-of-1-bits/) |            位运算             |          O(1)          |        O(1)         |
+| [0198.打家劫舍](https://leetcode-cn.com/problems/house-robber/) |           动态规划            |          O(n)          |        O(1)         |
+| [0203.移除链表元素](https://leetcode-cn.com/problems/remove-linked-list-elements/) |        哨兵节点+双指针        |          O(n)          |        O(1)         |
+| [0206.反转链表](https://leetcode-cn.com/problems/reverse-linked-list/) |         递归/迭代/栈          |    O(n)/O(n)/O(2n)     |   O(n)/O(1)/O(n)    |
+| [0219.存在重复元素 II](https://leetcode-cn.com/problems/contains-duplicate-ii/) |         散列表/哈希表         |       O(n)/O(2n)       |      O(n)/O(n)      |
+| [0226.翻转二叉树](https://leetcode-cn.com/problems/invert-binary-tree/) |           递归/迭代           |       O(n)/O(n)        |   O(log(n))/O(n)    |
+| [0232.用栈实现队列](https://leetcode-cn.com/problems/implement-queue-using-stacks/) |              栈               |  O(n)/O(1)/O(1)/O(1)   |        O(1)         |
+|  [0263.丑数](https://leetcode-cn.com/problems/ugly-number/)  |             迭代              |          O(n)          |        O(1)         |
+| [0283.移动零](https://leetcode-cn.com/problems/move-zeroes/) |            双指针             |          O(n)          |        O(1)         |
+| [0342.4的幂](https://leetcode-cn.com/problems/power-of-four/) |    位运算/位运算+数学运算     |       O(1)/O(1)        |      O(1)/O(1)      |
+| [0349.两个数组的交集](https://leetcode-cn.com/problems/intersection-of-two-arrays/) |            散列表             |          O(n)          |        O(n)         |
+| [0371.两整数之和](https://leetcode-cn.com/problems/sum-of-two-integers/) |            位运算             |          O(1)          |        O(1)         |
+| [0437.路径总和III](https://leetcode-cn.com/problems/path-sum-iii/)⭐ |    前缀和+哈希表/双重递归     | O(n)/O(nlog(n))~O(n^2) |     O(n)/O(2n)      |
+| [0455.分发饼干](https://leetcode-cn.com/problems/assign-cookies/) |         排序+贪心算法         |       O(nlog(n))       |        O(1)         |
+| [0575.分糖果](https://leetcode-cn.com/problems/distribute-candies/) |            散列表             |          O(n)          |        O(n)         |
+| [0821.字符的最短距离](https://leetcode-cn.com/problems/shortest-distance-to-a-character)⭐ |         正遍历+反遍历         |          O(n)          |        O(n)         |
+| [1332.删除回文子序列](https://leetcode-cn.com/problems/remove-palindromic-subsequences/)⭐ |     审题的重要性（逻辑）      |          O(1)          |        O(1)         |
+| [1260.二维网格迁移](https://leetcode-cn.com/problems/shift-2d-grid/description/)⭐ |             取模              |         O(m*n)         |       O(m*n)        |
+| [0874.模拟行走机器人](https://leetcode-cn.com/problems/walking-robot-simulation/)⭐ | 逻辑+散列表（将坐标映射为值） |         O(n+k)         |        O(k)         |
+| [0002.两数相加](https://leetcode-cn.com/problems/add-two-numbers/) |           链表遍历            |          O(n)          |        O(n)         |
+|                                                              |                               |                        |                     |
+|                                                              |                               |                        |                     |
+|                                                              |                               |                        |                     |
+|                                                              |                               |                        |                     |
+|                                                              |                               |                        |                     |
+|                                                              |                               |                        |                     |
 
 
 
@@ -4712,7 +4758,7 @@ ACOS( COS(latA) * COS(latB) * COS(lonA-lonB) + SIN(latA) * SIN(latB) ) * R
 
 
 
-> 参考博客文章：[力扣加加](https://leetcode-solution-leetcode-pp.gitbook.io/leetcode-solution/)、
+> 参考博客文章：[力扣加加](https://leetcode-solution-leetcode-pp.gitbook.io/leetcode-solution/)、[力扣官网](https://leetcode-cn.com/)
 
 # 9 JVM
 

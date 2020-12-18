@@ -3321,7 +3321,7 @@ ReentrantLock与synchronized的选择：
 
 
 
-# 3 IO/BIO/NIO
+# 3 IO/BIO/NIO/NIO2
 
 java.nio
 
@@ -3343,27 +3343,325 @@ java.nio
 
 # 4 集合源码
 
-## 4.1 HashMap
-
-**ArrayList**：底层的数据结构是**数组**。（查找、更改快；插入、删除慢）
-
-**LinkedList**：底层的数据结构是**链表**。
-
-**HashMap**： jdk1.7底层的数据结构是**数组+链表**、jdk1.8底层的数据结构是**数组+链表+红黑树**。
-
-**为什么要引入红黑树？**
-
-**HashMap的初始容量为什么是2^n？**
-
-1. 方便做&运算。
-2. 方便扩容后数据的移动。
-
-**默认初始容量是16？**
-
-**负载因子为什么是0.75？**负载因子太小了浪费空间并且会发生更多次数的resize，太大了哈希冲突增加会导致性能不好。负载因子取0.75本质是空间与时间成本的一种折中。
+集合的框架：
 
 
 
+## 4.1 基本面知识
+
+### 4.1.1 List/Set/Map
+
+**List/Set/Map的比较：**
+
+- **List**：可以有顺序地存取对象。
+- **Set**：不允许重复对象存放到集合中。
+- **Map**：采用键值对存储对象，使用哈希码来进行快速搜素。
+
+### 4.1.2 ArrayList/LinkedList
+
+**ArrayList/LinkedList的比较：**
+
+- **是否保证线程安全**：均不同步，即不保证线程安全。
+
+- **底层数据结构不同**：ArraytList底层是数组，LinkedList底层是双向链表（JDK1.6之前为双向循环链表；JDK1.7则取消了循环，变成了双向链表）。
+
+- **插入和删除操作**：插入和删除的时间复杂度均受元素位置的影响。
+
+  - ArrayList底层采用数组结构，插入和删除的性能较低，但是查询性能较高。
+
+  - ListedList底层采用双向链表，插入和删除的性能较高，但是查询性能较低。
+
+- **查询操作**：LinkedList不支持高效的随机元素访问；而ArraytList支持按元素索引快速获取元素对象。
+
+  - 由于ArraytList支持按索引随机获取元素，所以ArrayList实现了RandomAccess接口（标识接口），而LinkedList没有实现RandomAccess接口。
+
+  - 在Collections工具类的binarySearch方法中，会根据list判断是否是RandomAccess接口的实例。若是，则调用Collections的indexedBinarySearch方法进行搜索；反之，则调用Collections的iteratorBinarySearch方法来搜索。
+
+  - 实现了RandomAccess接口（如ArrayList）的List，优先选择fori遍历，其次是forEach遍历；未实现RandomAccess接口（如LinkedList）的List，优先选择iterator进行遍历（forEach底层也是iterator实现遍历），**当size很大时，禁止使用fori遍历**。
+
+    ```java
+    // 当List的size=200000时，ArrayList和LinkedList使用不同方式遍历的耗时如下：
+    // ArrayList使用fori遍历，耗时：1ms
+    // ArrayList使用iterator遍历，耗时：3ms
+    // LinkedList使用fori遍历，耗时：21805ms
+    // LinkedList使用iterator遍历，耗时：5ms
+    public class TraverseMethodTest {
+        public static void main(String[] args) {
+            List<Integer> list1 = new ArrayList<>();
+            List<Integer> list2 = new LinkedList<>();
+            for (int i = 0; i < 200000; i++) {
+                list1.add(i);
+                list2.add(i);
+            }
+    
+            // ArrayList使用fori遍历，耗时：5ms
+            int size = list1.size();
+            long start1 = System.currentTimeMillis();
+            for (int i = 0; i < size; i++) {
+                list1.get(i);
+            }
+            long end1 = System.currentTimeMillis();
+            System.out.println("ArrayList使用fori遍历，耗时：" + (end1 - start1) + "ms");
+    
+            // ArrayList使用iterator遍历，耗时：25ms
+            long start2 = System.currentTimeMillis();
+            Iterator<Integer> it1 = list1.iterator();
+            while (it1.hasNext()) {
+                Integer next = it1.next();
+            }
+            long end2 = System.currentTimeMillis();
+            System.out.println("ArrayList使用iterator遍历，耗时：" + (end2 - start2) + "ms");
+    
+            // LinkedList使用fori遍历，耗时：ms
+            int size2 = list2.size();
+            long start3 = System.currentTimeMillis();
+            for (int i = 0; i < size2; i++) {
+                list2.get(i);
+            }
+            long end3 = System.currentTimeMillis();
+            System.out.println("LinkedList使用fori遍历，耗时：" + (end3 - start3) + "ms");
+    
+            // LinkedList使用iterator遍历，耗时：ms
+            long start4 = System.currentTimeMillis();
+            Iterator<Integer> it2 = list2.iterator();
+            while (it2.hasNext()) {
+                Integer next = it2.next();
+            }
+            long end4 = System.currentTimeMillis();
+            System.out.println("LinkedList使用iterator遍历，耗时：" + (end4 - start4) + "ms");
+        }
+    }
+    ```
+
+- **内存空间占用不同**：LinkedList则需要存储指向下个元素的引用；ArrayList会在List的结尾预留一定的容量空间。ArrayList的扩容机制如下：
+
+  - ArrayList默认容量是10；
+
+  - 每次扩容按照1.5倍进行增长；
+  - 允许的最大容量就是Integer的最大值。
+
+**使用ArrayList的注意事项：**
+
+1. 在forEach/iterator迭代时，不能使用集合本身进行添加或删除元素（否则会出现ConcurrentModificationException）。
+2. 在forEach/iterator迭代时，可以使用迭代器可以进行删除元素，但仍然不能进行添加元素。
+3. 在fori迭代时，可以使用集合本身进行添加或删除元素。
+4. 若使用CopyOnWriteArrayList替代ArrayList，则在迭代（forEach/iterator/fori）时，可以使用集合本身进行添加或删除元素。
+
+```java
+// 测试iterator迭代
+@Test
+public void test1() {
+    List<Integer> list = new ArrayList<>();
+    for (int i = 0; i < 10; i++) {
+        list.add(i);
+    }
+
+    Iterator<Integer> it = list.iterator();
+    while (it.hasNext()) {
+        int i = (int) it.next();
+        // 在iterator迭代时，不能使用ArrayList集合本身进行添加或删除元素
+        list.add(i); // java.util.ConcurrentModificationException
+        list.remove(i); // java.util.ConcurrentModificationException
+    }
+
+}
+
+// 测试forEach迭代
+@Test
+public void test2() {
+    List<Integer> list = new ArrayList<>();
+    for (int i = 0; i < 10; i++) {
+        list.add(i);
+    }
+
+    for (Integer i : list) {
+        // 在forEach迭代时，不能使用ArrayList集合本身进行添加或删除元素
+        list.add(i); // java.util.ConcurrentModificationException
+        list.remove(i); // java.util.ConcurrentModificationException
+    }
+}
+
+// 测试fori迭代
+@Test
+public void test3() {
+    List<Integer> list = new ArrayList<>();
+    for (int i = 0; i < 10; i++) {
+        list.add(i);
+    }
+
+    for (int i = 0; i < 5; i++) {
+        // 在fori迭代时，可以使用ArrayList集合本身进行添加或删除元素
+        list.add(i);
+        list.remove(i);
+    }
+    System.out.println(list); // [1, 3, 5, 7, 9, 0, 1, 2, 3, 4]
+}
+
+// 测试使用迭代器删除元素
+@Test
+public void test4() {
+    List<Integer> list = new ArrayList<>();
+    for (int i = 0; i < 10; i++) {
+        list.add(i);
+    }
+    Iterator<Integer> it = list.iterator();
+    while (it.hasNext()) {
+        it.next();
+        // 在forEach/iterator迭代时，可以使用迭代器可以进行删除元素，但仍然不能进行添加元素
+        it.remove();
+    }
+    System.out.println(list); // 输出[]
+}
+
+// 测试使用CopyOnWriteArrayList
+@Test
+public void test5() {
+    CopyOnWriteArrayList<Integer> list = new CopyOnWriteArrayList<>();
+    for (int i = 0; i < 10; i++) {
+        list.add(i);
+    }
+
+    Iterator<Integer> it = list.iterator();
+    while (it.hasNext()) {
+        int i = (int) it.next();
+        // 在iterator迭代时，可以使用CopyOnWriteArrayList集合本身进行添加或删除元素
+        list.add(i);
+        list.remove(i);
+    }
+    System.out.println(list); // [1, 3, 5, 7, 9, 1, 3, 5, 7, 9]
+}
+```
+
+### 4.1.3 ArrayList/Vector
+
+**ArrayList/Vector的比较：**
+
+- Vector和ArrayList的底层均采用数组结构实现。
+
+- Vector的所有方法都是同步方法（添加了synchronized关键字）。多线程下可以安全地访问同一个Vector对象，缺点是在整个方法上添加了同步锁，导致性能很低。**由于Vector的性能低下，因此多线程下也不推荐使用Vector，应使用CopyOnWriteArrayList**。
+- ArrayList的方法不是同步的，无法在多线程下保证安全性。
+
+### 4.1.4 HashMap/Hashtable
+
+**HashMap/Hashtable的比较：**
+
+- **线程是否安全**：HashMap线程不安全，HashTable是线程安全的（Hashtable内部的方法基本都使用synchronized修饰）。
+
+- **效率**：由于线程安全的问题，HashMap的效率比HashTable要高。HashTable由于性能较低，已经被淘汰，多线程下使用ConcurrentHashMap 。
+
+- **对null Key 和null Value的支持**：
+
+  - HashMap中，null可以作为Key，且只能存在一个null Key，但可以存在多个Key对应的Value为null；
+  - Hashtable的Key和Value均不能为null（否则会抛出NullPointerException异常）。
+
+  |      集合类       |     Key      |    Value     |    super    |          说明          |
+  | :---------------: | :----------: | :----------: | :---------: | :--------------------: |
+  |     Hashtable     | 不允许为null | 不允许为null | Dictionary  |        线程安全        |
+  | ConcurrentHashMap | 不允许为null | 不允许为null | AbstractMap | 锁分段技术（JDK8:CAS） |
+  |      TreeMap      | 不允许为null |  允许为null  | AbstractMap |       线程不安全       |
+  |      HashMap      |  允许为null  |  允许为null  | AbstractMap |       线程不安全       |
+
+- **初始容量及扩容机制不同**：
+  - Hashtable默认的初始容量为11，之后每次扩容为2n+1（n为原来的容量大小），默认负载因子为0.75（负载因子太小了浪费空间并且会发生更多次数的resize，太大了哈希冲突增加会导致性能不好。负载因子取0.75本质是空间与时间成本的一种折中）。
+  - HashMap默认的初始容量为16，之后每次扩容为2n（n为原来的容量大小），默认负载因子为0.75。
+  - 若创建时制定了初始容量，Hashtable会直接使用给定的大小，而HashMap会将其扩充为2的幂次方大小（HashMap总是使用2的幂次方作为哈希表的大小）。
+
+- **底层数据结构不同**：
+  - JDK1.8之前，HashMap底层由数组+链表组成，数组是HashMap的主体，链表则是为了解决哈希冲突而存在的（"拉链法"解决冲突）；JDK1.8之后，在解决Hash冲突时有了较大的变化，当链表的长度大于阈值（默认是8）时，将链表转化为红黑树，以减少搜索时间。
+  - Hashtable底层仍然采用数组+链表组成。
+
+### 4.1.5 HashMap/HashSet
+
+**HashMap/HashSet的比较：**HashSet底层是使用HashMap实现的。
+
+|           HashMap            |                           HashSet                            |
+| :--------------------------: | :----------------------------------------------------------: |
+|        实现了Map接口         |                        实现了Set接口                         |
+|          存储键值对          |                          仅存储对象                          |
+|  调用put方法向map中添加元素  |                  调用add方法向Set中添加元素                  |
+| HashMap使用键(Key)计算哈希码 | HashSet使用对象计算哈希码，若两个对象的哈希码相同，再使用equals方法用来判断对象的相等性 |
+
+**HashSet检查重复的步骤：**
+
+1. 检查对象哈希码。若哈希码不同，则没有重复的对象；若哈希码相同，则下一步使用equals方法进行比较。
+2. 使用equals方法进行比较，若为true则表示有重复的对象，反之则没有重复的对象。
+
+### 4.1.6 深入HashMap
+
+#### 4.1.6.1 底层实现
+
+**HashMap的底层实现：**
+
+1. JDK1.8之前，HashMap底层采用数组和链表组成的**链表数组**结构。
+
+```java
+// JDk1.7的计算散列码的方法
+static int hash(int h) {
+    h ^= (h >>> 20) ^ (h >>> 12);
+    return h ^ (h >>> 7) ^ (h >>> 4);
+}
+```
+
+2. JDK1.8之后，HashMap在解决哈希冲突时有了较大的变化，当链表长度大于阈值（默认为 8）（将链表转换成红黑树前会判断，如果当前数组的长度小于 64，那么会选择先进行数组扩容，而不是转换为红黑树）时，将链表转化为**红黑树**，以减少搜索时间。
+
+```java
+// JDk1.8的计算散列码的方法
+// JDK1.8的哈希码计算只经过了一次扰动，性能比JDk1.7要高
+static final int hash(Object key) {
+      int h;
+      // key.hashCode(): 返回散列值也就是hashcode
+      // ^: 按位异或
+      // >>>:无符号右移, 忽略符号位, 空位都以0补齐
+      return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+}
+```
+
+3. TreeMap、TreeSet 以及 JDK1.8 之后的HashMap 底层都用到了红黑树结构，红黑树可以解决二叉查找树在某些情况下会退化成线性结构的缺陷。
+
+#### 4.1.6.2 幂次方长度
+
+**HashMap的长度为什么是2的幂次方？**
+
+为了能让 HashMap 存取高效，尽量减少碰撞，也就是要尽量把数据分配均匀。Hash 值的范围值-2147483648 到 2147483647，前后加起来大概 40 亿的映射空间，只要哈希函数映射得比较均匀松散，一般应用是很难出现碰撞的。但问题是一个 40 亿长度的数组，内存是放不下的。所以这个散列值是不能直接拿来用的。用之前还要先做对数组的长度取模运算，得到的余数才能用来要存放的位置也就是对应的数组下标。这个数组下标的计算方法是`(n - 1) & hash（n 代表数组长度）`。这也就解释了HashMap 的长度为什么是2的幂次方。
+
+这个算法应该如何设计呢？我们首先可能会想到采用%取余的操作来实现。但是：取余(%)操作中如果除数是 2 的幂次则等价于与其除数减一的与(&)操作（也就是说hash%length==hash&(length-1)的前提是 length是2的n次方）；并且采用二进制位操作&，相对于%能够提高运算效率，这就解释了HashMap的长度为什么是2的幂次方。
+
+#### 4.1.6.3 死循环问题
+
+在多线程下使用HashMap可能会由于rehash造成元素之间形成一个循环链表，导致HashMap在get元素时出现死循环问题。不过，好在JDK1.8后解决这个问题。但是正如Sun设计的初衷一样，多线程下应该使用ConcurrentHashMap来代替HashMap。
+
+### 4.1.7 ConcurrentHashMap/Hashtable
+
+**ConcurrentHashMap/Hashtable的比较：**
+
+- **底层数据结构不同**：
+  - JDK1.7的ConcurrentHashMap底层采用**分段的数组+链表**实现；JDK1.8采用和HashMap一样的结构，即数组+链表/红黑树实现。
+  - Hashtable采用**数组+链表**实现。
+
+- **实现线程安全的方式不同**：
+  - JDK1.7时，ConcurrentHashMap采用**分段锁**策略对整个桶数进行了分割分段（Segment，Segment是一种可重入锁），每一把锁只锁容器其中一部分数据，多线程访问容器里不同数据段的数据，就不会存在锁竞争，提高并发访问率；JDK1.8时，抛弃了Segment的概念，而是直接用**Node数组+链表+红黑树**的数据结构来实现，并发控制使用**synchronized+CAS**来操作。
+  - Hashtable使用同步方法（在方法上添加synchronized关键字）保证线程安全（"**全表锁**"），效率非常低下（例如：当put的时候，也不能get）。
+
+### 4.1.8 Comparable/Comparator
+
+**Comparable/Comparator的比较：**
+
+- 出处不同：
+  - Comparable接口出自`java.lang`包，Comparable的`compareTo(Object obj)`方法用来排序。
+  - Comparator接口出自 `java.util`包，Comparator的`compare(Object obj1, Object obj2)`方法用来排序。
+- 使用不同：Comparator具有更大的灵活性。
+  - 当需要对一个集合使用自定义排序时，我们就要重写`compareTo()`方法或`compare()`方法。
+  - 当需要对一个集合实现两种排序方式时，比如一个 song 对象中的歌名和歌手名分别采用一种排序方法的话，我们可以重写compareTo()方法和使用自制的Comparator方法、或以两个Comparator来实现歌名排序和歌星名排序，第二种代表我们只能使用两个参数版的`Collections.sort()`。
+
+### 4.1.9 LinkedHashMap/HashMap
+
+
+
+
+
+
+
+### 4.1.10 LinkedHashSet/HashSet
 
 
 
@@ -3375,12 +3673,590 @@ java.nio
 
 
 
+## 4.2 进阶
 
-> [ArrayList源码分析](https://www.cnblogs.com/zhangyinhua/p/7687377.html)、[LinkedList源码分析](https://www.cnblogs.com/zhangyinhua/p/7688304.html)、[HashMap源码分析](https://www.cnblogs.com/zhangyinhua/p/7698642.html)、[Vector和Stack源码分析](https://www.cnblogs.com/zhangyinhua/p/7688722.html)、[深入理解Java集合框架](https://zhuanlan.zhihu.com/p/24687801)、[哈希表解决冲突的两种方式](https://blog.csdn.net/zkangaroo/article/details/64918956)
+### 4.2.1 集合数据结构总结
 
-# 5 常用的工具包
+集合数据结构总结：
 
-Apache commons
+- List
+  - ArrayList： Object数组。
+  - Vector： Object数组。
+  - LinkedList： 双向链表（JDK1.6之前为双向循环链表，JDK1.7则取消了循环，变成了双向链表）。
+
+- Set
+  - HashSet（无序唯一）：底层采用HashMap实现。
+  - TreeSet（有序唯一）：红黑树（自平衡的排序二叉树）。
+  - LinkedHashSet：底层采用LinkedHashMap来实现，而LinkedHashMap内部又是基于HashMap实现。
+
+- Map
+  - HashMap： JDK1.8之前由数组+链表实现，JDK1.8采用数组+链表/红黑树实现。
+  - Hashtable：数组+链表。
+  - TreeMap：红黑树（自平衡的排序二叉树）。
+  - LinkedHashMap：继承自HashMap，底层采用数组+链表/红黑树实现；此外，还增加了一条双向链表，从而保证键值对的插入顺序。
+
+### 4.2.2 七种遍历方式性能分析
+
+
+
+
+
+
+
+### 4.2.3 fail-fast/fail-safe
+
+**快速失败（fail-fast）**：Java集合的一种错误检测机制。在使用迭代器对集合进行遍历时，若在多线程下操作（增加/删除/修改）非安全失败的集合可能就会触发fail-fast机制，导致抛出`ConcurrentModificationException`异常；此外，在单线程下，若在遍历时对集合对象的内容进行了操作（增加/删除/修改）也会触发fail-fast机制；值得注意的是，forEach循环也是借助于迭代器进行遍历。
+
+**原因：**每当迭代器使用`hashNext/next`遍历下一个元素前，都会检测`modCount`变量是否为`expectedModCount`值，确认OK就返回遍历，否则抛出异常，终止遍历。若在集合被遍历期间对其进行修改（增加/删除/修改，修改为什么会改变`modCount`的值）的话，就会改变`modCount`的值，进而导致`modCount≠expectedModCount`，进而抛出`ConcurrentModificationException`异常。
+
+```java
+final void checkForComodification() {
+	if (modCount != expectedModCount)
+		throw new ConcurrentModificationException();
+}
+```
+
+**安全失败（fail-safe）：**采用安全失败机制的集合容器，在遍历时不是直接在集合内容上访问，而是先复制原有集合内容，在拷贝的集合上进行遍历。所以。在遍历过程中对原集合所作的修改并不能被迭代器检测到，故不会抛出`ConcurrentModificationException`异常。
+
+**`Arrays.asList()`避坑指南**：
+
+- Arrays.asList()方法：返回由指定数组支持的固定大小列表（数组与集合之间转化的桥梁），返回的List是可序列化并实现了RandomAccess接口。
+
+  - 需要注意，转换后的List集合，不能使用其修改集合相关的方法，其add/remove/clear方法会抛出`UnsupportedOperationException`异常。这是因为asList的返回对象是一个Arrays内部类，并未实现集合的修改方法。Arrays.asList体现的是适配器模式，只是转换接口，后台的数据仍是数组。
+
+    ```java
+    String[] str = new String[]{"you", "wu"};
+    List list = Arrays.asList(str);
+    // 第一种情况：list.add("yangguanbao");运行时异常
+    // 第二种情况：str[0]="gujin";那么list.get(0)也会随之修改
+    ```
+
+- 集合的toArray()方法：将集合转化为数组。
+
+**`Arrays.asList()`注意事项**：
+
+1.
+
+
+
+
+
+> [ArrayList源码分析](https://www.cnblogs.com/zhangyinhua/p/7687377.html)、[LinkedList源码分析](https://www.cnblogs.com/zhangyinhua/p/7688304.html)、[HashMap源码分析](https://www.cnblogs.com/zhangyinhua/p/7698642.html)、[Vector和Stack源码分析](https://www.cnblogs.com/zhangyinhua/p/7688722.html)、[深入理解Java集合框架](https://zhuanlan.zhihu.com/p/24687801)、[哈希表解决冲突的两种方式](https://blog.csdn.net/zkangaroo/article/details/64918956)、[JDK1.8ArrayList主要方法和扩容机制(源码解析)](https://blog.csdn.net/u010890358/article/details/80515284)、[Java8系列之重新认识HashMap](https://zhuanlan.zhihu.com/p/21673805)、[HashMap的7种遍历方式与性能分析](https://mp.weixin.qq.com/s/Zz6mofCtmYpABDL1ap04ow)、[HashMap的死循环](https://coolshell.cn/articles/9606.html)、[LinkedHashMap源码详细分析](https://www.imooc.com/article/22931)、[Java Array to List Examples](https://javadevnotes.com/java-array-to-list-examples)
+
+# 5 常用的工具类/包
+
+## 5.1 Math
+
+- Math.round()："四舍五入"， 该函数返回的是一个四舍五入后的的整数。 
+  - **注意：**负数，小数点第一位是5时，直接舍去，整数部分不+1； 正数，小数点第一位是5时，往整数部分+1。
+
+- Math.ceil()："向上取整"，即小数部分直接舍去，并向正数部分进1。
+
+- Math.floor()："向下取整"，即小数部分直接舍去。
+  - **注意：**Math.floor()容易出现精度问题。例如，对小数8.54保留两位小数（虽然它已经保留了2位小数），`Math.floor(8.54*100)/100  // 输出结果为 8.53, 注意是 8.53 而不是 8.54`。**Math.floor()慎用！**
+
+## 5.2 Arrays
+
+```java
+// 排序
+sort()
+// 查找
+binarySearch()
+// 比较
+equals()
+// 填充
+fill()
+// 将数组转换为列表
+asList()
+// 转换为字符串
+Arrays.toString()
+// 复制
+copyOf()
+// 截取复制
+copyRangeOf()
+```
+
+## 5.3 Collections
+
+- 排序
+
+```java
+// 反转
+void reverse(List list)
+// 随机排序
+void shuffle(List list)
+// 按自然排序的升序排序
+void sort(List list)
+// 定制排序，由Comparator控制排序逻辑
+void sort(List list, Comparator c)
+// 交换两个索引位置的元素
+void swap(List list, int i , int j)
+// 旋转。当distance为正数时，将list后distance个元素整体移到前面。当distance为负数时，将 list的前distance个元素整体移到后面。
+void rotate(List list, int distance)
+```
+
+- 查找与替换操作
+
+```java
+// 对List进行二分查找，返回索引，注意List必须是有序的
+int binarySearch(List list, Object key)
+// 根据元素的自然顺序，返回最大的元素
+int max(Collection coll)
+// 根据定制排序，返回最大元素
+int max(Collection coll, Comparator c)
+// 用指定的元素代替指定list中的所有元素
+void fill(List list, Object obj)
+// 统计元素出现次数
+int frequency(Collection c, Object o)
+// 统计target在list中第一次出现的索引，找不到则返回-1
+int indexOfSubList(List list, List target)
+// 用新元素替换旧元素
+boolean replaceAll(List list, Object oldVal, Object newVal)
+```
+
+- 同步控制：禁止使用，效率很低，**需要线程安全的集合类型时请考虑使用 JUC 包下的并发集合**。
+
+```java
+// 返回指定Collection支持的同步（线程安全的）Collection
+synchronizedCollection(Collection<T>  c)
+// 返回指定列表支持的同步（线程安全的）List
+synchronizedList(List<T> list)
+// 返回由指定映射支持的同步（线程安全的）Map
+synchronizedMap(Map<K,V> m)
+// 返回指定Set支持的同步（线程安全的）Set
+synchronizedSet(Set<T> s)
+```
+
+- 设置不可变集合
+
+```java
+// 下面三类方法的参数是原有的集合对象，返回值是该集合的"只读"版本
+// 返回一个空的、不可变的集合对象，此处的集合既可以是List/Set/Map
+emptyXxx()
+// 返回一个只包含指定对象（只有一个或一个元素）的不可变的集合对象，此处的集合可以是List/Set/Map
+singletonXxx()
+// 返回指定集合对象的不可变视图，此处的集合可以是List/Set/Map
+unmodifiableXxx()
+```
+
+## 5.4 commons-io包
+
+
+
+## 5.5 commons-lang包
+
+`commons-lang`可能是最常用的java工具包之一。commons-lang包的基本组织结构如下：
+
+![image-20201202002550571](README.assets/image-20201202002550571.png)
+
+### 5.5.1 ArchUtils
+
+**ArchUtils：**java运行环境的系统信息工具类。
+
+```java
+getArch();// 获取电脑处理器体系结构 32 bit、64 bit、unknown
+getType();// 返回处理器类型 x86、ia64、ppc、unknown
+is32Bit();// 检查处理器是否为32位
+is64Bit();// 检查处理器是否为64位
+isIA64();// 检查是否是英特尔安腾处理器类型
+isPPC();// 检查处理器是否是电源PC类型
+isX86();// 检查处理器是否是x86类型
+```
+
+### 5.5.2 ArrayUtils
+
+**ArrayUtils：**数组工具类。
+
+```java
+// add(boolean[] array, boolean element) 将给定的数据添加到指定的数组中，返回一个新的数组
+ArrayUtils.add(null, true)          = [true]
+ArrayUtils.add([true], false)       = [true, false]
+ArrayUtils.add([true, false], true) = [true, false, true]
+// add(boolean[] array, int index, boolean element) 将给定的数据添加到指定的数组下标中，返回一个新的数组
+ArrayUtils.add(null, 0, true)          = [true]
+ArrayUtils.add([true], 0, false)       = [false, true]
+ArrayUtils.add([false], 1, true)       = [false, true]
+ArrayUtils.add([true, false], 1, true) = [true, true, false]
+// addAll(boolean[] array1, boolean... array2) 将给定的多个数据添加到指定的数组中，返回一个新的数组
+ArrayUtils.addAll(array1, null)   = cloned copy of array1
+ArrayUtils.addAll(null, array2)   = cloned copy of array2
+ArrayUtils.addAll([], [])         = []
+// clone(boolean[] array) 复制数组并返回 结果数组为空将返回空
+// contains(boolean[] array, boolean valueToFind) 检查该数据在该数组中是否存在，返回一个boolean值
+// getLength(Object array) 返回该数组长度
+ArrayUtils.getLength(null)            = 0
+ArrayUtils.getLength([])              = 0
+ArrayUtils.getLength([null])          = 1
+ArrayUtils.getLength([true, false])   = 2
+ArrayUtils.getLength([1, 2, 3])       = 3
+ArrayUtils.getLength(["a", "b", "c"]) = 3
+// hashCode(Object array) 返回该数组的哈希Code码
+// indexOf(boolean[] array, boolean valueToFind) 从数组的第一位开始查询该数组中是否有指定的数值，存在返回index的数值，否则返回-1
+// indexOf(boolean[] array, boolean valueToFind, int startIndex) 从数组的第startIndex位开始查询该数组中是否有指定的数值，存在返回index的数值，否则返回-1
+// insert(int index, boolean[] array, boolean... values) 向指定的位置往该数组添加指定的元素，返回一个新的数组
+ArrayUtils.insert(index, null, null)      = null
+ArrayUtils.insert(index, array, null)     = cloned copy of 'array'
+ArrayUtils.insert(index, null, values)    = null
+// isEmpty(boolean[] array) 判断该数组是否为空，返回一个boolean值
+// isNotEmpty(boolean[] array) 判断该数组是否为空，而不是null
+// isSameLength(boolean[] array1, boolean[] array2) 判断两个数组的长度是否一样，当数组为空视长度为0。返回一个boolean值
+// isSameType(Object array1, Object array2) 判断两个数组的类型是否一样，返回一个boolean值
+// isSorted(boolean[] array) 判断该数组是否按照自然排列顺序排序，返回一个boolean值
+// isSorted(T[] array, Comparator<T> comparator) 判断该数组是否按照比较器排列顺序排序，返回一个boolean值
+// lastIndexOf(boolean[] array, boolean valueToFind) 从数组的最后一位开始往前查询该数组中是否有指定的数值，存在返回index的数值，否则返回-1
+// lastIndexOf(boolean[] array, boolean valueToFind, int startIndex) 从数组的最后startIndex位开始往前查询该数组中是否有指定的数值，存在返回index的数值，否则返回-1
+// nullToEmpty(boolean[] array) 将null转换为空的数组,如果数组不为null,返回原数组,如果数组为null,返回一个空的数组
+// remove(boolean[] array, int index) 删除该数组指定位置上的元素，返回一个新的数组，所有后续元素左移（下标减1）
+ArrayUtils.remove([true], 0)              = []
+ArrayUtils.remove([true, false], 0)       = [false]
+ArrayUtils.remove([true, false], 1)       = [true]
+ArrayUtils.remove([true, true, false], 1) = [true, false]
+// removeAll(boolean[] array, int... indices) 删除该数组多个指定位置上的元素，返回一个新的数组，所有后续元素左移（下标减1）
+ArrayUtils.removeAll([true, false, true], 0, 2) = [false]
+ArrayUtils.removeAll([true, false, true], 1, 2) = [true]
+// removeAllOccurences(boolean[] array, boolean element) 从该数组中删除指定的元素，返回一个新的数组
+// removeElement(boolean[] array, boolean element) 从该数组中删除指定的元素，返回一个新的数组
+// removeElements(boolean[] array, boolean... values) 从该数组中删除指定数量的元素，返回一个新的数组
+// reverse(boolean[] array) 数组反转
+// reverse(boolean[] array, int startIndexInclusive, int endIndexExclusive) 数组从指定位置区间进行反转
+// shuffle(boolean[] array) 把数组中的元素按随机顺序重新排列
+// subarray(boolean[] array, int startIndexInclusive, int endIndexExclusive) 截取数组，按指定位置区间截取并返回一个新的数组
+// swap(boolean[] array, int offset1, int offset2) 指定该数组的两个位置的元素交换进行交换
+ArrayUtils.swap([1, 2, 3], 0, 2) -> [3, 2, 1]
+ArrayUtils.swap([1, 2, 3], 0, 0) -> [1, 2, 3]
+ArrayUtils.swap([1, 2, 3], 1, 0) -> [2, 1, 3]
+ArrayUtils.swap([1, 2, 3], 0, 5) -> [1, 2, 3]
+ArrayUtils.swap([1, 2, 3], -1, 1) -> [2, 1, 3]
+// toArray(T... items) 创建数组
+String[] array = ArrayUtils.toArray("1", "2");
+String[] emptyArray = ArrayUtils.<String>toArray();
+// toMap(Object[] array) 将二维数组转换成Map并返会Map
+Map colorMap = ArrayUtils.toMap(new String[][] {
+    {"RED", "#FF0000"},
+    {"GREEN", "#00FF00"},
+    {"BLUE", "#0000FF"}}
+);
+// toObject(boolean[] array) 将基本类型数组转换成对象类型数组并返回
+// toPrimitive(Boolean[] array) 将对象类型数组转换成基本类型数组并返回
+// toString(Object array) 将数组转换为string字符串并返回
+// toStringArray(Object[] array) 将Object数组转换为String数组类型
+```
+
+### 5.5.3 BooleanUtils
+
+**BooleanUtils：**布尔工具包。
+
+```java
+// and(boolean... array) 逻辑与
+// compare(boolean x, boolean y) 比较两个布尔值并返回int类型 如果x == y返回0， !x && y 返回小于 0 ，x && !y 返回大于0
+// isFalse(Boolean bool) 是否是假并返回boolean
+// isTrue(Boolean bool) 是否是真并返回boolean
+// negate(Boolean bool) 逻辑非
+// or(boolean... array) 逻辑或
+// toBoolean(Boolean bool) 将对象类型转换为基本数据类型并返回
+// toBoolean(int value) 将int类型转换为boolean类型并返回
+// toBoolean(String str) 将string类型转换为boolean类型并返回
+// toInteger(boolean bool) 将boolean类型数据转换为int类型并返回
+// toStringOnOff(boolean bool) 将boolean类型数据转换为String类型'on' or 'off'并返回
+// toStringTrueFalse(Boolean bool) 将boolean类型数据转换为String类型''true' or 'false'并返回
+// toStringYesNo(boolean bool) 将boolean类型数据转换为String类型'yes' or 'no'并返回
+// xor(boolean... array) 异或
+```
+
+### 5.5.4 ClassPathUtils
+
+**ClassPathUtils：**class路径工具。
+
+```java
+// toFullyQualifiedName(Class<?> context, String resourceName) 返回一个由class包名+resourceName拼接的字符串
+ClassPathUtils.toFullyQualifiedName(StringUtils.class, "StringUtils.properties") = "org.apache.commons.lang3.StringUtils.properties"
+// toFullyQualifiedName(Package context, String resourceName) 返回一个由class包名+resourceName拼接的字符串
+ClassPathUtils.toFullyQualifiedName(StringUtils.class.getPackage(), "StringUtils.properties") = "org.apache.commons.lang3.StringUtils.properties"
+// toFullyQualifiedPath(Class<?> context, String resourceName) 返回一个由class包名+resourceName拼接的字符串
+ClassPathUtils.toFullyQualifiedPath(StringUtils.class, "StringUtils.properties") = "org/apache/commons/lang3/StringUtils.properties"
+// toFullyQualifiedPath(Package context, String resourceName) 返回一个由class包名+resourceName拼接的字符串
+ClassPathUtils.toFullyQualifiedPath(StringUtils.class, "StringUtils.properties") = "org/apache/commons/lang3/StringUtils.properties"
+```
+
+### 5.5.5 EnumUtils
+
+**EnumUtils：**枚举工具类。
+
+```java
+// getEnum(Class<E> enumClass, String enumName) 通过类返回一个枚举，可能返回空
+// getEnumList(Class<E> enumClass) 通过类返回一个枚举集合
+// getEnumMap(Class<E> enumClass) 通过类返回一个枚举map
+// isValidEnum(Class<E> enumClass, String enumName) 验证enumName是否在枚举中，返回true false
+```
+
+### 5.5.6 ObjectUtils
+
+**ObjectUtils：**Object工具类。
+
+```java
+// allNotNull(Object... values) 检查所有元素是否为空,返回一个boolean
+// anyNotNull(Object... values) 检查元素是否为空,返回一个boolean,如果有一个元素不为空返回true
+// clone(T obj) 拷贝一个对象并返回
+// compare(T c1, T c2) 比较两个对象,返回一个int值
+// defaultIfNull(T object, T defaultValue) 如果对象为空返回一个默认值
+// firstNonNull(T... values) 返回数组中第一个不为空的值
+// notEqual(Object object1, Object object2) 判断两个对象不相等，返回一个boolean
+```
+
+### 5.5.7 RandomUtils
+
+**RandomUtils：**随机工具类。
+
+```java
+// nextBoolean() 返回一个随机boolean值
+// nextBytes(int count) 返回一个指定大小的随机byte数组
+// nextDouble() 返回一个随机double值
+// nextDouble(double startInclusive, double endInclusive) 返回一个指定范围的随机double值
+// nextFloat() 返回一个随机float值
+// nextFloat(float startInclusive, float endInclusive) 返回一个指定范围的随机float值
+// nextInt() 返回一个随机int值
+// nextInt(int startInclusive, int endExclusive) 返回一个指定范围的随机int值
+// nextLong() 返回一个随机long值
+// nextLong(long startInclusive, long endExclusive) 返回一个指定范围的随机long值
+```
+
+### 5.5.8 SystemUtils
+
+**SystemUtils：**操作系统工具类。
+
+```java
+// FILE_ENCODING 返回系统编码
+// IS_JAVA_1_1、...、IS_JAVA_1_8、IS_JAVA_10、IS_JAVA_9 判断java版本,返回一个boolean
+// IS_OS_LINUX 判断系统是否是linux,返回一个boolean
+// IS_OS_MAC 判断系统是否是mac,返回一个boolean
+// IS_OS_LINUX 判断系统是否是linux,返回一个boolean
+// JAVA_CLASS_PATH 返回系统CLASS_PATH值
+// JAVA_CLASS_VERSION 返回系统java版本
+// JAVA_HOME 返回系统java home
+// JAVA_RUNTIME_VERSION 返回java运行版本
+// JAVA_VERSION 返回java版本
+// OS_NAME 返回系统名
+// OS_VERSION 返回系统版本
+// USER_COUNTRY 返回用户国家编号
+// USER_DIR 返回项目文件夹
+// USER_HOME 返回系统用户主文件夹
+// USER_LANGUAGE 返回系统用户语言
+// USER_NAME 返回系统用户名
+```
+
+### 5.5.9 StringUtils
+
+**StringUtils：**字符串工具类。
+
+```java
+// abbreviate(String str, int maxWidth) 返回一个指定长度加省略号的字符串，maxWidth必须大于3
+StringUtils.abbreviate(null, *)      = null
+StringUtils.abbreviate("", 4)        = ""
+StringUtils.abbreviate("abcdefg", 6) = "abc..."
+StringUtils.abbreviate("abcdefg", 7) = "abcdefg"
+StringUtils.abbreviate("abcdefg", 8) = "abcdefg"
+StringUtils.abbreviate("abcdefg", 4) = "a..."
+StringUtils.abbreviate("abcdefg", 3) = IllegalArgumentException
+// abbreviate(String str, int offset, int maxWidth) 返回一个指定长度加省略号的字符串，maxWidth必须大于3
+// abbreviate(String str, String abbrevMarker, int maxWidth) 返回一个自定义省略号的指定长度字符串，maxWidth必须大于3
+StringUtils.abbreviate(null, "...", *)      = null
+StringUtils.abbreviate("abcdefg", null, *)  = "abcdefg"
+StringUtils.abbreviate("", "...", 4)        = ""
+StringUtils.abbreviate("abcdefg", ".", 5)   = "abcd."
+StringUtils.abbreviate("abcdefg", ".", 7)   = "abcdefg"
+StringUtils.abbreviate("abcdefg", ".", 8)   = "abcdefg"
+StringUtils.abbreviate("abcdefg", "..", 4)  = "ab.."
+StringUtils.abbreviate("abcdefg", "..", 3)  = "a.."
+StringUtils.abbreviate("abcdefg", "..", 2)  = IllegalArgumentException
+StringUtils.abbreviate("abcdefg", "...", 3) = IllegalArgumentException
+// abbreviateMiddle(String str, String abbrevMarker, int maxWidth) 将字符串缩短到指定长度（length），字符串的中间部分用替换字符串（middle）显示
+StringUtils.abbreviateMiddle("abc", null, 0)      = "abc"
+StringUtils.abbreviateMiddle("abc", ".", 0)      = "abc"
+StringUtils.abbreviateMiddle("abc", ".", 3)      = "abc"
+StringUtils.abbreviateMiddle("abcdef", ".", 4)     = "ab.f"
+// appendIfMissing(String str, CharSequence suffix, CharSequence... suffixes) 如果str不是以任何suffixes结尾，将字符串suffix拼接到字符串str后面
+StringUtils.appendIfMissing(null, null) = null
+StringUtils.appendIfMissing("abc", null) = "abc"
+StringUtils.appendIfMissing("", "xyz") = "xyz"
+StringUtils.appendIfMissing("abc", "xyz") = "abcxyz"
+StringUtils.appendIfMissing("abcxyz", "xyz") = "abcxyz"
+StringUtils.appendIfMissing("abcXYZ", "xyz") = "abcXYZxyz"
+// appendIfMissingIgnoreCase(String str, CharSequence suffix, CharSequence... suffixes) 同上 不区分大小写
+// capitalize(String str) 将字符串第一个字符大写并返回
+// center(String str, int size) 用空格字符填充使字符串str位于长度为size的大字符串中间
+StringUtils.center(null, *)   = null
+StringUtils.center("", 4)     = "    "
+StringUtils.center("ab", -1)  = "ab"
+StringUtils.center("ab", 4)   = " ab "
+StringUtils.center("abcd", 2) = "abcd"
+StringUtils.center("a", 4)    = " a  "
+// center(String str, int size, char padChar) 用指定字符填充使字符串str位于长度为size的大字符串中间
+// chomp(String str) 删除字符串末尾的一个换行符,返回一个新的字符串（换行符"n", "r", or "rn"）
+StringUtils.chomp(null)          = null
+StringUtils.chomp("")            = ""
+StringUtils.chomp("abc \r")      = "abc "
+StringUtils.chomp("abc\n")       = "abc"
+StringUtils.chomp("abc\r\n")     = "abc"
+StringUtils.chomp("abc\r\n\r\n") = "abc\r\n"
+StringUtils.chomp("abc\n\r")     = "abc\n"
+StringUtils.chomp("abc\n\rabc")  = "abc\n\rabc"
+StringUtils.chomp("\r")          = ""
+StringUtils.chomp("\n")          = ""
+StringUtils.chomp("\r\n")        = ""
+// chop(String str) 删除字符串末尾的一个字符，返回一个新的字符串
+// compare(String str1, String str2) 比较两个字符串，返回一个int值:str1等于str2（或都为空）返回0;str1小于str2返回小于0;str1大于str2返回大于0
+StringUtils.compare(null, null)   = 0
+StringUtils.compare(null , "a")   < 0
+StringUtils.compare("a", null)    > 0
+StringUtils.compare("abc", "abc") = 0
+StringUtils.compare("a", "b")     < 0
+StringUtils.compare("b", "a")     > 0
+StringUtils.compare("a", "B")     > 0
+StringUtils.compare("ab", "abc")  < 0
+// contains(CharSequence seq, CharSequence searchSeq) 检查字符串中是否包含指定字符，返回boolean
+// containsAny(CharSequence cs, CharSequence... searchCharSequences) 检查字符串中是否包含任一字符，返回boolean
+// containsNone(CharSequence cs, String invalidChars) 检查字符串不包含指定字符，返回boolean
+// containsOnly(CharSequence cs, String validChars) 检查字符串只包含特定的字符，返回boolean
+// containsWhitespace(CharSequence seq) 检查字符串中是否包含空格字符，返回boolean
+// countMatches(CharSequence str, CharSequence sub) 检查字符串中出现指定字符的次数，返回一个int值
+// defaultIfBlank(T str, T defaultStr) 如果字符串为null、空（""），或全是空格，将返回指定字符串，否则返回原值
+// defaultIfEmpty(T str, T defaultStr) 如果字符串为null、空（""），将返回指定字符串，否则返回原值
+// defaultString(String str) 如果字符串为null，将返回空的字符串（""），否则返回原值
+// defaultString(String str, String defaultStr) 如果字符串为null，将返回指定字符，否则返回原值
+// deleteWhitespace(String str) 删除字符串中的空格字符，并返回新的字符串
+// difference(String str1, String str2) 比较两个字符串差异，并返回差异的字符，返回第二个字符串的剩余部分，这意味着“ABC”和“AB”之间的区别是空字符串而不是“C”。
+// endsWith(CharSequence str, CharSequence suffix) 检查字符串是否以指定字符结尾，返回一个boolean
+// endsWithAny(CharSequence sequence, CharSequence... searchStrings) 检查字符串是否以指定字符数组结尾，返回一个boolean
+// endsWithIgnoreCase(CharSequence str, CharSequence suffix) 检查字符串是否以指定字符（不区分大小写）结尾，返回一个boolean
+// equals(CharSequence cs1, CharSequence cs2) 比较两个字符串是否相等，返回一个boolean
+// equalsAnyIgnoreCase(CharSequence string, CharSequence... searchStrings) 比较两个字符串是否相等（不区分大小写），返回一个boolean
+// equalsAny(CharSequence string, CharSequence... searchStrings) 比较字符串是否与指定字符串数组中某一值相等，返回一个boolean
+// equalsAnyIgnoreCase(CharSequence string, CharSequence... searchStrings) 比较字符串是否与指定字符串数组中某一值相等（不区分大小写），返回一个boolean
+// getCommonPrefix(String... strs) 获取字符串数组元素公共字符，返回string
+// indexOf(CharSequence seq, CharSequence searchSeq) 检查指定字符在字符串中出现的位置，返回一个int值
+// indexOfIgnoreCase(CharSequence seq, CharSequence searchSeq) 检查指定字符在字符串中出现的位置（不区分大小写），返回一个int值
+// isAllBlank(CharSequence... css) 检查数组所有字符是否为null、empty、或全是空格字符，返回一个boolean
+// isAllEmpty(CharSequence... css) 检查数组所有字符是否为null、empty，返回一个boolean
+// isAllLowerCase(CharSequence cs) 检查字符串中所有字符是否是小写，返回一个boolean
+// isAllUpperCase(CharSequence cs) 检查字符串中所有字符是否是大写，返回一个boolean
+// isAnyBlank(CharSequence... css) 检查数组中字符串是否有一个为null、empty或全是空格字符，返回一个boolean
+// isAnyEmpty(CharSequence... css) 检查数组中字符串是否有一个为null、empty，返回一个boolean
+// isBlank(CharSequence cs) 检查字符串是否为null、empty或空格字符，返回一个boolean
+StringUtils.isBlank(null)      = true
+StringUtils.isBlank("")        = true
+StringUtils.isBlank(" ")       = true
+StringUtils.isBlank("bob")     = false
+StringUtils.isBlank("  bob  ") = false
+// isEmpty(CharSequence cs) 检查字符串是否为null、empty，返回一个boolean
+StringUtils.isEmpty(null)      = true
+StringUtils.isEmpty("")        = true
+StringUtils.isEmpty(" ")       = false
+StringUtils.isEmpty("bob")     = false
+StringUtils.isEmpty("  bob  ") = false
+// isNotBlank(CharSequence cs) 检查字符串是否不为null、empty或空格字符，返回一个boolean
+// isNotEmpty(CharSequence cs) 检查字符串是否不为null、empty，返回一个boolean
+// isNumeric(CharSequence cs) 检查字符串是否是数字，返回一个boolean
+// isWhitespace(CharSequence cs) 检查字符串是否是空格字符，返回一个boolean
+// join(byte[] array, char separator) 将字节数组转换成string，以指定字符分隔
+StringUtils.join(null, *)               = null
+StringUtils.join([], *)                 = ""
+StringUtils.join([null], *)             = ""
+StringUtils.join([1, 2, 3], ';')  = "1;2;3"
+StringUtils.join([1, 2, 3], null) = "123"
+// joinWith(String separator, Object... objects) 将多个元素已指定字符分隔拼接成String
+StringUtils.joinWith(",", {"a", "b"})        = "a,b"
+StringUtils.joinWith(",", {"a", "b",""})     = "a,b,"
+StringUtils.joinWith(",", {"a", null, "b"})  = "a,,b"
+StringUtils.joinWith(null, {"a", "b"})       = "ab"
+// lastIndexOf(CharSequence seq, CharSequence searchSeq) 获取指定字符在字符串中的最后一个索引位置
+StringUtils.lastIndexOf(null, *)          = -1
+StringUtils.lastIndexOf(*, null)          = -1
+StringUtils.lastIndexOf("", "")           = 0
+StringUtils.lastIndexOf("aabaabaa", "a")  = 7
+StringUtils.lastIndexOf("aabaabaa", "b")  = 5
+StringUtils.lastIndexOf("aabaabaa", "ab") = 4
+StringUtils.lastIndexOf("aabaabaa", "")   = 8
+// left(String str, int len) 返回从左边开始指定大小的字符串
+StringUtils.left(null, *)    = null
+StringUtils.left(*, -ve)     = ""
+StringUtils.left("", *)      = ""
+StringUtils.left("abc", 0)   = ""
+StringUtils.left("abc", 2)   = "ab"
+StringUtils.left("abc", 4)   = "abc"
+// right(String str, int len) 同上相反
+// length(CharSequence cs) 获取字符串大小，返回一个int
+// lowerCase(String str) 将字符串转换为小写，返回一个string
+// upperCase(String str) 同上相反
+// mid(String str, int pos, int len) 获取字符串指定位置区间的字符，返回一个string
+// overlay(String str, String overlay, int start, int end) 在字符串位置区间插入指定字符，返回一个string
+// prependIfMissing(String str, CharSequence prefix, CharSequence... prefixes) 在字符串最左边插入指定字符，如果已存在，将不插入，返回一个string
+// prependIfMissingIgnoreCase(String str, CharSequence prefix, CharSequence... prefixes) 同上，只是不区分大小写
+// remove(String str, char remove) 删除字符串中指定字符，返回一个string
+// removeIgnoreCase(String str, String remove) 同上，只是不区分大小写
+// removeAll(String text, String regex) 根据匹配规则删除所有字符，返回一个string
+StringUtils.removeAll(null, *)      = null
+StringUtils.removeAll("any", null)  = "any"
+StringUtils.removeAll("any", "")    = "any"
+StringUtils.removeAll("any", ".*")  = ""
+StringUtils.removeAll("any", ".+")  = ""
+StringUtils.removeAll("abc", ".?")  = ""
+StringUtils.removeAll("A<__>\n<__>B", "<.*>")      = "A\nB"
+StringUtils.removeAll("A<__>\n<__>B", "(?s)<.*>")  = "AB"
+StringUtils.removeAll("ABCabc123abc", "[a-z]")     = "ABC123"
+// removeEnd(String str, String remove) 删除字符串结尾指定字符，返回一个string
+StringUtils.removeEnd(null, *)      = null
+StringUtils.removeEnd("", *)        = ""
+StringUtils.removeEnd(*, null)      = *
+StringUtils.removeEnd("www.domain.com", ".com.")  = "www.domain.com"
+StringUtils.removeEnd("www.domain.com", ".com")   = "www.domain"
+StringUtils.removeEnd("www.domain.com", "domain") = "www.domain.com"
+StringUtils.removeEnd("abc", "")    = "abc"
+// removeStart(String str, String remove) 同上相反
+// removeEndIgnoreCase(String str, String remove) 同上，只是不区分大小写
+// removeFirst(String text, String regex) 根据匹配规则删除第一次出现的字符，返回一个string
+// repeat(String str, int repeat) 将字符重复指定次数拼接成新的字符串，返回一个string
+// replace(String text, String searchString, String replacement) 用replacement替换字符串中的所有searchString，返回一个string
+// reverse(String str) 将字符串反转，返回一个string
+// reverseDelimited(String str, char separatorChar) 将字符串指定分隔符出的字符反转
+StringUtils.reverseDelimited(null, *)      = null
+StringUtils.reverseDelimited("", *)        = ""
+StringUtils.reverseDelimited("a.b.c", 'x') = "a.b.c"
+StringUtils.reverseDelimited("a.b.c", ".") = "c.b.a"
+// split(String str, String separatorChars) 将字符串以指定字符分隔，返回数组
+StringUtils.split(null, *)         = null
+StringUtils.split("", *)           = []
+StringUtils.split("abc def", null) = ["abc", "def"]
+StringUtils.split("abc def", " ")  = ["abc", "def"]
+StringUtils.split("abc  def", " ") = ["abc", "def"]
+StringUtils.split("ab:cd:ef", ":") = ["ab", "cd", "ef"]
+// substring(String str, int start) 将字符串从指定位置区间截取，返回string
+// swapCase(String str) 将字符串大小写互转，返回一个string
+StringUtils.swapCase(null)                 = null
+StringUtils.swapCase("")                   = ""
+StringUtils.swapCase("The dog has a BONE") = "tHE DOG HAS A bone"
+// toEncodedString(byte[] bytes, Charset charset) 将字符串转为指定编码格式，返回一个string
+// trim(String str) 去除字符串空格
+// trimToEmpty(String str) 去除字符串空格，null转为empty，返回一个string
+StringUtils.trimToEmpty(null)          = ""
+StringUtils.trimToEmpty("")            = ""
+StringUtils.trimToEmpty("     ")       = ""
+StringUtils.trimToEmpty("abc")         = "abc"
+StringUtils.trimToEmpty("    abc    ") = "abc"
+```
+
+
+
+
+
+
+
+
+
+
+
+> 参考博客文章：[commons-lang3工具类学习（一）](https://blog.csdn.net/u012240455/article/details/79014161?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522160683981119724818097015%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=160683981119724818097015&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_v2~rank_blog_default-2-79014161.pc_v2_rank_blog_default&utm_term=commons-lang3&spm=1018.2118.3001.4450)、[commons-lang3工具类学习（二）](https://blog.csdn.net/u012240455/article/details/79014192?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522160683981119724818097015%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=160683981119724818097015&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_v2~rank_blog_default-3-79014192.pc_v2_rank_blog_default&utm_term=commons-lang3&spm=1018.2118.3001.4450)、[commons-lang3工具类学习（三）](https://blog.csdn.net/u012240455/article/details/79014224?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522160683981119724818097015%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=160683981119724818097015&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_v2~rank_blog_default-1-79014224.pc_v2_rank_blog_default&utm_term=commons-lang3&spm=1018.2118.3001.4450)、[commons-lang3常用工具类api整理](https://blog.csdn.net/qq_37334135/article/details/95480230?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522160683970819195271630309%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=160683970819195271630309&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~top_click~default-1-95480230.pc_v2_rank_blog_default&utm_term=commons-lang3&spm=1018.2118.3001.4450)
+
+## 5.6 commons-fileupload包
 
 
 
@@ -4741,11 +5617,11 @@ Java中栈和队列都可以用LinkedList来模拟；此外，栈还可以用Sta
 | [0455.分发饼干](https://leetcode-cn.com/problems/assign-cookies/) |         排序+贪心算法         |       O(nlog(n))       |        O(1)         |
 | [0575.分糖果](https://leetcode-cn.com/problems/distribute-candies/) |            散列表             |          O(n)          |        O(n)         |
 | [0821.字符的最短距离](https://leetcode-cn.com/problems/shortest-distance-to-a-character)⭐ |         正遍历+反遍历         |          O(n)          |        O(n)         |
-| [1332.删除回文子序列](https://leetcode-cn.com/problems/remove-palindromic-subsequences/)⭐ |     审题的重要性（逻辑）      |          O(1)          |        O(1)         |
+| [1332.删除回文子序列](https://leetcode-cn.com/problems/remove-palindromic-subsequences/) |     审题的重要性（逻辑）      |          O(1)          |        O(1)         |
 | [1260.二维网格迁移](https://leetcode-cn.com/problems/shift-2d-grid/description/)⭐ |             取模              |         O(m*n)         |       O(m*n)        |
 | [0874.模拟行走机器人](https://leetcode-cn.com/problems/walking-robot-simulation/)⭐ | 逻辑+散列表（将坐标映射为值） |         O(n+k)         |        O(k)         |
 | [0002.两数相加](https://leetcode-cn.com/problems/add-two-numbers/) |           链表遍历            |          O(n)          |        O(n)         |
-|                                                              |                               |                        |                     |
+| [0003.无重复字符的最长子串](https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/)⭐ |      散列表（滑动窗口）       |          O(n)          |        O(n)         |
 |                                                              |                               |                        |                     |
 |                                                              |                               |                        |                     |
 |                                                              |                               |                        |                     |
@@ -4860,12 +5736,11 @@ JDK和OpenJDK的区别：
    - 若正在执行的是本地方法，则计数器数值为空（Undefined）。
    
 2. **虚拟机栈：**描述Java方法执行的线程内存模型。每个方法被执行时，Java虚拟机都会同步创建一个栈帧用于存储局部变量表、操作数栈、动态连接、方法出口等信息；每一个方法被调用直至执行完毕的过程，就对应着一个栈帧在虚拟机栈中从入栈到出栈的过程。
-
-   - 线程私有。
+- 线程私有。
    - 通常所说的"栈内存"就指的是虚拟机栈，或者更确切来说是指虚拟机栈中局部变量表部分。
    - 局部变量表中存储：计数数据类型、对象引用类型。
    - 虚拟机栈出现的两种异常：StackOverflowError异常和OutOfMemoryError异常。
-
+   
 3. **本地方法栈：**类似于虚拟机栈。区别是虚拟机栈为虚拟机执行Java方法服务，而本地方法栈则是为虚拟机使用到的本地方法服务。
    - 本地方法栈出现的两种异常：StackOverflowError异常和OutOfMemoryError异常。
 4. **Java堆：**作用是存放对象实例（堆是虚拟机所管理内存中最大的一块）。

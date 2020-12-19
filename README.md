@@ -3343,9 +3343,9 @@ java.nio
 
 # 4 集合源码
 
-集合的框架：
+集合的框架一栏：
 
-
+![image-20201219165410545](README.assets/image-20201219165410545.png)
 
 ## 4.1 基本面知识
 
@@ -3562,8 +3562,8 @@ public void test5() {
   |      HashMap      |  允许为null  |  允许为null  | AbstractMap |       线程不安全       |
 
 - **初始容量及扩容机制不同**：
-  - Hashtable默认的初始容量为11，之后每次扩容为2n+1（n为原来的容量大小），默认负载因子为0.75（负载因子太小了浪费空间并且会发生更多次数的resize，太大了哈希冲突增加会导致性能不好。负载因子取0.75本质是空间与时间成本的一种折中）。
-  - HashMap默认的初始容量为16，之后每次扩容为2n（n为原来的容量大小），默认负载因子为0.75。
+  - Hashtable默认的初始容量为11（之所以设计为11，是因为11是一个素数，发生哈希碰撞的概率要小于合数），之后每次扩容为2n+1（n为原来的容量大小），默认负载因子为0.75（负载因子太小了浪费空间并且会发生更多次数的resize，太大了哈希冲突增加会导致性能不好。负载因子取0.75本质是空间与时间成本的一种折中）。
+  - HashMap默认的初始容量为16（16为合数，2^n也为合数），之后每次扩容为2n（n为原来的容量大小），默认负载因子为0.75。
   - 若创建时制定了初始容量，Hashtable会直接使用给定的大小，而HashMap会将其扩充为2的幂次方大小（HashMap总是使用2的幂次方作为哈希表的大小）。
 
 - **底层数据结构不同**：
@@ -3592,7 +3592,7 @@ public void test5() {
 
 **HashMap的底层实现：**
 
-1. JDK1.8之前，HashMap底层采用数组和链表组成的**链表数组**结构。
+1. JDK1.8之前，HashMap底层采用数组和链表组成的**链表数组**结构（即"哈希桶"数组，底层对应的是Node[]）。
 
 ```java
 // JDk1.7的计算散列码的方法
@@ -3602,7 +3602,7 @@ static int hash(int h) {
 }
 ```
 
-2. JDK1.8之后，HashMap在解决哈希冲突时有了较大的变化，当链表长度大于阈值（默认为 8）（将链表转换成红黑树前会判断，如果当前数组的长度小于 64，那么会选择先进行数组扩容，而不是转换为红黑树）时，将链表转化为**红黑树**，以减少搜索时间。
+2. JDK1.8之后，HashMap在解决哈希冲突时有了较大的变化，当链表长度大于阈值（默认为 8）（将链表转换成红黑树前会判断，如果当前数组的长度小于 64，那么会选择先进行数组扩容，而不是转换为红黑树）且数组容量大于64时，将链表转化为**红黑树**，以减少搜索时间。
 
 ```java
 // JDk1.8的计算散列码的方法
@@ -3655,23 +3655,28 @@ static final int hash(Object key) {
 
 ### 4.1.9 LinkedHashMap/HashMap
 
+**LinkedHashMap/HashMap比较：**
 
-
-
-
-
+- 类的关系：LinkedHashMap继承自HashMap。
+- 对null Key 和null Value的支持：与HashMap相同，Key和Value都允许为空。
+- 底层数据结构：
+  - HashMap：数组+链表/红黑树。
+  - LinkedMap：数组+链表/红黑树+双向链表。
+- 线程是否安全：都属于线程不安全的集合。
+- 是否有序：HashMap无序；LinkedHashMap有序（分为插入顺序和访问顺序两种），若是访问顺序，当put和get操作已经存在的Entry时，都会把Entry移动到双向链表的末尾（其实是先删除再插入）。
 
 ### 4.1.10 LinkedHashSet/HashSet
 
+**LinkedHashSet/HashSet比较：**
 
+- 类的关系：LinkedHashSet继承自HashSet。
+- 对null Key 和null Value的支持：HashSet、LinkedHashSet均只可以存储一个null。
+- 底层数据结构：
+  - HashSet：底层使用HashMap实现，采用数组+链表/红黑树结构。
+  - LinkedHashSet：采用数组+链表/红黑树+双向链表结构。
 
-
-
-
-
-
-
-
+- 线程是否安全：都属于线程不安全的集合。
+- 是否有序：HashSet无序；LinkedHashSet有序。
 
 ## 4.2 进阶
 
@@ -3695,13 +3700,135 @@ static final int hash(Object key) {
   - TreeMap：红黑树（自平衡的排序二叉树）。
   - LinkedHashMap：继承自HashMap，底层采用数组+链表/红黑树实现；此外，还增加了一条双向链表，从而保证键值对的插入顺序。
 
-### 4.2.2 七种遍历方式性能分析
+### 4.2.2 HashMap七种遍历方式性能
 
+**HashMap七种遍历方式如下：**
 
+1. 迭代器（Iterator）EntrySet的方式。
+2. 迭代器（Iterator）KeySet的方式。
+3. forEach EntrySet的方式。
+4. forEach KeySet的方式。
+5. Lambda表达式的方式。
+6. Stream API单线程的方式。
+7. Stream API多线程的方式。
 
+```java
+// 使用JMH对以上七种遍历方式进行测试
+// Benchmark                       Mode  Cnt  Score   Error   Units
+// HashMapTest.entrySet           thrpt    5  4.181 ± 0.170  ops/ms
+// HashMapTest.forEachEntrySet    thrpt    5  4.224 ± 0.837  ops/ms
+// HashMapTest.forEachKeySet      thrpt    5  4.334 ± 0.297  ops/ms
+// HashMapTest.keySet             thrpt    5  4.304 ± 0.440  ops/ms
+// HashMapTest.lambda             thrpt    5  4.237 ± 0.179  ops/ms
+// HashMapTest.parallelStreamApi  thrpt    5  2.426 ± 0.273  ops/ms
+// HashMapTest.streamApi          thrpt    5  4.525 ± 2.226  ops/ms
+@BenchmarkMode(Mode.Throughput) // 测试类型：吞吐量
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@Warmup(iterations = 2, time = 1, timeUnit = TimeUnit.SECONDS) // 预热 2 轮，每次 1s
+@Measurement(iterations = 5, time = 3, timeUnit = TimeUnit.SECONDS) // 测试 5 轮，每次 3s
+@Fork(1) // fork 1 个线程
+@State(Scope.Thread) // 每个测试线程一个实例
+public class HashMapTest {
+    static Map<Integer, String> map = new HashMap() {{
+        // 添加数据
+        for (int i = 0; i < 10; i++) {
+            put(i, "val:" + i);
+        }
+    }};
 
+    public static void main(String[] args) throws RunnerException {
+        // 启动基准测试
+        Options opt = new OptionsBuilder()
+                .include(HashMapTest.class.getSimpleName()) // 要导入的测试类
+                .output("C:/Users/zcpro/Desktop/jmh-map.log") // 输出测试结果的文件
+                .build();
+        new Runner(opt).run(); // 执行测试
+    }
 
+    @Benchmark
+    public void entrySet() {
+        // 使用迭代器（Iterator）EntrySet的方式进行遍历
+        Iterator<Map.Entry<Integer, String>> iterator = map.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Integer, String> entry = iterator.next();
+            System.out.println(entry.getKey());
+            System.out.println(entry.getValue());
+        }
+    }
 
+    @Benchmark
+    public void keySet() {
+        // 使用迭代器（Iterator）KeySet的方式进行遍历
+        Iterator<Integer> iterator = map.keySet().iterator();
+        while (iterator.hasNext()) {
+            Integer key = iterator.next();
+            System.out.println(key);
+            System.out.println(map.get(key));
+        }
+    }
+
+    @Benchmark
+    public void forEachEntrySet() {
+        // 使用ForEach EntrySet的方式进行遍历
+        for (Map.Entry<Integer, String> entry : map.entrySet()) {
+            System.out.println(entry.getKey());
+            System.out.println(entry.getValue());
+        }
+    }
+
+    @Benchmark
+    public void forEachKeySet() {
+        // 使用ForEach KeySet的方式进行遍历
+        for (Integer key : map.keySet()) {
+            System.out.println(key);
+            System.out.println(map.get(key));
+        }
+    }
+
+    @Benchmark
+    public void lambda() {
+        // 使用Lambda表达式的方式进行遍历
+        map.forEach((key, value) -> {
+            System.out.println(key);
+            System.out.println(value);
+        });
+    }
+
+    @Benchmark
+    public void streamApi() {
+        // 使用Stream API单线程的方式进行遍历
+        map.entrySet().stream().forEach((entry) -> {
+            System.out.println(entry.getKey());
+            System.out.println(entry.getValue());
+        });
+    }
+
+    @Benchmark
+    public void parallelStreamApi() {
+        // 使用Stream API多线程的方式进行遍历
+        map.entrySet().parallelStream().forEach((entry) -> {
+            System.out.println(entry.getKey());
+            System.out.println(entry.getValue());
+        });
+    }
+}
+```
+
+**总结：**
+
+1. **HashMap除了Stream API多线程（并行循环parallelStream）的方式性能比较高之外，其他的遍历方式在性能方面几乎没有任何差别**。
+2. 无论是forEach遍历还是迭代器遍历，EntrySet的遍历性能都要略高于KeySet（相差不大）。
+3. 从`HashMapTest.class`字节码文件可以看出：
+   - 使用迭代器和forEach遍历的底层实现一致（相当于forEach是一种语法糖）。
+   - Lambda表达式采用Key-Value对遍历，类似于KeySet遍历。
+   - Stream单线程和Stream多线程均采用EntrySet遍历，多线程遍历性能提升极大。
+4. 从安全性角度：
+   - 在迭代器遍历中使用迭代器本身删除元素安全。
+   - 在forEach遍历中使用集合本身操作（增加/删除/修改）元素不安全，会出现`ConcurrentModificationException`异常。
+   - 在Lambda遍历中使用集合本身操作（增加/删除/修改）元素不安全，会出现`ConcurrentModificationException`异常；可以先使用Lambda的 removeIf方法删除多余的数据，再进行循环才是一种正确操作集合的方式。
+   - 在Stream遍历中使用集合本身操作（增加/删除/修改）元素不安全，会出现`ConcurrentModificationException`异常；可以在流中使用filter对集合元素进行过滤达到"删除"的效果。
+
+![image-20201219112315157](README.assets/image-20201219112315157.png)
 
 ### 4.2.3 fail-fast/fail-safe
 
@@ -3735,9 +3862,33 @@ final void checkForComodification() {
 
 **`Arrays.asList()`注意事项**：
 
-1.
+1. 传入的数组必须是对象数组，而不是基本类型。
 
+   ```java
+   // 当传入一个基本数据类型数组时，Arrays.asList()的真正得到的参数就不是数组中的元素，而是数组对象本身，此时List的唯一元素就是这个数组
+   public void test8() {
+       // 改成Integer[] myArray = {1, 2, 3};可以避免出现异常
+       int[] myArray = {1, 2, 3};
+       List myList = Arrays.asList(myArray);
+       System.out.println(myList.size()); // 1
+       System.out.println(myList.get(0)); // 数组地址值
+   //        System.out.println(myList.get(1)); // 报错： ArrayIndexOutOfBoundsException
+       int[] array = (int[]) myList.get(0);
+       System.out.println(Arrays.toString(array)); // [1, 2, 3]
+   }
+   ```
 
+2. 转换后的List集合，不能使用其修改集合相关的方法，其add/remove/clear方法会抛出`UnsupportedOperationException`异常。Arrays.asList()⽅法返回的并不是`java.util.ArrayList`，而是`java.util.Arrays`的⼀个内部类，这个内部类并没有实现集合的修改⽅法或者说并没有重写这些⽅法。
+
+   ```java
+   public void test9() {
+       List myList = Arrays.asList(1, 2, 3);
+       System.out.println(myList.getClass()); // class java.util.Arrays$ArrayList
+       myList.add(4); // 运⾏时报错： UnsupportedOperationException
+       myList.remove(1); // 运⾏时报错： UnsupportedOperationException
+       myList.clear(); // 运⾏时报错： UnsupportedOperationException
+   }
+   ```
 
 
 
@@ -6774,4 +6925,9 @@ public static void main(String[] args){
 > 参考博客文章：[《Effective Java (2th)》]()
 
 # 11 面试点总结
+
+必须掌握的手写代码：
+
+1. 双重检查+volatile单例模式
+2. 死锁+阻塞队列实现的死锁
 

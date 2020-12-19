@@ -125,4 +125,32 @@ public class ArraysTest {
         int[] j = Arrays.copyOfRange(h, 6, 11);
         System.out.println(Arrays.toString(j)); // [6, 6, 6, 0, 0]
     }
+
+    /**
+     * Arrays.asList()是泛型方法，传入的对象必须是对象数组
+     */
+    @Test
+    public void test8() {
+        int[] myArray = {1, 2, 3};
+        List myList = Arrays.asList(myArray);
+        System.out.println(myList.size()); // 1
+        System.out.println(myList.get(0)); // 数组地址值
+//        System.out.println(myList.get(1)); // 报错： ArrayIndexOutOfBoundsException
+        int[] array = (int[]) myList.get(0);
+        System.out.println(Arrays.toString(array)); // [1, 2, 3]
+    }
+
+    /**
+     * Arrays.asList()返回的集合是一个Arrays内部类，并未实现集合的修改方法。
+     * 其add/remove/clear方法会抛出UnsupportedOperationException异常。
+     * Arrays.asList体现的是适配器模式，只是转换接口，后台的数据仍是数组。
+     */
+    @Test
+    public void test9() {
+        List myList = Arrays.asList(1, 2, 3);
+        System.out.println(myList.getClass()); // class java.util.Arrays$ArrayList
+        myList.add(4); // 运⾏时报错： UnsupportedOperationException
+        myList.remove(1); // 运⾏时报错： UnsupportedOperationException
+        myList.clear(); // 运⾏时报错： UnsupportedOperationException
+    }
 }

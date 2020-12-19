@@ -1,0 +1,63 @@
+@startuml
+interface Iterable
+interface Collection
+Collection -up-|>Iterable
+interface List
+interface Set
+interface Queue
+List -up-|>Collection
+Set -up-|>Collection
+Queue -up-|>Collection
+class ArrayList
+class LinkedList
+ArrayList .up.|> List
+LinkedList .up.|>List
+interface Deque
+interface BlockingQueue
+Deque -up-|> Queue
+BlockingQueue -up-|> Queue
+LinkedList  .up.|> Deque
+class ArrayDeque
+ArrayDeque .up.|> Deque
+class Vector
+Vector .up.|> List
+class Stack
+Stack -up-|> Vector
+interface SortedSet
+SortedSet -up-|> Set
+class HashSet
+class TreeSet
+class LinkedHashSet
+HashSet .up.|> Set
+TreeSet .up.|>SortedSet
+LinkedHashSet -up-|> HashSet
+
+interface Map
+abstract class AbstractMap
+AbstractMap .up.|>Map
+interface SortedMap
+SortedMap -up-|> Map
+class Hashtable
+Hashtable .up.|> Map
+class TreeMap
+TreeMap -up-|> AbstractMap
+TreeMap .up.|> SortedMap
+class HashMap
+HashMap -up-|> AbstractMap
+class LinkedHashMap
+LinkedHashMap -up-|> HashMap
+
+class Arrays
+class Collections
+Arrays -[hidden]> Collections
+
+interface Comparable
+interface Comparator
+Comparable -[hidden]> Comparator
+
+note right of Queue: 队列接口
+note right of Deque: 双端队列接口
+note right of LinkedList: 可用作队列和栈
+note right of Stack: 常用作栈
+
+@enduml

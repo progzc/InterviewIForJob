@@ -27,7 +27,7 @@ mindmapDiagram {
 **** InputStreamReader\n字节流与字符流转换桥梁 <<pink>>
 ***** 读数据的3种方法\nint read();\nint read(char[] cbuf);\nint read(char[] cbuf, int offset, int length);<<pink>>
 **** BufferedReader <<pink>>
-***** 除InputStreamWriter3种方法外：\nString readLine();按行读（不包括任何行终止字符）<<pink>>
+***** 除InputStreamReader3种方法外：\nString readLine();按行读（不包括任何行终止字符）<<pink>>
 **** FilterReader
 
 
@@ -80,6 +80,6 @@ mindmapDiagram {
 ---- DataOutputStream
 --- 标准流(打印流) <<rose>>
 ---- PrintStream <<pink>>
------ System.in <<pink>>
+----- System.out <<pink>>
 ----- System.err <<pink>>
 @endmindmap

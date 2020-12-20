@@ -1,0 +1,85 @@
+@startmindmap
+<style>
+mindmapDiagram {
+  .green {
+    BackgroundColor lightgreen
+  }
+  .rose {
+    BackgroundColor orange
+  }
+  .lightblue {
+    BackgroundColor lightblue
+  }
+  .pink{
+    BackgroundColor pink
+  }
+}
+</style>
+* Java IO <<lightblue>>
+** Reader\n字符输入流 <<green>>
+*** 节点流 <<rose>>
+**** FileReader <<pink>>
+***** 便捷流，继承自InputStreamReader\n区别：一个是节点流，一个是处理流<<pink>>
+**** StringReader
+**** PipedReader
+**** CharArrayReader
+*** 处理流 <<rose>>
+**** InputStreamReader\n字节流与字符流转换桥梁 <<pink>>
+***** 读数据的3种方法\nint read();\nint read(char[] cbuf);\nint read(char[] cbuf, int offset, int length);<<pink>>
+**** BufferedReader <<pink>>
+***** 除InputStreamWriter3种方法外：\nString readLine();按行读（不包括任何行终止字符）<<pink>>
+**** FilterReader
+
+
+** Writer\n字符输出流 <<green>>
+*** 节点流 <<rose>>
+**** FileWriter <<pink>>
+***** 便捷流，继承自OutputStreamReader\n区别：一个是节点流，一个是处理流<<pink>>
+**** StringWriter
+**** PipedWriter
+**** CharArrayWriter
+*** 处理流 <<rose>>
+**** OutputStreamWriter\n字节流与字符流转换桥梁 <<pink>>
+***** 写数据的5种方法：\nvoid write(int c);\nvoid write(char[] cbuf);\nvoid write(char[] cbuf, int off, int len);\nvoid write(String str);\nvoid write(String str, int off, int len);<<pink>>
+**** BufferedWriter <<pink>>
+***** 写数据时必须强制刷新流\n除OutputStreamWriter5种方法外：\nvoid newLine();写换行符<<pink>>
+**** FilterWriter
+*** 打印流 <<rose>>
+**** PrintWriter <<pink>>
+
+
+-- InputStream\n字节输入流 <<green>>
+--- 节点流 <<rose>>
+---- FileInputStream <<pink>>
+----- 读数据的3种方法：\nint read();\nint read(byte[] bys);\nint read(byte[] bys, int off, int len);<<pink>>
+---- PipedInputStream
+---- ByteInputStream
+--- 处理流 <<rose>>
+---- BufferedInputStream <<pink>>
+----- 与FileInputStream方法相同 <<pink>>
+---- ObjectInputStream <<pink>>
+----- Object readObject(); <<pink>>
+---- DataInputStream
+---- SequenceInputStream
+--- 标准流 <<rose>>
+---- System.in <<pink>>
+----- 常用：new Scanner(System.in) <<pink>>
+
+
+-- OutputStream\n字节输出流 <<green>>
+--- 节点流 <<rose>>
+---- FileOutputStream <<pink>>
+----- 写数据的3种方法：\nvoid write(int by);\nvoid write(byte[] bys);\nvoid write(byte[] bys, int index, int len); <<pink>>
+---- PipedOutputStream
+---- ByteOutputStream
+--- 处理流 <<rose>>
+---- BufferedOutputStream <<pink>>
+----- 与FileOutputStream方法相同 <<pink>>
+---- ObjectOutputStream <<pink>>
+----- void writeObject(Object obj); <<pink>>
+---- DataOutputStream
+--- 标准流(打印流) <<rose>>
+---- PrintStream <<pink>>
+----- System.in <<pink>>
+----- System.err <<pink>>
+@endmindmap

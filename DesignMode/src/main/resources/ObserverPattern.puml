@@ -1,0 +1,46 @@
+@startuml
+/'事件订阅'/
+/'基础发布者'/
+class EventManager{
+  + Map<String, List<EventListener>> listeners = new HashMap<>;
+
+  + void subscribe(String eventType, EventListener listener);
+  + void unsubscribe(String eventType, EventListener listener);
+  + void notify(String eventType, File file);
+}
+
+/'具体发布者， 由其他对象追踪'/
+class Editor{
+  + EventManager events;
+  - File file;
+
+  + void openFile(String filePath);
+  + void saveFile();
+}
+Editor o-->EventManager
+
+/'通用观察者接口'/
+interface EventListener{
+  + void update(String eventType, File file);
+}
+
+/'收到通知后发送邮件'/
+class EmailNotificationListener{
+  - String email;
+
+  + void update(String eventType, File file);
+}
+EmailNotificationListener .up.|> EventListener
+
+/'收到通知后在日志中记录一条消息'/
+class LogOpenListener{
+  - File log;
+
+  + void update(String eventType, File file);
+}
+LogOpenListener .up.|> EventListener
+EventManager o--> EventListener
+
+note right of Editor: Client
+
+@enduml

@@ -1,0 +1,32 @@
+@startuml
+/'重写算法的标准步骤'/
+/'基础社交网络类'/
+abstract class Network{
+  + String userName;
+  + String password;
+
+  + boolean post(String message);
+  + {abstract} boolean logIn(String userName, String password);
+  + {abstract} boolean sendData(byte[] data);
+  + {abstract} void logOut();
+}
+
+/'具体社交网络Facebook'/
+class Facebook{
+  - void simulateNetworkLatency();
+  + boolean logIn(String userName, String password);
+  + boolean sendData(byte[] data);
+  + void logOut();
+}
+Facebook -up-|> Network
+
+/'具体社交网络Twitter'/
+class Twitter{
+  - void simulateNetworkLatency();
+  + boolean logIn(String userName, String password);
+  + boolean sendData(byte[] data);
+  + void logOut();
+}
+Twitter -up-|> Network
+
+@enduml

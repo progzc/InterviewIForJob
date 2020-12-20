@@ -1,0 +1,70 @@
+@startuml
+/'媒体播放器的接口'/
+/'通用状态接口'/
+abstract class State{
+  ~ Player player;
+
+  + {abstract} String onLock();
+  + {abstract} String onPlay();
+  + {abstract} String onNext();
+  + {abstract} String onPrevious();
+}
+State o--left--> Player
+
+/'锁定状态'/
+class LockedState{
+  + String onLock();
+  + String onPlay();
+  + String onNext();
+  + String onPrevious();
+}
+LockedState -up-|> State
+
+/'就绪状态'/
+class ReadyState{
+  + String onLock();
+  + String onPlay();
+  + String onNext();
+  + String onPrevious();
+}
+ReadyState -up-|> State
+
+/'运行状态'/
+class PlayingState{
+  + String onLock();
+  + String onPlay();
+  + String onNext();
+  + String onPrevious();
+}
+PlayingState -up-|> State
+
+/'播放器'/
+class Player{
+  - State state;
+  - boolean playing = false;
+  - List<String> playlist = new ArrayList<>;
+  - int currentTrack = 0;
+
+  + void changeState(State state);
+  + State getState();
+  + void setPlaying(boolean playing);
+  + boolean isPlaying();
+  + String startPlayback();
+  + String nextTrack();
+  + String previousTrack();
+  + void setCurrentTrackAfterStop();
+}
+Player o--right--> State
+
+/'播放器UI'/
+class UI{
+  - Player player;
+  - {static} JTextField textField = new JTextField;
+
+  + void init();
+}
+UI o--right--> Player
+
+note left of UI: Client
+
+@enduml

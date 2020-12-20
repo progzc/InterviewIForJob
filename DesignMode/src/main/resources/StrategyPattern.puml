@@ -1,0 +1,64 @@
+@startuml
+/'电子商务应用中的支付方法'/
+interface PayStrategy{
+  + boolean pay(int paymentAmount);
+  + void collectPaymentDetails();
+}
+
+/'使用PayPal支付'/
+class PayByPayPal{
+  - static final Map<String, String> DATA_BASE = new HashMap<>;
+  - final BufferedReader READER = new BufferedReader<new InputStreamReader<System.in>>;
+  - String email;
+  - String password;
+  - boolean signedIn;
+
+  + boolean pay(int paymentAmount);
+  + void collectPaymentDetails();
+  - boolean verify();
+  - void setSignedIn(boolean signedIn);
+}
+PayByPayPal .up.|> PayStrategy
+
+/'使用信用卡支付'/
+class PayByCreditCard{
+  - final BufferedReader READER = new BufferedReader<new InputStreamReader<System.in>>;
+  - CreditCard card;
+
+  + boolean pay(int paymentAmount)
+  + void collectPaymentDetails();
+  - boolean cardIsPresent();
+}
+PayByCreditCard .up.|> PayStrategy
+PayByCreditCard o--> CreditCard
+
+/'信用卡类'/
+class CreditCard{
+  - int amount;
+  - String number;
+  - String date;
+  - String cvv;
+
+  + void setAmount(int amount);
+  + int getAmount();
+}
+
+/'订单类'/
+class Order{
+  - int totalCost = 0;
+  - boolean isClosed = false;
+
+  + void processOrder(PayStrategy strategy);
+  + void setTotalCost(int cost);
+  + int getTotalCost();
+  + boolean isClosed();
+  + void setClosed();
+}
+Order o--> PayStrategy
+
+class Client{
+}
+Client --> Order
+Client ..> PayByPayPal
+
+@enduml

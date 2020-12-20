@@ -1,0 +1,77 @@
+@startuml
+/'IO框架'/
+/'接口'/
+interface Readable
+interface Closeable
+interface AutoCloseable
+interface Appendable
+interface Flushable
+AutoCloseable -up-|> Closeable
+
+/'抽象类'/
+abstract class Reader
+Reader .up.|> Readable
+Reader .up.|> Closeable
+abstract class Writer
+Writer .up.|> Appendable
+Writer .up.|> Closeable
+Writer .up.|> Flushable
+abstract class InputStream
+InputStream .down.|> Closeable
+abstract class OutputStream
+OutputStream .down.|> Closeable
+OutputStream .down.|> Flushable
+Reader -[hidden]> Writer
+
+
+/'字符输入流'/
+class InputStreamReader
+InputStreamReader -up-|> Reader
+class BufferedReader
+BufferedReader -up-|> Reader
+class FileReader
+FileReader -up-|> InputStreamReader
+
+/'字符输出流'/
+class OutputStreamWriter
+OutputStreamWriter -up-|> Writer
+class BufferedWriter
+BufferedWriter -up-|> Writer
+class FileWriter
+FileWriter -up-|> OutputStreamWriter
+class PrintWriter
+PrintWriter -up-|> Writer
+
+/'字节输入流'/
+class FileInputStream
+FileInputStream -down-|> InputStream
+class FilterInputStream
+FilterInputStream -down-|> InputStream
+class BufferedInputStream
+BufferedInputStream -down-|> FilterInputStream
+class ObjectInputStream
+ObjectInputStream -down-|> InputStream
+class System.in
+System.in -down-|> InputStream
+
+/'字节输出流'/
+class FileOutputStream
+FileOutputStream -down-|> OutputStream
+class FilterOutputStream
+FilterOutputStream -down-|> OutputStream
+class BufferedOutputStream
+BufferedOutputStream -down-|>FilterOutputStream
+class ObjectOutputStream
+ObjectOutputStream -down-|> OutputStream
+class PrintStream
+PrintStream -down-|> FilterOutputStream
+PrintStream .down.|> Appendable
+PrintStream .down.|> Closeable
+
+
+class System.in
+class System.err
+System.out -down-|> PrintStream
+System.err -down-|> PrintStream
+
+@enduml

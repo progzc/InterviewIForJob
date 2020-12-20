@@ -47,6 +47,9 @@ HashMap -up-|> AbstractMap
 class LinkedHashMap
 LinkedHashMap -up-|> HashMap
 
+class Properties
+Properties -up-|> Hashtable
+
 class Arrays
 class Collections
 Arrays -[hidden]> Collections

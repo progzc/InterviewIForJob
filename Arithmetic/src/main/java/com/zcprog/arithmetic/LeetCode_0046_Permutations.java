@@ -33,6 +33,11 @@ public class LeetCode_0046_Permutations {
         System.out.println(backtrackSolve(nums));
     }
 
+    /**
+     * 回溯法
+     * 时间复杂度：O(n*n!)
+     * 空间复杂度：O(n)
+     */
     private static List<List<Integer>> backtrackSolve(int[] nums) {
         if (nums == null) {
             return null;

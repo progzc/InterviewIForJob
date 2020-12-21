@@ -65,7 +65,7 @@ public class LeetCode_0039_CombinationSum {
         if (candidates.length < 1) {
             return ans;
         }
-        backtrack1(candidates, target, ans, combine, 0);
+        backtrack2(candidates, target, ans, combine, 0);
         return ans;
     }
 

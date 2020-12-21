@@ -39,7 +39,7 @@ public class LeetCode_0015_3Sum {
      * 2.将List添加到List先采用Arrays.asList将数组转换为List，再添加到List
      * 3.排除重复元素的技巧
      * 时间复杂度：O(n^2)
-     * 空间复杂度：取决于排序算法
+     * 空间复杂度：O(log(n))
      */
     private static List<List<Integer>> doublePointerSolve2(int[] nums) {
         List<List<Integer>> ans = new ArrayList<>();
@@ -81,7 +81,7 @@ public class LeetCode_0015_3Sum {
     /**
      * 排序+双指针
      * 时间复杂度：O(n^2)
-     * 空间复杂度：取决于排序算法
+     * 空间复杂度：O(log(n))
      */
     private static List<List<Integer>> doublePointerSolve1(int[] nums) {
         if (nums == null) {

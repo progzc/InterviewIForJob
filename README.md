@@ -671,41 +671,107 @@ public class Car {
 
 ![image-20201214221633035](README.assets/image-20201214221633035.png)
 
-### ### 备忘录模式
+### ### 备忘录模式⭐⭐
 
 **备忘录模式：**一种行为设计模式， 允许在不暴露对象实现细节的情况下保存和恢复对象之前的状态。
 
+后悔药人人都想要，但是事实却是残酷的，根本就没有后悔药可买，但是也不仅如此，在软件的世界里就有后悔药！备忘录模式就是一种后悔药，它给我们的软件提供后悔药的机制，通过它可以使系统恢复到某一特定的历史状态。
+
+所谓备忘录模式就是在不破坏封装的前提下，捕获一个对象的内部状态，并在该对象之外保存这个状态，这样可以在以后将对象恢复到原先保存的状态。它实现了对信息的封装，使得客户不需要关心状态保存的细节。保存就要消耗资源，所以备忘录模式的缺点就在于消耗资源。如果类的成员变量过多，势必会占用比较大的资源，而且每一次保存都会消耗一定的内存。
+
+**Java类库中的应用：**
+
+- 所有`java.io.Serializable`的实现都可以模拟备忘录
+- 所有`javax.faces.component.StateHolder`的实现
 
 
 
 
 
 
-### ### 观察者模式
 
 
 
 
+
+
+
+
+
+
+
+
+
+### ### 观察者模式⭐
+
+**观察者模式：**亦称"事件订阅者"/"监听者"/"Event-Subscriber"/"Listener"/"Observer"。是一种行为设计模式， 允许你定义一种订阅机制， 可在对象事件发生时通知多个"观察"该对象的其他对象。
+
+何谓观察者模式？观察者模式定义了对象之间的一对多依赖关系，这样一来，当一个对象改变状态时，它的所有依赖者都会收到通知并且自动更新。在这里，发生改变的对象称之为观察目标，而被通知的对象称之为观察者。一个观察目标可以对应多个观察者，而且这些观察者之间没有相互联系，所以么可以根据需要增加和删除观察者，使得系统更易于扩展。所以观察者提供了一种对象设计，让主题和观察者之间以松耦合的方式结合。
+
+**Java类库中的应用：**
+
+- `java.util.Observer/java.util.Observable` （极少在真实世界中使用）
+- `java.util.EventListener`的所有实现（几乎广泛存在于Swing组件中）
+- `javax.servlet.http.HttpSessionBindingListener`
+- `javax.servlet.http.HttpSessionAttributeListener`
+- `javax.faces.event.PhaseListener`
+
+![image-20201220180945111](README.assets/image-20201220180945111.png)
 
 ### ### 状态模式
 
+**状态模式：**一种行为设计模式， 让你能在一个对象的内部状态变化时改变其行为， 使其看上去就像改变了自身所属的类一样。
 
+在很多情况下我们对象的行为依赖于它的一个或者多个变化的属性，这些可变的属性我们称之为状态，也就是说行为依赖状态，即当该对象因为在外部的互动而导致他的状态发生变化，从而它的行为也会做出相应的变化。对于这种情况，我们是不能用行为来控制状态的变化，而应该站在状态的角度来思考行为，即是什么状态就要做出什么样的行为。这个就是状态模式。
 
+所以状态模式就是允许对象在内部状态发生改变时改变它的行为，对象看起来好像修改了它的类。
 
+在状态模式中我们可以减少大块的if…else语句，它是允许态转换逻辑与状态对象合成一体，但是减少if…else语句的代价就是会换来大量的类，所以状态模式势必会增加系统中类或者对象的个数。同时，状态模式是将所有与某个状态有关的行为放到一个类中，并且可以方便地增加新的状态，只需要改变对象状态即可改变对象的行为。但是这样就会导致系统的结构和实现都会比较复杂，如果使用不当就会导致程序的结构和代码混乱，不利于维护。
+
+**Java类库中的应用：**
+
+- `javax.faces.lifecycle.LifeCycle#execute()`（由`Faces­Servlet`控制，行为依赖于当前`JSF`生命周期的阶段（状态））。
+
+**识别方法：**状态模式可通过受外部控制且能根据对象状态改变行为的方法来识别。
+
+![image-20201220213845097](README.assets/image-20201220213845097.png)
 
 ### ### 策略模式⭐
 
+**策略模式：**一种行为设计模式， 它能让你定义一系列算法， 并将每种算法分别放入独立的类中， 以使算法的对象能够相互替换。
 
+我们知道一件事可能会有很多种方式来实现它，但是其中总有一种最高效的方式，在软件开发的世界里面同样如此，我们也有很多中方法来实现一个功能，但是我们需要一种简单、高效的方式来实现它，使得系统能够非常灵活，这就是策略模式。
 
+策略模式就是定义了算法族，分别封装起来，让他们之前可以互相转换，此模式然该算法的变化独立于使用算法的客户。在策略模式中它将这些解决问题的方法定义成一个算法群，每一个方法都对应着一个具体的算法，这里的一个算法我就称之为一个策略。虽然策略模式定义了算法，但是它并不提供算法的选择，即什么算法对于什么问题最合适这是策略模式所不关心的，所以对于策略的选择还是要客户端来做。客户必须要清楚的知道每个算法之间的区别和在什么时候什么地方使用什么策略是最合适的，这样就增加客户端的负担。同时，策略模式也非常完美的符合了"开闭原则"，用户可以在不修改原有系统的基础上选择算法或行为，也可以灵活地增加新的算法或行为。但是一个策略对应一个类将会是系统产生很多的策略类。
 
+**Java类库中的应用：**
 
+- 对`java.util.Comparator#compare() `的调用来自Collections#sort()。
+- `javax.servlet.http.HttpServlet#service­()`方法， 还有接受`Http­Servlet­Request`和`Http­Servlet­Response`对象作为参数的`do­XXX()`方法。
 
+- `javax.servlet.Filter#doFilter()`。
 
-### ### 模板方法模式
+**识别方法：** 策略模式可以通过允许嵌套对象完成实际工作的方法以及允许将该对象替换为不同对象的设置器来识别。
 
+![image-20201220170844020](README.assets/image-20201220170844020.png)
 
+### ### 模板方法模式⭐
 
+**模板方法模式：**是一种行为设计模式， 它在超类中定义了一个算法的框架（**骨架**）， 允许子类在不修改结构的情况下重写算法的特定步骤。
 
+有些时候我们做某几件事情的步骤都差不多，仅有那么一小点的不同，在软件开发的世界里同样如此，如果我们都将这些步骤都一一做的话，费时费力不讨好。所以我们可以将这些步骤分解、封装起来，然后利用继承的方式来继承即可，当然不同的可以自己重写实现嘛！这就是模板方法模式提供的解决方案。
+
+所谓模板方法模式就是在一个方法中定义一个算法的骨架，而将一些步骤延迟到子类中。模板方法使得子类可以在不改变算法结构的情况下，重新定义算法中的某些步骤。模板方法模式就是基于继承的代码复用技术的。在模板方法模式中，我们可以将相同部分的代码放在父类中，而将不同的代码放入不同的子类中。也就是说我们需要声明一个抽象的父类，将部分逻辑以具体方法以及具体构造函数的形式实现，然后声明一些抽象方法让子类来实现剩余的逻辑，不同的子类可以以不同的方式来实现这些逻辑。所以模板方法的模板其实就是一个普通的方法，只不过这个方法是将算法实现的步骤封装起来的。
+
+**Java类库中的应用：**
+
+- `java.io.InputStream`、`java.io.OutputStream`、`java.io.Reader`和`java.io.Writer`的所有非抽象方法
+- `java.util.AbstractList`、`java.util.AbstractSet`和`java.util.AbstractMap`的所有非抽象方法
+- `javax.servlet.http.HttpServlet`，所有默认发送HTTP 405"方法不允许"错误响应的`do­XXX()`方法，你可随时对其进行重写
+
+**识别方法：**模版方法可以通过行为方法来识别，该方法已有一个在基类中定义的"默认"行为。
+
+![image-20201220202941597](README.assets/image-20201220202941597.png)
 
 ### ### 访问者模式
 
@@ -1347,7 +1413,7 @@ class MyThread implements Callable<Integer> {
 
 #### 2.2.7.1 CountDownLatch
 
-**CountDownLatch（减法计数器）**：允许一个或多个线程等待直到在其他线程中执行的一组操作完成的同步辅助。
+**CountDownLatch（减法计数器，也称倒计时器）**：允许一个或多个线程等待直到在其他线程中执行的一组操作完成的同步辅助。
 
 **原理**：每次有线程调用countDown方法，则数量减1；若计数器变为0，await方法就会被唤醒，继续执行。
 
@@ -1376,7 +1442,7 @@ public class CountDownLatchDemo {
 
 #### 2.2.7.2 CyclicBarrier
 
-**CyclicBarrier（加法计数器）**：允许一组线程全部等待彼此达到共同屏障点的同步辅助。 循环阻塞在涉及固定大小的线程方的程序中很有用，这些线程必须偶尔等待彼此。 屏障被称为循环 ，因为它可以在等待的线程被释放之后重新使用。
+**CyclicBarrier（加法计数器，也称栅栏）**：允许一组线程全部等待彼此达到共同屏障点的同步辅助。 循环阻塞在涉及固定大小的线程方的程序中很有用，这些线程必须偶尔等待彼此。 屏障被称为循环 ，因为它可以在等待的线程被释放之后重新使用。
 
 ```java
 public class CyclicBarrierDemo {
@@ -3347,30 +3413,69 @@ ReentrantLock与synchronized的选择：
 
 
 
+# 3 BIO/NIO/AIO
 
+## 3.1 BIO
 
-
-
-
-
-# 3 IO/BIO/NIO/NIO2
-
-## 3.1 IO
-
-### 3.1.1 IO流分类及使用总结
+### 3.1.1 BIO流分类及使用总结
 
 ![image-20201220113532629](README.assets/image-20201220113532629.png)
 
-### 3.1.2 IO框架总结
+### 3.1.2 BIO框架总结
 
 ![image-20201220133343541](README.assets/image-20201220133343541.png)
 
-### 3.1.3 IO框架中的设计模式
+### 3.1.3 BIO源码中的设计模式
+
+- 模板方法模式：
 
 - 策略模式：File+FilenameFilter
 - 装饰模式：new BufferedWriter(new OutputStreamWriter(new FileInputStream("文件路径")))
 - 适配器模式：
 
+## 3.2 NIO/AIO
+
+**几个概念的理解（以"银行取款"为例）：**
+
+- **同步：**使用同步IO时，Java自己处理IO读写。
+  - 例：自己亲自出马持银行卡到银行取钱。
+- **异步：**使用异步IO时，Java将IO读写委托给OS处理，需要将数据缓冲区地址和大小传给OS处理，需要将数据缓冲区地址和大小传给OS，OS需要支持异步IO操作API。
+  - 例：委托一个小弟拿银行卡到银行取钱，然后给你，前提当然是需要将银行卡和密码交给小弟。
+
+- **阻塞：**使用阻塞IO时，Java调用会一直阻塞到读写完成才返回。
+  - 例： ATM排队取款，你只能等待。
+
+- **非阻塞：**使用非阻塞IO时，如果不能读写Java调用会马上返回，当IO事件分发器会通知可读写时再继续进行读写，不断循环直到读写完成。
+  - 例：柜台取款，取个号，然后坐在椅子上做其它事，等号期间广播会通知你办理，没到号你就不能去，你可以不断问大堂经理排到了没有，大堂经理如果说还没到你就不能去。
+
+```bash
+-- 综合举例
+-- 同步阻塞：自己去银行ATM取款
+-- 异步阻塞：委托小弟去银行ATM取款
+-- 异步非阻塞：委托小弟去银行柜台拿号取款
+```
+
+**Java对BIO、NIO、AIO的支持：**
+
+- Java BIO (blocking I/O)：**同步并阻塞**，服务器实现模式为**一个连接一个线程**，即客户端有连接请求时服务器端就需要启动一个线程进行处理，如果这个连接不做任何事情会造成不必要的线程开销，当然可以通过线程池机制改善。
+- Java NIO (non-blocking I/O)： **同步非阻塞**，服务器实现模式为**一个请求一个线程**，即客户端发送的连接请求都会注册到多路复用器上，多路复用器轮询到连接有I/O请求时才启动一个线程进行处理。
+- Java AIO(NIO 2) (Asynchronous I/O) ： **异步非阻塞**，服务器实现模式为**一个有效请求一个线程**，客户端的I/O请求都是由OS先完成了再通知服务器应用去启动线程进行处理。
+
+**BIO、NIO、AIO适用场景分析：**
+
+- BIO方式适用于连接数目比较小且固定的架构，对服务器资源要求比较高，并发局限于应用中，JDK1.4以前的唯一选择，但程序直观简单易理解。
+- NIO方式适用于连接数目多且连接比较短（轻操作）的架构，比如聊天服务器，并发局限于应用中，编程比较复杂，JDK1.4开始支持。
+- AIO方式使用于连接数目多且连接比较长（重操作）的架构，比如相册服务器，充分调用OS参与并发操作，编程比较复杂，JDK7开始支持。
+
+### 3.2.1 NIO
+
+**NIO与IO的主要区别：**NIO的核心在于通道（Channel，打开到IO设备（如文件、套接字）的连接，**负责传输**）和缓冲区（Buffer，**负责存储**）。
+
+|            IO             |               NIO               |
+| :-----------------------: | :-----------------------------: |
+| 面向流（Stream Oriented） |  面向缓冲区（Buffer Oriented）  |
+| 同步阻塞IO（Blocking IO） | 同步非阻塞IO（Non Blocking IO） |
+|             -             |       选择器（Selectors）       |
 
 
 
@@ -3378,10 +3483,13 @@ ReentrantLock与synchronized的选择：
 
 
 
+### 3.2.2 AIO
 
 
 
-> 参考博客文章：[Java IO中的设计模式](https://www.cnblogs.com/wxgblogs/p/5649933.html)
+
+
+> 参考博客文章：[Java IO中的设计模式](https://www.cnblogs.com/wxgblogs/p/5649933.html)、[BIO/NIO/AIO整理](https://blog.csdn.net/guanghuichenshao/article/details/79375967)
 
 # 4 集合源码
 
@@ -4160,7 +4268,7 @@ Map colorMap = ArrayUtils.toMap(new String[][] {
 
 ### 5.5.4 ClassPathUtils
 
-**ClassPathUtils：**class路径工具。
+**ClassPathUtils：** class路径工具。
 
 ```java
 // toFullyQualifiedName(Class<?> context, String resourceName) 返回一个由class包名+resourceName拼接的字符串
@@ -4186,7 +4294,7 @@ ClassPathUtils.toFullyQualifiedPath(StringUtils.class, "StringUtils.properties"
 
 ### 5.5.6 ObjectUtils
 
-**ObjectUtils：**Object工具类。
+**ObjectUtils：** Object工具类。
 
 ```java
 // allNotNull(Object... values) 检查所有元素是否为空,返回一个boolean
@@ -4905,10 +5013,10 @@ MySQL性能优化的几个方向：**库表结构优化**、**索引优化**、*
 
 ### 6.2.2 事务的ACID
 
-1. 原子性：事务不可分隔，要么全部成功，要么全部失败。
-2. 一致性：事务必须使数据库从一个一致性状态变换到另外一个一致性状态。
-3. 隔离性：事务的隔离性是指一个事务的执行不能被其他事务干扰（即对其他事务不可见）。
-4. 持久性：持久性是指一个事务一旦被提交，它对数据库中数据的改变就是永久性的。即使系统重启也不会丢失。
+1. 原子性（Atomicity）：事务不可分隔，要么全部成功，要么全部失败。
+2. 一致性（Consistency）：事务必须使数据库从一个一致性状态变换到另外一个一致性状态。
+3. 隔离性（Isolation）：事务的隔离性是指一个事务的执行不能被其他事务干扰（即对其他事务不可见）。
+4. 持久性（Durability）：持久性是指一个事务一旦被提交，它对数据库中数据的改变就是永久性的。即使系统重启也不会丢失。
 
 ### 6.2.3 事务的隔离级别
 
@@ -4916,21 +5024,21 @@ MySQL性能优化的几个方向：**库表结构优化**、**索引优化**、*
 
 1. 未提交读（READ UNCOMMITTED）：
 
-   - 事务中的修改，即时没有提交，对其他事务也都是可见的。
+   - 事务中的修改，即使没有提交，对其他事务也都是可见的。
    - 事务可以读取未提交的数据，称之为**脏读**。
 
    - 从性能上来说，不会比其他级别好太多，**实际中一般很少使用**。
 
 2. 提交读（READ COMMITTED）：
 
-   - 大多数数据库系统的默认隔离级别都是READ COMMITTED（但MySQL不是），READ COMMITTED满足ACID中隔离性的定义。
-   - 一个事务从开始直到提交之前，所做的任何修改对其他事务都不可见。这个级别也称之为**不可重复读**。
+   - **大多数数据库系统的默认隔离级别都是READ COMMITTED（但MySQL不是），READ COMMITTED满足ACID中隔离性的定义**。
+   - 一个事务从开始直到提交之前，所做的任何修改对其他事务都不可见。这个级别也称之为**不可重复读**。通俗点说，就是指在⼀个事务内多次读同⼀数据；在这个事务还没有结束时，另⼀个事务也访问该数据。那么，在第⼀个事务中的两次读数据之间，由于第⼆个事务的修改导致第⼀个事务两次读取的数据可能不⼀样。
    - 两次执行同样的查询，可能会得到不一样的结果。
 
 3. 可重复读（REPEATABLE READ）：
 
    - 解决了脏读的问题；保证了在同一个事务中多次读取同样记录的结果是一致的。
-   - 无法解决**幻读问题**。所谓幻读，是指当某个事务在读取某个范围内的记录时，另外一个事务又在该范围内插入了新的记录，当之前的事务再次读取该范围的记录时，会产生换行。
+   - 无法解决**幻读问题**。所谓幻读，是指当某个事务在读取某个范围内的记录时，另外一个事务又在该范围内插入了新的记录，当之前的事务再次读取该范围的记录时，会产生幻读。
    - **REPEATABLE READ是MySQL的默认事务隔离级别**。InnoDB和XtraDB存储引擎通过多版本并发控制解决了幻读的问题。
 
 4. 可串行化（SERIALIZABLE）：
@@ -5001,6 +5109,7 @@ MVCC只在可重复读和提交读两个隔离级别下工作。
 
 1. **尽量选择使用可以正确存储数据的最小数据类型**。
 2. **简单数据类型的操作通常需要更少的CPU周期**。
+   
    - 整型比字符操作代价更低；
    - 应该使用MySQL内建的类型而不是字符串来存储日期和时间；
    - 应该用整型存储IP地址...
@@ -5774,58 +5883,137 @@ ACOS( COS(latA) * COS(latB) * COS(lonA-lonB) + SIN(latA) * SIN(latB) ) * R
 
 Java中栈和队列都可以用LinkedList来模拟；此外，栈还可以用Stack来模拟。
 
-|                             题目                             |             思路              |       时间复杂度       |     空间复杂度      |
-| :----------------------------------------------------------: | :---------------------------: | :--------------------: | :-----------------: |
-| [0088.合并两个有序数组](https://leetcode-cn.com/problems/merge-sorted-array/) |            三指针             |         O(m+n)         |        O(1)         |
-|    [0066.加一](https://leetcode-cn.com/problems/plus-one)    |        数组的反向遍历         |          O(n)          |        O(1)         |
-| [0053.最大连续子序列/子序列和](https://leetcode-cn.com/problems/maximum-subarray/) |   动态规划/贪心算法/分治法    |          O(n)          |        O(1)         |
-| [0026.删除排序数组中的重复项](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-array/description/) |           快慢指针            |          O(n)          |        O(1)         |
-| [0020.有效的括号](https://leetcode-cn.com/problems/valid-parentheses/description) |         栈/正则表达式         |       O(n)/很快        |      O(1)/O(n)      |
-|  [0001.两数之和](https://leetcode-cn.com/problems/two-sum)   |            哈希表             |          O(n)          |        O(n)         |
-| [0021.合并两个有序链表](https://leetcode-cn.com/problems/merge-two-sorted-lists) |             递归              |         O(n+m)         |       O(n+m)        |
-| [0160.相交链表](https://leetcode-cn.com/problems/intersection-of-two-linked-lists/) |         双指针/哈希表         |     O(m+n)/O(m+n)      |      O(1)/O(m)      |
-| [0101.对称二叉树](https://leetcode-cn.com/problems/symmetric-tree/) |      递归(DFS)/迭代(BFS)      |       O(n)/O(n)        |   O(height)/O(n)    |
-| [0104.二叉树的最大深度](https://leetcode-cn.com/problems/maximum-depth-of-binary-tree/description/) |      递归(DFS)/迭代(BFS)      |       O(n)/O(n)        |    O(hight)/O(n)    |
-| [0108.将有序数组转换为二叉搜索树](https://leetcode-cn.com/problems/convert-sorted-array-to-binary-search-tree/) |           递归(LDR)           |          O(n)          |      O(log(n))      |
-| [0121.买卖股票的最佳时机](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock/description/) |        数组遍历/双指针        |       O(n)/O(n)        |      O(1)/O(1)      |
-| [0122.买卖股票的最佳时机 II](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-ii/description/) |       贪心算法/动态规划       |       O(n)/O(n)        |      O(1)/O(1)      |
-| [0125.验证回文串](https://leetcode-cn.com/problems/valid-palindrome/description/) |     双指针及常用api的使用     |          O(n)          |        O(1)         |
-| [0136.只出现一次的数字](https://leetcode-cn.com/problems/single-number/) |            位运算             |          O(n)          |        O(1)         |
-|  [0155.最小栈](https://leetcode-cn.com/problems/min-stack/)  |            辅助栈             |          O(1)          |        O(n)         |
-| [0167.两数之和II输入有序数组](https://leetcode-cn.com/problems/two-sum-ii-input-array-is-sorted/) |       双指针/二分查找法       |    O(n)/O(nlog(n))     |      O(1)/O(1)      |
-| [0169.多数元素](https://leetcode-cn.com/problems/majority-element/) |     投票法/哈希表/排序法      |  O(n)/O(n)/O(nlog(n))  | O(1)/O(n)/O(log(n)) |
-| [0172.阶乘后的零](https://leetcode-cn.com/problems/factorial-trailing-zeroes/) |             迭代              |       O(log(n))        |        O(1)         |
-| [0190.颠倒二进制位](https://leetcode-cn.com/problems/reverse-bits/) |          位运算+移位          |          O(1)          |        O(1)         |
-| [0191.位1的个数](https://leetcode-cn.com/problems/number-of-1-bits/) |            位运算             |          O(1)          |        O(1)         |
-| [0198.打家劫舍](https://leetcode-cn.com/problems/house-robber/) |           动态规划            |          O(n)          |        O(1)         |
-| [0203.移除链表元素](https://leetcode-cn.com/problems/remove-linked-list-elements/) |        哨兵节点+双指针        |          O(n)          |        O(1)         |
-| [0206.反转链表](https://leetcode-cn.com/problems/reverse-linked-list/) |         递归/迭代/栈          |    O(n)/O(n)/O(2n)     |   O(n)/O(1)/O(n)    |
-| [0219.存在重复元素 II](https://leetcode-cn.com/problems/contains-duplicate-ii/) |         散列表/哈希表         |       O(n)/O(2n)       |      O(n)/O(n)      |
-| [0226.翻转二叉树](https://leetcode-cn.com/problems/invert-binary-tree/) |           递归/迭代           |       O(n)/O(n)        |   O(log(n))/O(n)    |
-| [0232.用栈实现队列](https://leetcode-cn.com/problems/implement-queue-using-stacks/) |              栈               |  O(n)/O(1)/O(1)/O(1)   |        O(1)         |
-|  [0263.丑数](https://leetcode-cn.com/problems/ugly-number/)  |             迭代              |          O(n)          |        O(1)         |
-| [0283.移动零](https://leetcode-cn.com/problems/move-zeroes/) |            双指针             |          O(n)          |        O(1)         |
-| [0342.4的幂](https://leetcode-cn.com/problems/power-of-four/) |    位运算/位运算+数学运算     |       O(1)/O(1)        |      O(1)/O(1)      |
-| [0349.两个数组的交集](https://leetcode-cn.com/problems/intersection-of-two-arrays/) |            散列表             |          O(n)          |        O(n)         |
-| [0371.两整数之和](https://leetcode-cn.com/problems/sum-of-two-integers/) |            位运算             |          O(1)          |        O(1)         |
-| [0437.路径总和III](https://leetcode-cn.com/problems/path-sum-iii/)⭐ |    前缀和+哈希表/双重递归     | O(n)/O(nlog(n))~O(n^2) |     O(n)/O(2n)      |
-| [0455.分发饼干](https://leetcode-cn.com/problems/assign-cookies/) |         排序+贪心算法         |       O(nlog(n))       |        O(1)         |
-| [0575.分糖果](https://leetcode-cn.com/problems/distribute-candies/) |            散列表             |          O(n)          |        O(n)         |
-| [0821.字符的最短距离](https://leetcode-cn.com/problems/shortest-distance-to-a-character)⭐ |         正遍历+反遍历         |          O(n)          |        O(n)         |
-| [1332.删除回文子序列](https://leetcode-cn.com/problems/remove-palindromic-subsequences/) |     审题的重要性（逻辑）      |          O(1)          |        O(1)         |
-| [1260.二维网格迁移](https://leetcode-cn.com/problems/shift-2d-grid/description/)⭐ |             取模              |         O(m*n)         |       O(m*n)        |
-| [0874.模拟行走机器人](https://leetcode-cn.com/problems/walking-robot-simulation/)⭐ | 逻辑+散列表（将坐标映射为值） |         O(n+k)         |        O(k)         |
-| [0002.两数相加](https://leetcode-cn.com/problems/add-two-numbers/) |           链表遍历            |          O(n)          |        O(n)         |
-| [0003.无重复字符的最长子串](https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/)⭐ |      散列表（滑动窗口）       |          O(n)          |        O(n)         |
-|                                                              |                               |                        |                     |
-|                                                              |                               |                        |                     |
-|                                                              |                               |                        |                     |
-|                                                              |                               |                        |                     |
-|                                                              |                               |                        |                     |
+|                             题目                             |                    思路                     |       时间复杂度       |     空间复杂度      |
+| :----------------------------------------------------------: | :-----------------------------------------: | :--------------------: | :-----------------: |
+| [0088.合并两个有序数组](https://leetcode-cn.com/problems/merge-sorted-array/) |                   三指针                    |         O(m+n)         |        O(1)         |
+|    [0066.加一](https://leetcode-cn.com/problems/plus-one)    |               数组的反向遍历                |          O(n)          |        O(1)         |
+| [0053.最大连续子序列/子序列和](https://leetcode-cn.com/problems/maximum-subarray/) |          动态规划/贪心算法/分治法           |          O(n)          |        O(1)         |
+| [0026.删除排序数组中的重复项](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-array/description/) |                  快慢指针                   |          O(n)          |        O(1)         |
+| [0020.有效的括号](https://leetcode-cn.com/problems/valid-parentheses/description) |                栈/正则表达式                |       O(n)/很快        |      O(1)/O(n)      |
+|  [0001.两数之和](https://leetcode-cn.com/problems/two-sum)   |                   哈希表                    |          O(n)          |        O(n)         |
+| [0021.合并两个有序链表](https://leetcode-cn.com/problems/merge-two-sorted-lists) |                    递归                     |         O(n+m)         |       O(n+m)        |
+| [0160.相交链表](https://leetcode-cn.com/problems/intersection-of-two-linked-lists/) |                双指针/哈希表                |     O(m+n)/O(m+n)      |      O(1)/O(m)      |
+| [0101.对称二叉树](https://leetcode-cn.com/problems/symmetric-tree/) |             递归(DFS)/迭代(BFS)             |       O(n)/O(n)        |   O(height)/O(n)    |
+| [0104.二叉树的最大深度](https://leetcode-cn.com/problems/maximum-depth-of-binary-tree/description/) |             递归(DFS)/迭代(BFS)             |       O(n)/O(n)        |    O(hight)/O(n)    |
+| [0108.将有序数组转换为二叉搜索树](https://leetcode-cn.com/problems/convert-sorted-array-to-binary-search-tree/) |                  递归(LDR)                  |          O(n)          |      O(log(n))      |
+| [0121.买卖股票的最佳时机](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock/description/) |               数组遍历/双指针               |       O(n)/O(n)        |      O(1)/O(1)      |
+| [0122.买卖股票的最佳时机 II](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-ii/description/) |              贪心算法/动态规划              |       O(n)/O(n)        |      O(1)/O(1)      |
+| [0125.验证回文串](https://leetcode-cn.com/problems/valid-palindrome/description/) |            双指针及常用api的使用            |          O(n)          |        O(1)         |
+| [0136.只出现一次的数字](https://leetcode-cn.com/problems/single-number/) |                   位运算                    |          O(n)          |        O(1)         |
+|  [0155.最小栈](https://leetcode-cn.com/problems/min-stack/)  |                   辅助栈                    |          O(1)          |        O(n)         |
+| [0167.两数之和II输入有序数组](https://leetcode-cn.com/problems/two-sum-ii-input-array-is-sorted/) |              双指针/二分查找法              |    O(n)/O(nlog(n))     |      O(1)/O(1)      |
+| [0169.多数元素](https://leetcode-cn.com/problems/majority-element/) |            投票法/哈希表/排序法             |  O(n)/O(n)/O(nlog(n))  | O(1)/O(n)/O(log(n)) |
+| [0172.阶乘后的零](https://leetcode-cn.com/problems/factorial-trailing-zeroes/) |                    迭代                     |       O(log(n))        |        O(1)         |
+| [0190.颠倒二进制位](https://leetcode-cn.com/problems/reverse-bits/) |                 位运算+移位                 |          O(1)          |        O(1)         |
+| [0191.位1的个数](https://leetcode-cn.com/problems/number-of-1-bits/) |                   位运算                    |          O(1)          |        O(1)         |
+| [0198.打家劫舍](https://leetcode-cn.com/problems/house-robber/) |                  动态规划                   |          O(n)          |        O(1)         |
+| [0203.移除链表元素](https://leetcode-cn.com/problems/remove-linked-list-elements/) |               哨兵节点+双指针               |          O(n)          |        O(1)         |
+| [0206.反转链表](https://leetcode-cn.com/problems/reverse-linked-list/) |                递归/迭代/栈                 |    O(n)/O(n)/O(2n)     |   O(n)/O(1)/O(n)    |
+| [0219.存在重复元素 II](https://leetcode-cn.com/problems/contains-duplicate-ii/) |                散列表/哈希表                |       O(n)/O(2n)       |      O(n)/O(n)      |
+| [0226.翻转二叉树](https://leetcode-cn.com/problems/invert-binary-tree/) |                  递归/迭代                  |       O(n)/O(n)        |   O(log(n))/O(n)    |
+| [0232.用栈实现队列](https://leetcode-cn.com/problems/implement-queue-using-stacks/) |                     栈                      |  O(n)/O(1)/O(1)/O(1)   |        O(1)         |
+|  [0263.丑数](https://leetcode-cn.com/problems/ugly-number/)  |                    迭代                     |          O(n)          |        O(1)         |
+| [0283.移动零](https://leetcode-cn.com/problems/move-zeroes/) |                   双指针                    |          O(n)          |        O(1)         |
+| [0342.4的幂](https://leetcode-cn.com/problems/power-of-four/) |           位运算/位运算+数学运算            |       O(1)/O(1)        |      O(1)/O(1)      |
+| [0349.两个数组的交集](https://leetcode-cn.com/problems/intersection-of-two-arrays/) |                   散列表                    |          O(n)          |        O(n)         |
+| [0371.两整数之和](https://leetcode-cn.com/problems/sum-of-two-integers/) |                   位运算                    |          O(1)          |        O(1)         |
+| [0437.路径总和III](https://leetcode-cn.com/problems/path-sum-iii/)⭐ |           前缀和+哈希表/双重递归            | O(n)/O(nlog(n))~O(n^2) |     O(n)/O(2n)      |
+| [0455.分发饼干](https://leetcode-cn.com/problems/assign-cookies/) |                排序+贪心算法                |       O(nlog(n))       |        O(1)         |
+| [0575.分糖果](https://leetcode-cn.com/problems/distribute-candies/) |                   散列表                    |          O(n)          |        O(n)         |
+| [0821.字符的最短距离](https://leetcode-cn.com/problems/shortest-distance-to-a-character)⭐ |                正遍历+反遍历                |          O(n)          |        O(n)         |
+| [1332.删除回文子序列](https://leetcode-cn.com/problems/remove-palindromic-subsequences/) |            审题的重要性（逻辑）             |          O(1)          |        O(1)         |
+| [1260.二维网格迁移](https://leetcode-cn.com/problems/shift-2d-grid/description/)⭐ |                    取模                     |         O(m*n)         |       O(m*n)        |
+| [0874.模拟行走机器人](https://leetcode-cn.com/problems/walking-robot-simulation/)⭐ |      逻辑+散列表（**将坐标映射为值**）      |         O(n+k)         |        O(k)         |
+| [0002.两数相加](https://leetcode-cn.com/problems/add-two-numbers/) |                  链表遍历                   |          O(n)          |        O(n)         |
+| [0003.无重复字符的最长子串](https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/)⭐ |             散列表（滑动窗口）              |          O(n)          |        O(n)         |
+| [0005.最长回文字串](https://leetcode-solution-leetcode-pp.gitbook.io/leetcode-solution/medium/5.longest-palindromic-substring)⭐ |       动态规划/中心扩展/Manacher算法        |   O(n^2)/O(n^2)/O(n)   |  O(n^2)/O(1)/O(n)   |
+| [0011.盛最多水的容器](https://leetcode-cn.com/problems/container-with-most-water/description/) |         双指针（优化后比官解更快）          |          O(n)          |        O(1)         |
+|   [0015.三数之和](https://leetcode-cn.com/problems/3sum/)    |                 排序+双指针                 |         O(n^2)         |      O(log(n))      |
+| [0017.电话号码的字母组合](https://leetcode-cn.com/problems/letter-combinations-of-a-phone-number)⭐ |          **回溯法+StringBuilder**           |       O(3^m*4^n)       |       O(m+n)        |
+| [0019.删除链表的倒数第N个节点](https://leetcode-cn.com/problems/remove-nth-node-from-end-of-list/) |                  快慢指针                   |          O(n)          |        O(1)         |
+| [0022.括号生成](https://leetcode-cn.com/problems/generate-parentheses) |          **回溯法+StringBuilder**           |     O(4^n/n^(1/2))     |        O(n)         |
+| [0024.两两交换链表中的节点](https://leetcode-cn.com/problems/swap-nodes-in-pairs/) |                  递归/迭代                  |       O(n)/O(n)        |      O(n)/O(1)      |
+| [0029.两数相除](https://leetcode-cn.com/problems/divide-two-integers/)⭐ |                  两数相除                   |                        |                     |
+| [0031.下一个排列](https://leetcode-cn.com/problems/next-permutation/)⭐ |              解题的逻辑要清晰               |          O(n)          |        O(1)         |
+| [0033.搜索旋转排序数组](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/) |                   二分法                    |       O(log(n))        |        O(1)         |
+| [0039.组合总和](https://leetcode-cn.com/problems/combination-sum/) |                 **回溯法**                  |        O(n*2^n)        |        O(n)         |
+| [0040.组合总和II](https://leetcode-cn.com/problems/combination-sum-ii/) |                 **回溯法**                  |        O(n*2^n)        |        O(n)         |
+| [0046.全排列](https://leetcode-cn.com/problems/permutations/) |                 **回溯法**                  |        O(n*n!)         |        O(n)         |
+| [0047.全排列 II](https://leetcode-cn.com/problems/permutations-ii/)⭐ |             **先排序，再回溯**              |        O(n*n！)        |        O(n)         |
+| [0048.旋转图像](https://leetcode-cn.com/problems/rotate-image/) |        原地旋转/水平翻转+对角线翻转         |     O(n^2)/O(n^2)      |      O(1)/O(1)      |
+| [0049.字母异位词分组](https://leetcode-cn.com/problems/group-anagrams/)⭐ |         **排序+哈希表**/计数+哈希表         |      O(nklog(k))       |        O(nk)        |
+| [0055.跳跃游戏](https://leetcode-cn.com/problems/jump-game/) |                  贪心算法                   |          O(n)          |        O(1)         |
+| [0056.合并区间](https://leetcode-cn.com/problems/merge-intervals/) |             定制排序+链表转数组             |       O(nlog(n))       |      O(log(n))      |
+| [0060.第k个排列](https://leetcode-cn.com/problems/permutation-sequence/)⭐ |                                             |                        |                     |
+| [0061.旋转链表](https://leetcode-cn.com/problems/rotate-list/) |                    遍历                     |          O(n)          |        O(1)         |
+| [0062.不同路径](https://leetcode-cn.com/problems/unique-paths/) |                  迭代/递归                  |    O(mn)/O(2^m+2^n)    |     O(mn)/O(n)      |
+| [0073.矩阵置零](https://leetcode-cn.com/problems/set-matrix-zeroes/) |       **压缩状态法**/散列表+两次遍历        |      O(mn)/O(mn)       |     O(1)/O(m+n)     |
+| [0075.颜色分类](https://leetcode-cn.com/problems/sort-colors/) |              **双指针**/计数法              |       O(n)/O(2n)       |      O(1)/O(1)      |
+|   [0078.子集](https://leetcode-cn.com/problems/subsets/)⭐    |         **迭代枚举+位运算/回溯法**          |  O(n\*2^n)/O(n\*2^n)   |      O(n)/O(n)      |
+| [0079.单词搜索](https://leetcode-cn.com/problems/word-search/)⭐ |    **回溯法**(类似于图的遍历，暴力搜索)     |                        |                     |
+| [0080.删除排序数组中的重复项 II](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-array-ii/)⭐ |          遍历（**代码控制在5行**）          |          O(n)          |        O(1)         |
+| [0086.分隔链表](https://leetcode-cn.com/problems/partition-list/) |              哑节点+拆分再联结              |          O(n)          |        O(1)         |
+| [0090.子集 II](https://leetcode-cn.com/problems/subsets-ii/)⭐ | **排序+回溯法**/**迭代**/位运算(很难，放弃) |        O(n*2^n)        |        O(n)         |
+| [0091.解码方法](https://leetcode-cn.com/problems/decode-ways/) |                  动态规划                   |          O(n)          |        O(1)         |
+| [0092.反转链表 II](https://leetcode-cn.com/problems/reverse-linked-list-ii/)⭐ |            **迭代**/**两次递归**            |       O(1)/O(n)        |      O(1)/O(n)      |
+| [0094.二叉树的中序遍历](https://leetcode-cn.com/problems/binary-tree-inorder-traversal/) |             迭代(中序遍历)/递归             |       O(n)/O(n)        |      O(n)/O(n)      |
+| [0098.验证二叉搜索树](https://leetcode-cn.com/problems/validate-binary-search-tree/) |             迭代(中序遍历)/递归             |                        |                     |
+|                                                              |                                             |                        |                     |
 
+**算法题总结：**
 
+**常见的算法：**
 
+- 动态规划：
 
+- 多指针/快慢指针：多用于字符串、数组、链表
+
+- 迭代：二叉树常用BFS、链表反转
+
+- 递归：二叉树常用DFS、链表反转
+
+- 回溯：暴力穷举（结束条件+路径+决策），注意剪枝（减少路径）
+
+  LeetCode上关于回溯的题目归纳如下：
+
+  |    类型    |                           题目归纳                           |
+  | :--------: | :----------------------------------------------------------: |
+  | 子集、组合 | [子集](https://leetcode-cn.com/problems/subsets/)、[子集 II](https://leetcode-cn.com/problems/subsets-ii/)、[组合](https://leetcode-cn.com/problems/combinations/)、[组合总和](https://leetcode-cn.com/problems/combination-sum/)、[组合总和 II](https://leetcode-cn.com/problems/combination-sum-ii/) |
+  |   全排列   | [全排列](https://leetcode-cn.com/problems/permutations/)、[全排列 II](https://leetcode-cn.com/problems/permutations-ii/)、[字符串的全排列](https://leetcode-cn.com/problems/zi-fu-chuan-de-pai-lie-lcof/)、[字母大小写全排列](https://leetcode-cn.com/problems/letter-case-permutation/) |
+  |    搜索    | [解数独](https://leetcode-cn.com/problems/sudoku-solver/)、[单词搜索](https://leetcode-cn.com/problems/word-search/)、[N皇后](https://leetcode-cn.com/problems/eight-queens-lcci/)、[分割回文串](https://leetcode-cn.com/problems/palindrome-partitioning/)、[二进制手表](https://leetcode-cn.com/problems/binary-watch/) |
+
+- 贪心算法：侧重于逻辑
+
+- 栈/队列：FILO/FIFO，栈使用Stack(尽量弃用)/LinkedList；队列使用LinkedList。
+
+  - 队列：`offer：入队`、`poll：出队`。
+
+  - 栈：`peek：取`、`pop：出栈`、`push：入栈`。
+
+**提高效率的操作：**
+
+- 哈希表（HashMap/数组的索引和值也可看作是一种键值对）
+- 散列表（HashSet）
+- 位运算：<<、>>、>>>、&、|、~、^
+  - n&(n-1)
+  - 若a=b，a^b=0；若a任意，a^0=a
+- 二分搜索/分治法
+- 考虑是否先排序：是否可使用工具类排序
+- 空间换时间：典型代表是dp算法
+- 程序语言的限制：若字符串拼接较多，使用StringBuilder代替String
+- 正则表达式的使用
+
+**减少临界条件判断：**
+
+- 哑节点（也称哨兵节点）：链表、二叉树用得比较多。
+
+**注意事项：**
+
+- 对于引用对象，需要考虑是否能改变原对象，不然要先进行拷贝。
+
+**高难度：**
+
+- 红黑树
 
 
 
@@ -6950,26 +7138,1197 @@ public static void main(String[] args){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 > 参考博客文章：[《Effective Java (2th)》]()
 
-# 11 面试点总结
+# 11 Redis
 
-必须掌握的手写代码：
+## 11.1 背景
+
+### 11.1.1 互联网项目的架构演进
+
+**架构模型的演进**：单机MySQL—>Memcached + MySQL读写分离（垂直拆分）—> 分库分表+ MySQL集群（水平拆分）—>负载均衡 + 分库分表 + MySQ集群（水平拆分）+ 图片/文件/流媒体...服务器
+
+MySQL引擎：以前采用MyISAM（表锁）、现在采用InnoDB（行锁）。
+
+NoSQL（Not only SQL）特点：
+
+1. 数据之间没有关系，方便扩展。
+2. 大数据量高性能（Redis每秒写8万次，每秒读11万次）。
+3. 数据类型多样型（不需要事先设计数据库，随取随用）。
+
+大数据的3V+3高：数据3V（海量Volume、多样Variety、实时Velocity）；程序要3高（高并发、高可拓、高性能）。
+
+### 11.1.2 NoSQL的四大分类
+
+- KV键值对：新浪（**Redis**）、美团（Redis+Tair）、阿里/百度（Redis + Memcache）。
+- 文档型数据库：**MongoDB**（是一个介于关系型数据库和非关系型数据库的中间的产品）、ConthDB。
+- 列存储数据库：**HBase**、分布式文件系统。
+- 图形关系数据库：**Neo4J**、InfoGrid，主要用于社交网络、推荐系统。
+
+### 11.1.3 Redis介绍
+
+Redis（Remote Dictionary Server）：远程字典服务。
+
+**Redis的作用**：内存存储、持久化（rdb和aof）；**高速缓存**；发布订阅系统；地图信息分析；计时器、计数器（**浏览量**）...
+
+> 本项目使用Redis做**高速缓存**及使用Hyperloglog统计博客文章**浏览量**、统计页面**访客数**。
+
+**Redis的特性**：数据类型多样化；持久化；集群；事务...
+
+**Redis的基本指令**（指令不区分大小写，但key-value区分大小写）：
+
+- SELECT 3：切换到第3个数据库（Redis默认有16个数据库，默认使用的是第0个）。
+- DBBASE：查看数据库大小。
+- KEYS pattern：查看满足pattern正则表达式的key。
+- FLUSHDB：清空当前数据库。
+- FLUSHALL：清空全部数据库。
+
+**为什么Redis这么块**：Redis是单线程的（CPU不是Redis的性能瓶颈，机器的内存和网络带宽才是）。
+
+1. 误区一：高性能的服务器一定是多线程的？（错误）
+
+2. 误区二：多线程（CPU上下文切换也很耗时）一定比单线程效率高（错误）
+
+   原因：Redis是将所有的数据全部存放在内存中，使用单线程操作效率最高；多线程存在CPU上下文切换（很耗时）。因此，对于内存系统而言，没有上下文切换效率更高。
+
+## 11.2 基本使用
+
+### 11.2.1 常用的命令
+
+命令的使用需要在Redis官网或者菜鸟网站上查询即可。
+
+- EXISTS key：判断某个键是否存在。
+- DEL key：移除某个键。
+- EXPIRE key seconds：设置某个键的存货时间（单位是秒）。
+- TTL key：查看某个键的剩余存活时间。
+- SET key value：设置键值对。
+- GET key：获取键位key的值。
+- TYPE key：查看某个key的数据类型。
+
+### 11.2.2 五种基本数据类型
+
+五大基本数据类型是**String**、**List**、**Set**、**Hash**、**Zset**
+
+- String（字符串）
+
+```yaml
+APPEND key value  # 在原来的值上拼接字符串(若key不存在，则相当于新建一个key-value)
+STRLEN key  # 获得字符串的长度
+incr key / decr key  # 自增1/自减1
+INCRBY key num / DECRBY key num  # 自增num/自减num
+GETRANGE key start end  # 截取字符串(GETRANGE key 0 -1可以截取全部字符串)
+SETRANGE key offset value  # 替换(从offset索引处开始替换，替换的长度位value的长度)
+SETEX key seconds value  # 设置过期时间
+SETNX key value  # 若key不存在再设置key-value(在分布式锁中会常常使用);若存在则创建失败
+mset key value [key value...]  # 设置多个key-value
+mget key [key...]  # 获取多个key
+msetnx key value [key value...]  # 不存在再设置key-value(原子性的操作:要么一起成功,要么一起失败)
+getset key value  # 若存在就获取该key对应的value;若不存在就返回nil,再设置key-value
+
+# 使用场景:
+# 1. 计数器
+# 2. 统计多单位的数量
+# 3. 粉丝数
+# 4. 对象缓存存储
+```
+
+- List（链表）：可以把List当成栈、队列、阻塞队列
+
+```yaml
+LPUSH key value [value...]  # 将一个值或者多个值插入到链表的头部(左)
+RPUSH key value [value...]  # 将一个值或者多个值插入到链表的尾部(右)
+LRANGE key start stop  # 截取哪几个value（LRANGE key 0 -1 截取链表的所有元素）（不会改变链表）
+LPOP key  # 移除链表的头部元素(第一个元素)
+RPOP key  # 移除链表的尾部元素(最后一个元素)
+LINDEX key index  # 获取链表中索引位index(index从0开始)的元素
+LLEN key  # 返回链表的长度
+LREM key count value  # 移除链表中指定个数的value元素，精确匹配
+LTRIM key start stop  # 通过下表截取指定的长度（会改变链表）
+RPOPLPUSH source destination  # 移除源链表的尾部元素，并添加到目标链表的头部元素中
+LSET key index value  # 改变链表中索引位index的元素的值，设置为value(要求链表必须先存在,若不存在会报错)
+LINSERT key BEFORE|AFTER pivot value  # 在链表中哪个元素之前/或之后插入一个元素
+
+# 使用场景：
+# 1. 消息排队
+# 2. 消息队列
+# 3. 栈
+```
+
+- Set（集合）：Set中的值不能重复
+
+```yaml
+SADD key value  # 添加一个元素到Set集合中
+SMEMBERS key  # 查看Set集合中的所有元素
+SISMEMBER key value  # 判断某个元素是否在Set集合中
+SCARD key  # 获取Set集合中的元素个数
+SREM key value  # 移除Set集合中的某个元素
+SRANDMEMBER key [count]  # 随机抽取出count个元素(若未设置count,则随机抽取出1个元素)
+SPOP key  # 随机删除Set集合中的一个元素
+SMOVE source destination member  # 将source集合中的member元素移除，并添加到destination集合中
+SDIFF key1 key2  # 以key1集合为标准，比较两个集合的差集
+SINTER key1 key2  # 比较两个集合的交集（如查找共同好友）
+SUNION key1 key2  #  求两个集合的并集
+
+# 使用场景：
+# 1. 共同关注、共同爱好、推荐好友
+```
+
+- Hash（哈希）：key的value值是Map集合，相当于是key-Map
+
+```yaml
+HSET key field value  # 在hash表中设置一个field-value
+HGET key field  # 获取hash表的一个字段值
+HMSET key field value [field value...]  # 在hash表中设置多个field-value
+HMGET key field [field...]  # 获取hash表的多个字段值
+HGETALL key  # 获取hash表的field-value
+HDEL key field  # 删除hash表中的某个字段
+HLEN key  # 获取hash表的字段数量
+HEXISTS key field  # 判断hash表中的某个字段是否存在
+HkEYS key  # 获取hash表中所有字段
+HVALS key  # 获取hash表中所有字段值
+HINCRBY key field num  # 使hash表中的字段值自增num
+HDECRBY key field num  # 使hash表中的字段值自减num
+HSETNX key field value  # 若hash表中某个字段不存在，则设置字段值；若存在，则设置失败
+
+# 使用场景：
+# 1. Hash一般用于存储需要经常变动的信息（如用户信息）
+# 2. Hash更适合于对象的存储，String更加适合于字符串的存储
+```
+
+- Zset（有序集合）
+
+```yaml
+ZADD key score member [score member...]  # 添加一个或多个元素到有序集合中，并为元素设置score
+ZRANGE key start end  # 截取部分元素（如ZRANGE key 0 -1表示截取所有元素）
+ZRANGEBYSCORE key min max  # 显示score值在min到max之间的member
+ZRANGEBYSCORE key min max WITHSCORES  # 显示score值在min到max之间的member,并附带score值
+ZREM key member  # 移除有序集合中的某个元素
+ZCARD key  # 获取有序集合中的元素个数
+ZREVRANGE key start stop  # 有序集合中索引从start到stop的元素按照从大到小排序
+ZCOUNT key min max  # 有序集合中score值在min到max之间的元素数量
+
+# 使用场景：
+# 1. 主要用在需要排序的场景：如排行榜、取TOP N测试...
+```
+
+### 11.2.3 三种特殊数据类型
+
+- Geospatial（地理位置）
+
+```yaml
+# 规则：两级无法直接添加（有效的经度从-180度到180度，有效的纬度从-85.05112878度到85.05112878度）
+# 一般会下载城市数据，直接通过Java程序导入
+GETADD key longitude latitude member [longitude latitude member...]  # 将经度、纬度、城市名称添加到地理空间中
+GEOPOS key member  # 获取指定名称的经纬度信息
+GEODIST key member1 member2 km  # 获取两个城市之间的直线距离，指定距离单位是km（默认单位即是km）
+# 以给定的经纬度为中心，找出某一半径(单位是km)内的元素
+# WITHDIST表示显示到中心的距离、WITHCOORD表示显示他人的定位信息、COUNT num表示只显示num个结果
+GEORADIUS key longitude latitude radius km [WITHDIST] [WITHCOORD] [COUNT num] 
+# 以给定的城市为中心，找出某一半径(单位是km)内的元素
+GEORADIUSBYMEMBER key member radius km
+GEOHASH key member1 member2  # 将二维的经纬度转换为一维的字符串（如果两个字符串越接近，那么则距离越近）
+
+# GEO底层的实现原理其实就是ZSet，可以使用Zset命令来操作GEO
+ZRANGE key 0 -1  # 查看地图中的所有元素
+ZREM key member  # 移除地图中的某个元素
+
+
+# 使用场景：
+# 1. 朋友的定位
+# 2. 附近的人
+# 3. 打车距离计算...
+```
+
+- Hyperloglog（基数统计）
+
+Hyperloglog基数统计的优点：占用的内存固定，只需要12KB内存（2），从内存角度来比较的话使用Hyperloglog作为统计计数是首选。
+
+Hyperloglog基数统计的错误率：0.81%（**针对于统计UV任务，可以忽略不计**）
+
+```yaml
+PFADD key element [element...]  # 添加元素到key中
+PFCOUNT key  # 统计key中元素的数量
+PFMERGE destkey sourcekey [sourcekey...]  # 合并sourcekey1和sourcekey2中的元素（去掉重复值，即并集）
+
+# 使用场景：
+# 1. 统计网页的UV(一个人访问一个网站多次，但是还是算作一个人)
+# 1.1 传统的解决方式：使用Set保存用户的id（IP地址），然后统计set中的元素数量作为标准判断！但弊端是会保存大量的用户id（IP地址），会造成资源的浪费，而我们的目的是为了计数，而不是保存用户的id。
+# 1.2 现在采用Redis Hyperloglog基数统计的方式（如果允许容错）就可以更加优雅地解决我们的问题。
+```
+
+- Bitmaps（位图）：操作二进制位来进行记录，只有0和1两个状态（查询的时间复杂度：O(1)）
+
+```yaml
+SETBIT key offset value  # 对key所储存的字符串值,设置或清除指定偏移量上的位(bit)
+GETBIT key offset  # 对key所储存的字符串值,获取指定偏移量上的位(bit)
+BITCOUNT key  # 统计给定字符串中,被设置为1的比特位的数量
+
+# 使用场景：
+# 1. 使用位储存统计用户信息（如活跃/不活跃；登录/未登录...）
+# 2. 统计365天打卡信息（某天是否打卡、总的打卡天数...）
+```
+
+- 布隆过滤器
+
+## 11.3 事务
+
+### 11.3.1 事务的处理
+
+**Redis事务的本质**：一组命令（如多个set命令）的集合。一个事务中的所有命令都会被序列化，在事务执行的过程中，会按照顺序执行。
+
+**Redis事务的特性**：一次性、顺序性、排他性。
+
+> 注意事项：
+>
+> 1. Redis事务没有隔离级别的概念（需回顾Spring中的隔离级别）。
+> 2. 所有的命令在事务中，并未被直接执行，只有发起执行命令（EXEC）的时候才会执行。
+> 3. **Redis单条命令是原子性的，但是Redis事务不是原子性的。**
+>    - 开启（MULTI）事务后，若将命令加入队列时报错（这种错误是**编译型错误**）；执行（EXEC）事务后，所有入队的命令都不会执行。
+>    - 开启（MULTI）事务后，若将命令加入队列时成功；执行（EXEC）事务后，部分入队的指令出错（这种错误是**运行时错误**），则未出错的命令依旧会执行成功（**体现了Redis的事务不是原子性的**）。
+> 4. 虽然Redis自带的事务并不具备原子性，但是我们可以在java程序中通过异常处理来回滚（详见`12.4.1`）。
+
+**Redis事务的处理**：开启事务（MULTI）-->命令入队（...）-->（EXEC）
+
+```yaml
+# 开启事务
+MULTI
+# 取消事务
+DISCARD
+# 执行事务
+EXEC
+```
+
+### 11.3.2 悲观锁/乐观锁
+
+**悲观锁**：很悲观，认为在什么时候都会出问题，无论做什么都会加锁。
+
+**乐观锁**：很乐观，认为什么时候都不会出问题，所以不会上锁。更新数据的时候去判断一下，在此期间是否有人修改过这个数据（先获取version，更新的时候比较version）。
+
+**使用watch可以当作Redis的乐观锁操作，使用unwatch可以取消监视。**
+
+```yaml
+# 举个例子
+# 步骤一：线程1
+watch money  # 监视money（类似于添加乐观锁）
+multi  # 开启事务
+DECRBY money 20
+INCRBY out 20 # 为了模拟多线程操作，先不提交线程1的事务
+# 步骤二：线程2
+INCRBY money 10  # 线程2修改了money的值
+# 步骤三：提交线程1的事务
+EXEC  # 执行后输出（nil），表示线程1的事务执行失败了，这是由于watch监视到了线程2对money的改动，起到了乐观锁的作用
+
+# 使用unwatch可以取消监视
+# 结合使用watch和unwatch可以实现自旋锁的功能
+```
+
+## 11.4 操作Redis
+
+### 11.4.1 使用Jedis操作Redis
+
+使用步骤如下：
+
+```java
+// 1. 导入依赖包
+...
+// 2. 使用Jedis操作Redis（这里截取部分关键代码）
+    Jedis jedis = New Jedis("127.0.0.1", 6379);
+	// jedis的所有命令就是之前学习客户端操作的哪些指令
+	System.out.println(jedis.ping()); // 输出PONG表示已连接上
+	// 其他指令不一一讲解
+	...
+// 3. 使用jedis操作Redis事务
+// 注意事项：虽然Redis自带的事务并不具备原子性，但是我们可以在程序中通过异常处理来回滚
+public class TestMulti {
+    public static void main(String[] args) {
+        //创建客户端连接服务端，redis服务端需要被开启
+        Jedis jedis = new Jedis("127.0.0.1", 6379);
+        jedis.flushDB();
+
+        JSONObject jsonObject = new JSONObject(); // 此处需要重点回顾Jackson与FastJson
+        jsonObject.put("hello", "world");
+        jsonObject.put("name", "java");
+        Transaction multi = jedis.multi(); //开启事务
+        String result = jsonObject.toJSONString();
+        try{
+            multi.set("json", result); //向redis存入一条数据
+            multi.set("json2", result); //再存入一条数据
+            int i = 100/0; //这里引发了异常，用0作为被除数
+            multi.exec(); //如果没有引发异常，执行进入队列的命令
+        }catch(Exception e){
+            e.printStackTrace();
+            multi.discard(); // 如果出现异常，回滚(放弃事务)
+        }finally{
+            System.out.println(jedis.get("json"));
+            System.out.println(jedis.get("json2"));
+            jedis.close(); //最终关闭客户端
+        }
+    }
+}
+```
+
+### 11.4.2 使用Springboot操作Redis
+
+**注意**：在SpringBoot2.x之后，原来使用的JEDIS被替换成了Lettuce。
+
+**原因**：Jedis采用的是直连，多个线程操作的话，是不安全的；若为了避免不安全，使用Jedis pool连接池，又会造成性能的降低（类似BIO模式）。而Lettuce采用Netty，实例可以在多个线程中共享，不存在线程不安全的情况，可以减少线程数据，提高性能（类似NIO模式）。
+
+`RedisAutoConfiguration.java`中的部分源码分析：
+
+```java
+	@Bean
+    @ConditionalOnMissingBean(name = {"redisTemplate"}) // 可以自定义一个redisTemplate来替换这个默认的Bean
+    public RedisTemplate<Object, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) throws UnknownHostException {
+        // 默认的RedisTemplate没有过多的设置，Redis对象都是需要序列化的！
+		// 两个泛型都是Object、Object的类型，我们后面使用需要强制转换<String, Object>
+        RedisTemplate<Object, Object> template = new RedisTemplate();
+        template.setConnectionFactory(redisConnectionFactory);
+        return template;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean // 由于String是Redis中最常使用的类型，所以单独封装了一个stringRedisTemplate Bean
+    public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory redisConnectionFactory) throws UnknownHostException {
+        StringRedisTemplate template = new StringRedisTemplate();
+        template.setConnectionFactory(redisConnectionFactory);
+        return template;
+    }
+```
+
+使用步骤下：
+
+```java
+// 1. 导入依赖
+// 2. 配置连接
+// 3. 测试或使用
+//   3.1 实际使用时，一般会根据Spring提供的redisTemplate进行自定义（例如默认的RedisTemplate采用的时JDK序列化的方式，这种方式中文在Redis客户端中的显示不友好（会乱码），一般会自定义使用Jackson或者fastjson进行序列化）。
+// 	 3.2 值得注意的是，Jackson或者fastjson进行序列化需要Entity类实现Serializable接口。
+//   3.3 除此之外，一般会封装一个RedisUtils工具类。
+```
+
+#### 11.4.2.1 自定义redisTemplate
+
+在`RedisConfig.java`中配置自定义redisTemplate Bean，部分代码如下：
+
+```java
+@Configuration
+@EnableCaching // 开启Spring缓存注解
+public class RedisConfig {
+
+    /**
+     * 通过改造Spring提供的RedisTemplate实现自定义RedisTemplate
+     * @return redisTemplate Bean
+     */
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory){
+        // 为了开发方便，一般直接使用<String, Object>
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+
+        // 处理编码问题
+        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
+        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+
+        redisTemplate.setKeySerializer(stringRedisSerializer); // key采用String的序列化方式
+        redisTemplate.setHashKeySerializer(stringRedisSerializer); // hash的key也采用String的序列化方式
+        redisTemplate.setValueSerializer(jackson2JsonRedisSerializer); // value序列化方式采用jackson
+        redisTemplate.setHashValueSerializer(jackson2JsonRedisSerializer); // hash的value序列化方式采用jackson
+        redisTemplate.afterPropertiesSet(); // 初始化redisTemplate
+
+        return redisTemplate;
+    }
+
+    @Bean
+    public ValueOperations<String, String> valueOperations(RedisTemplate<String, String> redisTemplate) {
+        return  redisTemplate.opsForValue(); // 简化原生String类型的API调用
+    }
+
+    @Bean
+    public ListOperations<String, Object> listOperations(RedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForList(); // 简化原生List类型的API调用
+    }
+
+    @Bean
+    public SetOperations<String, Object> setOperations(RedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForSet(); // 简化原生Set类型的API调用
+    }
+
+    @Bean
+    public ZSetOperations<String, Object> zSetOperations(RedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForZSet(); // 简化原生ZSet类型的API调用
+    }
+
+    @Bean
+    public HashOperations<String, String, Object> hashOperations(RedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForHash(); // 简化原生Hash类型的API调用
+    }
+```
+
+**注意事项**：
+
+1. 使用Jackson2JsonRedisSerializer反序列化带泛型的数据时会报错，而使用GenericJackson2JsonRedisSerializer可以正常反序列化；这是因为GenericJackson2JsonRedisSerializer序列化时，会保存序列化的对象的包名和类名，反序列化时以这个作为标示就可以反序列化成指定的对象。
+2. Jackson2JsonRedisSerializer要比GenericJackson2JsonRedisSerializer效率要高。
+3. 使用StringRedisSerializer进行序列化的值，在Java和Redis中保存的内容一致；使用Jackson2JsonRedisSerializer进行序列化的值，在Redis中保存的内容，比Java中多了一对双引号。
+
+本项目使用Jackson2JsonRedisSerializer进行序列化，针对带泛型的数据反序列化时不能将map解析成对象这一问题，**解决方案是：序列化存储时，使用工具类将对象转成json字符串；反序列化时再使用工具类将字符串转换为对象**。
+
+> 参考文章：[Jackson2JsonRedisSerializer与GenericJacksonRedisSerializer对比](https://www.cnblogs.com/nieaojie625/p/13772906.html)、[Redis序列化问题](https://gitee.com/fengzxia/spring-boot-redis-cache/blob/master/Jackson%20Serializer%E7%BC%93%E5%AD%98%E6%95%B0%E6%8D%AE%E5%BA%8F%E5%88%97%E5%8C%96%E9%97%AE%E9%A2%98.md)
+
+#### 11.4.3.2 自定义RedisUtils工具类
+
+在`RedisUtils.java`中封装Redis工具类：
+
+```java
+@Component
+public class RedisUtils {
+    @Autowired
+    private RedisTemplate<String,Object> redisTemplate;
+    @Autowired
+    private ValueOperations<String, String> valueOperations;
+    @Autowired
+    private HashOperations<String, String, Object> hashOperations;
+    @Autowired
+    private ListOperations<String, Object> listOperations;
+    @Autowired
+    private SetOperations<String, Object> setOperations;
+    @Autowired
+    private ZSetOperations<String, Object> zSetOperations;
+    /**  默认过期时长，单位：秒 */
+    public final static long DEFAULT_EXPIRE = 60 * 60 * 24;
+    /**  不设置过期时长 */
+    public final static long NOT_EXPIRE = -1;
+
+    /**
+     * 设置值与过期时间
+     * @param key
+     * @param value
+     * @param expire
+     */
+    public void set(String key,Object value, long expire) {
+        valueOperations.set(key, JsonUtils.toJson(value));
+        if(expire != NOT_EXPIRE){
+            redisTemplate.expire(key, expire, TimeUnit.SECONDS);
+        }
+    }
+
+    /**
+     * 设置值，默认过期时间1天
+     * @param key
+     * @param value
+     */
+    public void set(String key, Object value){
+        set(key, value, DEFAULT_EXPIRE);
+    }
+
+    /**
+     * 获取对象，同时设置过期时间
+     * @param key
+     * @param clazz
+     * @param expire
+     * @param <T>
+     * @return
+     */
+    public <T> T getObj(String key, Class<T> clazz, long expire) {
+        String value = valueOperations.get(key);
+        if(expire != NOT_EXPIRE){
+            redisTemplate.expire(key, expire, TimeUnit.SECONDS);
+        }
+        return value == null ? null : JsonUtils.toObj(value, clazz);
+    }
+
+    /**
+     * 获取对象，不设置过期时间
+     * @param key
+     * @param clazz
+     * @param <T>
+     * @return
+     */
+    public <T> T getObj(String key, Class<T> clazz) {
+        return getObj(key, clazz, NOT_EXPIRE);
+    }
+
+    /**
+     * 获取值，同时设置过期时间
+     * @param key
+     * @param expire
+     * @return
+     */
+    public String get(String key, long expire) {
+        String value = valueOperations.get(key);
+        if(expire != NOT_EXPIRE){
+            redisTemplate.expire(key, expire, TimeUnit.SECONDS);
+        }
+        return value;
+    }
+
+    /**
+     * 获取值，不设置过期时间
+     * @param key
+     * @return
+     */
+    public String get(String key) {
+        return get(key, NOT_EXPIRE);
+    }
+
+    /**
+     * 删除
+     * @param key
+     */
+    public void delete(String key) {
+        redisTemplate.delete(key);
+    }
+
+    /**
+     * 更新过期时间
+     * @param key
+     */
+    public void updateExpire(String key) {
+        redisTemplate.expire(key,DEFAULT_EXPIRE,TimeUnit.SECONDS);
+    }   
+}
+```
+
+## 11.5 高级使用
+
+### 11.5.1 Redis.conf
+
+在Windows下的配置文件是redis.windows.conf，Linux下的配置文件是Redis.conf。**值得注意的是**：Windows平台的Redis官方已经放弃维护了（目前是微软在维护），且Redis官方也推荐在Linux环境下使用，在Windows环境下使用Redis可能会出现一些未知的错误。
+
+```yaml
+# Redis.conf配置文件详解
+# 1. 配置文件相关
+### 1.1 配置文件对大小写不敏感
+### 1.2 可以使用include引入其他的配置文件，例如：include /path/to/local.conf
+
+# 2. 网络相关
+### 2.1 绑定IP：bind 127.0.0.1
+### 2.2 一般开启保护模式：protected-mode yes
+### 2.3 开启端口：port 6379
+
+# 3. 通用设置
+### 3.1 是否以守护线程方式运行，默认未no，需要手动开启未yes：daemonize yes
+### 3.2 若以后台方式运行(即以守护线程方式运行)，则需要指定一个pid文件：pidfile /var/run/redis_6379.pid
+### 3.3 配置日志级别(debug/verbose/notice/warning)：loglevel notice
+### 3.4 配置输出的日志的文件名及位置（若为空，则为标准的输出）：logfile ""
+### 3.5 默认的数据库数量为16个：databases 16
+### 3.6 是否总是显示Logo（即启动Redis时的彩蛋Banner）：always-show-logo yes
+
+# 4. 快照配置
+### 4.1 配置持久化(会持久化到.rdb/.aof中)规则：
+		save 900 1  # 若900s内，至少有1个key进行了修改，则会即时进行持久化操作
+		save 300 10  # 若300s内，至少有10个key进行了修改，则会即时进行持久化操作
+		save 60 10000  # 若60s内，至少有10000个key进行了修改，则会即时进行持久化操作
+### 4.2 持久化之后，是否需要Redis继续工作：stop-writes-on-bgsave-error yes
+### 4.3 是否压缩rdb文件，需要消耗一些CPU资源：rdbcompression yes
+### 4.4 保存rdb文件的时候，是否进行错误的检查校验：rdbchecksum yes
+### 4.5 rdb文件保存的目录：dir ./
+### 4.6 rdb文件的名称：dbfilename dump.rdb
+
+# 5. 主从复制的配置（在12.5.4详细介绍）
+### 5.1 在从机的配置文件中配置主机的ip地址和端口号：replicaof <masterip> <masterport>
+### 5.2 若主机有密码，在从机的配置文件中需配置密码：masterauth <master-password>
+
+# 6. 安全配置
+### 6.1 默认没有密码，但可以设置登录密码（更多地通过命令设置密码:config set requirepass;登录时使用命令: auth 密码）：requirepass 密码
+
+# 7. 客户端限制配置
+### 7.1 设置能连接上Redis的最大客户端的数量：maxclients 10000
+### 7.2 配置Redis的最大内存容量（默认单位是字节）：maxmemory <bytes>
+### 7.3 配置内存到达上限时的处理策略：maxmemory-policy noeviction
+##### 7.3.1 volatile-lru策略：只对设置了过期时间的key进行LRU(默认值)
+##### 7.3.2 allkeys-lru策略：删除lru算法的key
+##### 7.3.3 volatile-random策略：随机删除即将过期的key
+##### 7.3.4 allkeys-random策略：随机删除
+##### 7.3.5 volatile-ttl策略：删除即将过期的
+##### 7.3.6 noeviction策略：永不过期，返回错误
+
+# 8. aof配置
+### 8.1 默认不开启aof模式，默认使用rdb方式持久化；在大部分所有的情况下，rdb完全够用：appendonly no
+### 8.2 持久化的文件名字：appendfilename "appendonly.aof"
+### 8.3 持久化同步机制: 
+		appendfsync always  # 每次修改都会同步，消耗性能
+		appendfsync everysec  # 每秒执行一次同步，可能会丢失这1s的数据（默认是这种机制）
+		appendfsync no  # 不执行同步，这个时候操作系统自己同步数据，速度最快	
+### 8.4 配置重写规则
+		auto-aof-rewrite-percentage 100  # 
+		auto-aof-rewrite-min-size 64mb  # 若aof文件大于64m，会fock一个新的进程来将文件进行重写
+```
+
+> 参考博客文章：[Redis的缓存淘汰策略LRU与LFU](https://www.jianshu.com/p/c8aeb3eee6bc)
+
+### 11.5.2 持久化
+
+Redis是内存数据库，如果不将内存中的数据库状态保存到磁盘，那么一旦服务器进程退出，服务器中的数据库状态也会消息，故而使用Redis必须学会持久化（**持久化是面试和工作的重点**）。
+
+#### 11.5.2.1 RDB（Redis DataBase）
+
+**RDB持久化**：在指定的时间间隔内将内存中的数据集快照写入磁盘（即Snapshot快照），恢复时会将快照文件直接读到内存里。Redis会单独创建（fork）一个子进程来进行持久化，会先将数据写入到一个临时文件中，待持久化过程都结束了，再用这个临时文件替换上次持久化好的文件（文件默认名称是`dump.rdb`）。整个过程中，主进程是不进行任何IO操作的，这就确保了极高的性能。**如果需要进行大规模数据的恢复，且对数据恢复的完整性不是很敏感，那么RDB方式要比AOF方式更加的高效。RDB的缺点是最后一次持久化后的数据可能丢失。我们默认的就是RDB，一般情况下不需要修改这个配置**。在生产环境一般会对rdb文件进行备份。在主从复制中，RDB一般用在从机上面进行备用。
+
+**RDB持久化触发机制**：
+
+1. save规则满足的情况下，会自动触发rdb规则，生成rdb文件。
+2. 执行FLUSHALL命令，也会触发rdb规则，生成rdb文件。
+3. 退出Redis，也会产生rdb文件。
+
+**RDB恢复机制**：
+
+1. 只需要将rdb文件放在Redis的启动目录，那么启动的时候就会自动检查dump.rdb，并恢复其中的数据。
+2. 查看rdb文件需要存在的位置：config get dir
+
+**RDB持久化优点**：
+
+1. 适合大规模的数据恢复。
+2. 对数据的完整性要求不高。
+
+**RDB持久化的缺点**：
+
+1. 需要一定的时间间隔进程操作。若Redis意外宕机了，这个最后一次修改的数据就没有了。
+2. fork进程的时候，会占用一定的内容空间。
+
+#### 11.5.2.2 AOF（Append Only File）
+
+**AOF持久化**： Redis同样会单独创建（fork）一个子进程来进行持久化，将所有的命令都记录下来，恢复的时候将文件（文件默认名称是`appendonly.aof`）全部执行一遍即可。以日志的形式来记录每个写操作，将Redis执行过的所有指令记录下来（**读操作不记录**），只允许追加文件但不可以改写文件。Redis启动之初会读取该文件重新构建数据。AOF持久化默认是不开启的，需要手动进行配置（设置：`appendonly yes`）（详见`12.5.1`）。
+
+**注意**：若`appendonly.aof`有错误，那么Redis是启动不起来的，我们需要使用Redis的`redis-check-aof`工具来修复这个文件（Linux下的修复命令为`redis-check-aof --fix appendonly.aof`）。修复成功后，重启就可以恢复了。
+
+**AOF持久化的优点**：
+
+1. 每一次修改都同步，文件的完整性会更加好。
+2. 每秒同步一次，可能会丢失1s的数据。
+3. 永不同步，效率最高。
+
+**AOF持久化的缺点**;
+
+1. 相对于数据文件来说，AOF远远大于RDB，修复的速度也比RDB慢。
+2. AOF运行效率要比RDB慢，故而Redis默认的配置是RDB持久化。
+
+#### 11.5.2.3 总结
+
+1. RDB持久化方式能够在指定的时间间隔内对数据进行快早存储。
+2. AOF持久化方式记录每次对服务器写的操作，当服务器重启的时候会重新执行这些命令来恢复原始的数据，AOF命令以Redis协议追加保存每次写的操作到文件末尾。Redis还能对AOF文件进行后台重写，使AOF文件的体积不至于过大。
+3. 只做缓存，如果只希望数据在服务器运行的时候存在，也可以不使用任何持久化。
+4. 同时开启两种持久化方式：
+   - 在这种情况下，当Redis重启的时候会优先载入AOF文件来恢复原始的数据，因为在通常情况下AOF文件保存的数据集要比RDB文件保存的数据集要完整。
+   - RDB的数据不实时，同时使用两者时服务器重启也只会查找AOF文件，那要不要只使用AOF呢？建议不要，因为RDB更适合用于备份数据库（AOF在不断变化不好备份）、快速重启，而且不会有AOF可能潜在的Bug，留着作为一个万一的手段。
+
+5. 性能建议：
+   - 因为RDB文件只用作后备用途，建议只在Slave上持久化RDB文件，而且只要15分钟备份一次就够了，只需要save 900 1这条规则。
+   - 如果使用AOF，好处是在最恶劣情况下也只会丢失不超过两秒的数据，启动脚本较简单只load自己的AOF文件就可以了，代价一是带来了持续的IO，二是AOF rewrite的最后将rewrite过程中产生的新数据写到新文件造成的阻塞几乎是不可避免的。只要硬盘许可，应该尽量减少AOF rewrite的频率。AOF重写的基础大小默认值64M太小了，可以设到5G以上，默认超过原大小100%时重写可以改到适当的数值。
+   - 如果不使用AOF，仅靠master-slave-replication实现高可用也可以，能省掉一大笔IO，也减少了rewrite时带来的系统波动。代价是如果master/slave同时挂掉，会丢失十几分钟的数据，启动脚本也要比较两个master/slave中的RDB文件，载入较新的那个，微博就是这种架构。
+
+### 11.5.3 发布订阅
+
+Redis发布订阅（pub/sub）是一种消息通信模式（类似于RabbitMQ\Kafka等消息中间件）：发送者（pub）发送消息、订阅者（sub）接收消息。
+
+Redis客户端可以订阅任意数量的频道。
+
+```yaml
+SUBSCRIBE channel [channel...]  # 订阅一个或多个频道（订阅端）
+PSUBSCRIBE pattern [pattern...]  # 使用模式匹配订阅一个或多个符合给定模式的频道（订阅端）
+UNSUBSCRIBE channel [channel...]  # 取消订阅一个或多个频道（订阅端）
+
+PUBLISH channel message  # 将信息message发送到指定的频道channel（发布端）
+
+# 使用场景（针对复杂的场景就会使用消息中间件如RabbitMQ/kafka）：
+# 1. 订阅关注系统：例如微信公众号、微博的关注系统
+# 2. 构建即时通信应用：例如网络聊天室、实时消息系统、实时提醒
+```
+
+**发布订阅的原理**：Redis是使用C语言实现的，可以分析源码里的pubsun.c文件，了解发布和订阅机制的底层实现。
+
+1. 通过SUBSCRIBE命令订阅某个频道后，redis-server里维护了一个字典，字典的键就是一个个channel，而字典的值则是一个链表，链表中保存了所有订阅这个channel的客户端。SUBSCRIBE命令就是将客户端添加到给定channel的订阅链表中。
+2. 通过PUBLISH命令向订阅者发送消息，redis-server会使用给定的频道作为键，在它所维护的channel字典中查找记录了订阅这个频道的所有客户端的链表，遍历这个链表，将消息发布给所有订阅者。
+3. 在Redis中，可以设定对某一个key值进行消息发布及消息订阅；当一个key值上进行了消息发布后，所有订阅它的客户端都会收到相应的消息。这一功能最明显的用法就是用作实时消息系统，如普通的即时聊天、群聊等功能。
+
+![image-20201029091123620](README.assets/image-20201029091123620.png)
+
+### 11.5.4 主从复制
+
+**主从复制的概念**：是指将一台Redis服务器的数据，复制到其他的Redis服务器。前者称为主节点（master/leader），后者称为从节点（slave/follower）；数据的复制的单向的，只能由主节点到从节点；master以写为主，salve以读为主。默认情况下，每台Redis服务器都是主节点；且一个主节点可以有多个从节点（或没有从节点），但一个从节点只能有一个主节点。
+
+**主从复制的作用**：
+
+1. 数据冗余：主从复制实现了**数据的热备份**，是持久化之外的一种数据冗余方式。
+2. 故障恢复：当主节点出现问题时，可以由从节点提供服务，实现快速的故障恢复；实际上是一种**服务的冗余**。
+3. 负载均衡：在主从复制基础上，配合**读写分离**，可以由主节点提供写服务，由从节点提供读服务（即写Redis数据时应用连接主节点，读Redis数据时应用连接从节点），分担服务器负载。尤其是在写少读多的场景下，通过多个从节点分担读负载，可以大大提高Redis服务器的并发量。
+4. 高可用基石：除了上述作用外，主从复制还是哨兵模式和集群能够实施的基础。
+
+**为什么要使用Redis集群**：
+
+1. 从结构上，单个Redis服务器会发生单点故障；并且一台服务器需要处理所有的请求负载，压力较大。
+2. 从容量上，单个Redis服务器内存容量有限，就算一台Redis服务器内存容量为256G，也不能将所有内存用作Redis存储内存（一般来说，单台Redis最大使用内存不应超过20G）。
+
+**主从复制使用场景**：例如电商网站上的商品，一般都是一次上传、无数次浏览（即读写少多），这是应该使用主从复制来进行读写分离。主从复制至少需要3台Redis服务器（1主2从）搭建集群。
+
+Redis集群的搭建步骤如下：
+
+```yaml
+# 主从复制只需配置从库，不用配置主库（默认即是主库）
+info replication  # 查看当前库主从复制的信息
+
+# 1. 复制多个Redis.conf文件并编辑相应配置
+### 1.1 修改端口号
+### 1.2 修改pidfile（与端口号同步）
+### 1.3 修改logfile
+### 1.4 修改dbfilename
+# 2. 启动多个Redis服务：redis-server config文件
+# 3. 主从配置，搭建集群：
+### 3.1 在需要作为从机的服务器上使用命令行配置：SLAVEOF host port
+### 3.2 也可以在从机的配置文件中配置主机的ip地址和端口号：replicaof <masterip> <masterport>
+### 3.3 若主机有密码，在从机的配置文件中需配置密码：masterauth <master-password>
+
+# Linux相关知识
+## 1. 启动后可以采用ps -ef|grep redis查看进程信息
+## 2. 在进程中可以使用shutdown（是Redis的命令）
+## 3. 在linux系统中（非程序进程中）可以使用shutdown关机、使用"kill 端口号"杀死进程
+```
+
+**集群使用注意事项**：
+
+1. 真实的主从配置应该在配置文件中配置（这样才是永久生效的），使用命令`SLAVEOF host port`配置是暂时的。
+2. 主机可以写，从机不可写只能读。主机中的所有信息和数据，都会自动被从机保存。
+3. 若主机断开连接，从机依旧会连接到主机，但是没有写操作；若主机重新回来，从机依旧可以直接获取到主机写的信息。
+4. 通过命令行配合的主从关系，若从机断开连接，重新会变回主机；只要再次变为从机，立马就会从主机中获取值。
+
+**主从复制的原理**：
+
+1. slave启动成功连接到master后会发送一个sync同步命令。
+2. master接到命令后会启动后台的存盘进程，同时收集所有接收到的用于修改数据集的命令；在后台进程执行完毕之后，master将传送整个数据文件到salve，并完成一次完全同步。
+3. 全量复制：slave在接收到数据库文件数据后，将其存盘并加载到内存中。
+4. 增量复制：master继续将新的所有收集到的修改命令依次传给slave，完成同步。
+5. 只要重新连接master，一次完全同步（全量复制）将被自动执行。
+
+**宕机后手动配置主机**：层层链路模式下（**主机1-->从机1，主机1-->从机2，从机1-->从机2**：即从机1既是主机1的从机，也是从机2的主机；从机2既是主机1的从机，又是从机1的从机），若主机1断开，系统并不会主动挑选从机1作为主机，需要在从机1中使用命令"谋权篡位"成为新的主机（命令：`SLAVEOF no one`）；若主机1修复，不会重新连接从机1和从机2。（**了解即可，工作中会使用哨兵模式解决这一问题**）
+
+### 11.5.5 哨兵模式
+
+**哨兵（Sentinel）模式**：`12.5.4`所述主从切换的瓶颈在于，当主机宕机后，需要手动将一台从机配置成主机，这就需要人工干预，费时费力，还会造成一段时间内服务不可用。在工作方式中，会优先使用哨兵模式来解决这一问题。**哨兵模式会依据投票数自动将从机变为主机**。**哨兵是一个独立的进程，会独立运行**；哨兵通过发送命令，等待Redis服务器的响应，从而监控运行的多个Redis实例（**哨兵可以类比于调度中心**）。
+
+**哨兵模式原理**：若主服务器宕机，哨兵1先检测到这个结果，系统并不会马上进行failover过程，仅仅是哨兵1主观地认为主服务器不可用，这个现象称为**主观下线**。当后面的哨兵也检测到主服务器不可用，并且数量达到一定值时，那么哨兵之间就会进行一次投票，投票的结果由一个哨兵发起，进行failover（故障转移）操作。切换成功后，就会通过发布订阅模式，让各个哨兵把自己监控的从服务器实现切换主机，这个过程称之为**客观下线**。**若宕机的主机在客观下机后又重新恢复，只能归并到新的主机下，当作从机使用了**。
+
+<img src="../BlogProjects/zcblog/docs/zcblog-backend-docs/zcblog-backend-docs.assets/image-20201029115713647.png" alt="image-20201029115713647" style="zoom: 50%;" />
+
+配置哨兵的步骤如下：
+
+```yaml
+# 12.5.4节中Redis集群搭建[续]
+# 4. 配置哨兵：
+### 4.1 创建哨兵的配置文件：sentinel.conf
+### 数字1表示当1个哨兵统一认为master主节点失联，那么这时客观上就认为主节点失联了
+### 4.2 配置哨兵：SENTINEL MONITOR 主节点名称名 被监控机器的IP地址 被监控机器的端口号 1 
+# 5. 启动哨兵：redis-sentinel 配置文件名
+```
+
+**哨兵模式的优点**：
+
+1. 哨兵集群，基于主从复制模式，所有的主从配置优点，它全有。
+2. 主从可以切换、故障可以转移，系统的可用性会更好。
+3. 哨兵模式就是主从模式的升级，手动到自动，更加健壮。
+
+**哨兵模式的缺点**
+
+1. Redis不好在线扩容，集群容量一旦到达上限，在线扩容就十分麻烦。
+2. 实现哨兵模式的配置很麻烦，里面有很多选择。
+
+哨兵模式的全部配置如下：
+
+```yaml
+# 1. 哨兵sentinel实例运行的端口：port 26379
+# 2. 哨兵sentinel的工作目录：dir /tmp
+# 3. 配置哨兵监控Redis节点：sentinel monitor <master-name> <ip> <redis-port> <quorum>
+# 4. 设置哨兵连接主从的密码：sentinel auth-pass <master-name> <password>
+# 5. 指定多少毫秒之后，主节点没有答应哨兵时，此时哨兵主观上认为主节点下线：
+	sentinel down-after-milliseconds <master-name> <milliseconds>
+# 6. 设置在发生failover主从切换时，最多可以有多少个salve可以同时对新的master进行同步：
+	sentinel parallel-syncs <master-name> <numslaves>
+# 7. 设置故障转移的超时时间：sentinel failover-timeout <master-name> <milliseconds>
+# 8. 设置通知脚本（当出现故障时可以发送邮件通知相关人员）：sentinel notification-script <master-name> <script-path>
+# 9. 当master由于failover而发生改变时，这个脚本将会执行通知客户端关于master地址已经发生改变：
+	sentinel client-reconfig-script <master-name> <script-path>
+```
+
+### 11.5.6 缓存穿透与雪崩
+
+> **缓存穿透（查不到）** ：用户想要查询一个数据，发现Redis内存数据库中没有，也就是缓存没有命中；于是向持久层数据库查询，发现也没有，于是本次查询失败。当用户很多的时候，缓存都没有命中，于是都去请求了持久层数据库，这会给持久层数据库造成很大的压力，这个时候就相当于出现了缓存穿透。
+
+**缓存穿透的解决方案**：
+
+1. **使用布隆过滤器**：布隆过滤器是一种数据结构，对所有可能查询的参数以hash形式存储，在控制层先进行校验，不符合则丢弃，从而避免了对底层存储系统的查询压力。
+
+2. **缓存空对象**：当存储层不命中后，即使返回的空对象也将其缓存起来，同时会设置一个过期时间，之后再访问这个数据将会从缓存中获取，保护了后端数据源。这种方法存在两个问题：一是浪费存储空间、二是缓存层和存储层的数据会有一段时间窗口的不一致，对于需要保持一致性的业务会有影响。
+
+> **缓存击穿（量太大）**：缓存击穿是指当某个key在过期的瞬间，有大量的请求并发访问，这类数据一般是热点数据，由于缓存过期，会同时访问数据库来查询最新数据，并且回写缓存，会导致数据库瞬间压力过大。
+
+**缓存击穿的解决方案**：
+
+1. **设置热点数据永不过期**：从缓存层面来看，没有设置过期时间，所以不会出现热点key过期后产生的问题。
+2. **加互斥锁**：使用分布式锁，保证对于每个key同时只有一个线程去查询后端服务，其他线程没有获得分布式锁的权限，因此只需要等待即可。这种方式将高并发的压力转移到了分布式锁，因此对分布式锁的考验很大。
+
+> **缓存雪崩**：指在某一个时间段，缓存集中过期失效，这是产生雪崩的原因之一；缓存服务器的某个节点宕机或断网，这是产生雪崩的原因之二。
+
+**缓存雪崩的解决方案**：
+
+1. **Redis高可用**：既然Redis有可能挂掉，那就多增设几台Redis，这样一台挂掉之后其他的还可以继续工作，其实就是搭建Redis集群（异地多活）。
+2. **限流降级**：在缓存失效后，通过加锁或者队列来控制读数据库写缓存的线程数量。比如对某个key只允许一个线程查询数据和写缓存，其他线程等待（消息中间件如RabbitMQ、Kafka都可以实现）。
+3. **数据预热**：在正式部署前，先把可能的数据预先访问一遍，这样部分可能大量访问的数据就会加载到缓存中。在即将发生大并发访问前手动触发加载缓存不同的key，设置不同的过期时间，让缓存失效的时间点尽量均匀。
+
+# 12 消息中间件
+
+## 12.1 基本概念
+
+**MQ**： Message Queue（消息队列），是在消息的传输过程中保存消息的容器，多用于分布式系统之间进行通信。实现MQ大致有两种主流方式：AMQP、JMS。
+
+分布式系统通信的两种方式：直接远程调用、借助第三方完成间接通信。
+
+**AMQP**： Advanced Message Queuing Protocol（高级消息队列协议），是一个网络**协议**，是应用层协议的一个开放标准，为面向消息的中间件设计。基于此协议的客户端与消息中间件可传递消息，并不受客户端/中间件不同产品，不同的开发语言等条件的限制。2006年，AMQP 规范发布，类比HTTP。
+
+**JMS**： Java Message Service，Java消息服务应用程序**接口**，是一个Java平台中关于面向消息中间件的API，属于JavaEE规范的一种（类比于JDBC）。
+
+**MQ的优势和劣势**：
+
+|                  优势                  |                             劣势                             |
+| :------------------------------------: | :----------------------------------------------------------: |
+|   **应用解耦：**提升容错性与可维护性   |         系统可用性降低：引入了中间件，系统稳定性变差         |
+| **异步提速：**提升用户体验和系统吞吐量 | 系统复杂性提高：从同步远程调用变成异步调用<br />（重复消费问题、消息丢失问题、消息传递的顺序性） |
+|     **削峰填谷：**提高系统的稳定性     | 一致性问题：A通过MQ给B/C/D三个系统发送消息数据，若B/C处理成功，D处理失败，怎么办？ |
+
+**常见的MQ产品的比较：**
+
+|                |                           RabbitMQ                           |                    ActiveMQ                    |         RocketMQ         |                     Kafka                      |
+| :------------: | :----------------------------------------------------------: | :--------------------------------------------: | :----------------------: | :--------------------------------------------: |
+|   公司/社区    |                            Rabbit                            |                     Apache                     |         阿里巴巴         |                     Apache                     |
+|    开发语言    |                            Erlang                            |                      Java                      |           Java           |                   Scala&Java                   |
+|    协议支持    |          基于AMQP协议，并支持XMPP，SMTP，STOMP协议           | 基于JMS接口，OpenWire，STOMP，REST，XMPP，AMQP | 基于JMS接口，自定义协议  |       自定义协议，社区封装了http协议支持       |
+| 客户端支持语言 | 官方支持Erlang，Java，Ruby等，社区产出多种API，几乎支持所有语言 |    Java，C，C++，Python，PHP，Perl，.net等     |   Java，C++（不成熟）    | 官方支持Java，社区产出多种API，如PHP，Python等 |
+|   单击吞吐量   |                         万级（其次）                         |                  万级（最差）                  |      十万级（最好）      |                 十万级（次之）                 |
+|    消息延迟    |                            微秒级                            |                     毫秒级                     |          毫秒级          |                    毫秒以内                    |
+|    功能特性    |    并发能力强，性能极其好，延时低，社区活跃，管理界面丰富    |          老牌产品，成熟度高，文档较多          | MQ功能比较完备，扩展性佳 | 只支持主要的MQ功能，毕竟是为大数据领域准备的。 |
+
+**RabbitMQ**：由Rabbit公司基于AMQP标准开发的一个消息中间件。基础架构如下：
+
+![image-20201227191655274](README.assets/image-20201227191655274.png)
+
+- Broker：接收和分发消息的应用，RabbitMQ Server就是Message Broker
+
+- Virtual host：出于多租户和安全因素设计的，把AMQP的基本组件划分到一个虚拟的分组中，类似于网络中的namespace概念。当多个不同的用户使用同一个RabbitMQ Server提供的服务时，可以划分出多个vhost，每个用户在自己的vhost创建exchange/queue等。
+
+- Connection： publisher/consumer和broker之间的TCP连接。
+
+- channel：如果每次访问RabbitMQ都建立一个Connection，在消息量大时建立TCP Connection的开销将是巨大的，效率也较低。channel是在Connection内部建立的逻辑连接，如果应用程序支持多线程，通常每个thread创建单独的channel进行通讯，AMQP method包含了channel id帮助客户端和message broker识别channel，所以channel之间是完全隔离的。channel作为轻量级的Connection极大减少了操作系统建立TCP Connection的开销。
+
+- Exchange： message到达broker的第一站，根据分发规则，匹配查询表中的routing key，分发消息到queue中去。常用的类型有：direct(point-to-point)、topic(publish-subscribe)、fanout(multicast)。
+
+- Queue：消息最终被送到这里等待consumer取走。
+
+- Binding： Exchange和Queue之间的虚拟连接，Binding中可以包含routing key。Binding信息被保存到Exchange中的查询表中，用于message的分发依据。
+
+## 12.2 支持模式
+
+### 12.2.1 简单模式
+
+**简单模式（Hello World）**：一个生产者，一个消费者（无须设置交换机，会使用默认的交换机）。
+
+- P：生产者，也就是要发送消息的程序。
+- C：消费者，消息的接收者，会一直等待消息到来。
+- Queue：消息队列，图中红色部分。类似一个邮箱，可以缓存消息；生产者向其中投递消息，消费者从其中取出消息。
+
+![image-20201227212349118](README.assets/image-20201227212349118.png)
+
+### 12.2.2 工作队列模式
+
+**工作队列模式（work queues）**：一个生产者，多个消费者**竞争**消费同一个队列中的消息（无须设置交换机，会使用默认的交换机）。
+
+- 应用场景：对于任务过重或任务较多情况使用工作队列可以提高任务处理的速度。
+
+```yaml
+# 生产者执行过程：
+# 创建连接-->创建频道-->声明队列-->发送消息-->关闭频道-->关闭连接
+
+# 消费者执行过程：
+# 创建连接-->创建频道-->声明队列-->频道设置（一次接受处理多少个消息）-->创建消费者（收到消息后的回调处理）-->消费消息
+```
+
+![image-20201227212421167](README.assets/image-20201227212421167.png)
+
+### 12.2.3 发布订阅模式
+
+**发布订阅模式（Publish/Subscribe）**：一个生产者+路由器+多个消费者（都会收到消息）（需要设置FANOUT类型的交换机）。
+
+- P：生产者，也就是要发送消息的程序，但是不再发送到队列中，而是发给X（交换机）。
+- C：消费者，消息的接收者，会一直等待消息到来。
+- Queue：消息队列，接收消息、缓存消息。
+- X：交换机（Exchange）。一方面，接收生产者发送的消息；另一方面，知道如何处理消息，例如递交给某个特别队列、递交给所有队列、或是将消息丢弃。到底如何操作，取决于Exchange的类型。Exchange有常见以下3种类型：
+  - Fanout：广播，将消息交给所有绑定到交换机的队列。
+  - Direct：定向，把消息交给符合指定routing key的队列。
+  - Topic：通配符，把消息交给符合routing pattern（路由模式） 的队列。
+
+- 注意事项：
+  - 交换机只负责转发消息，不具备存储消息的能力，因此如果没有任何队列与Exchange绑定，或者没有符合路由规则的队列，那么消息会丢失！
+
+![image-20201227212531842](README.assets/image-20201227212531842.png)
+
+```yaml
+# 生产者执行过程：
+# 创建连接-->创建频道-->声明交换机-->声明队列-->队列绑定交换机-->发送消息-->关闭频道-->关闭连接
+
+# 消费者执行过程：
+# 创建连接-->创建频道-->声明交换机-->声明队列-->队列绑定交换机-->创建消费者（收到消息后的回调处理）-->消费消息
+```
+
+- 发布订阅/工作队列模式区别：
+
+  - 工作队列模式不用定义交换机，而发布/订阅模式需要定义交换机。
+  - 工作队列模式的生产方是面向队列发送消息（底层使用默认交换机），而发布/订阅模式的生产方是面向交换机发送消息。
+
+  - 工作队列模式不需要设置队列和交换机的绑定（底层会将队列绑定到默认的交换机），而发布/订阅模式需要设置队列和交换机的绑定。
+
+### 12.2.4 路由模式
+
+**路由模式（Routing）**：一个生产者+路由器+多个消费者（定向）（需要设置DIRECT类型的交换机）。
+
+- P：生产者，向Exchange发送消息，发送消息时，会指定一个routingKey。
+- X： Exchange（交换机），接收生产者的消息，然后把消息递交给与routingKey完全匹配的队列。
+- C1：消费者，其所在队列指定了需要routingKey为error的消息。
+- C2：消费者，其所在队列指定了需要routingKey为info、error、warning的消息。
+
+- 路由模式的特点：
+  - 队列与交换机的绑定，不能是任意绑定了，而是要指定一个routingKey（路由key）。
+  - 消息的发送方在向Exchange发送消息时，也必须指定消息的routingKey。
+  - Exchange不再把消息交给每一个绑定的队列，而是根据消息的routingKey进行判断，只有队列的routingKey与消息的routingKey完全一致，才会接收到消息。
+- 注意事项：
+  - Routing模式要求队列在绑定交换机时要指定routingKey，消息会转发到符合routingKey的队列。
+
+![image-20201227223124324](README.assets/image-20201227223124324.png)
+
+```yaml
+# 生产者执行过程：
+# 创建连接-->创建频道-->声明交换机-->声明队列-->队列绑定交换机(需指定routingKey)-->发送消息(需指定routingKey)-->关闭频道-->关闭连接
+
+# 消费者执行过程：
+# 创建连接-->创建频道-->声明交换机-->声明队列-->队列绑定交换机(需指定routingKey)-->创建消费者（收到消息后的回调处理）-->消费消息
+```
+
+### 12.2.5 通配符模式
+
+**通配符模式（Topics）**：一个生产者+路由器+多个消费者（通配符）（需要设置TOPIC类型的交换机）。
+
+- 通配符模式的routingKey一般都是由一个或多个单词组成，多个单词之间以"."分隔，例如：`item.insert`，通配符规则如下：
+  - #：匹配一个或多个单词（例如：`item.#`能够匹配`item.insert.abc`或者`item.insert`）。
+  - \*：恰好匹配一个单词（例如：`item.*`只能匹配`item.insert`）。
+
+![image-20201227225418184](README.assets/image-20201227225418184.png)
+
+```yaml
+# 生产者执行过程：
+# 创建连接-->创建频道-->声明交换机-->声明队列-->队列绑定交换机(需采用通配符/或指定的routingKey)-->发送消息(需采用通配符/或指定的routingKey)-->关闭频道-->关闭连接
+
+# 消费者执行过程：
+# 创建连接-->创建频道-->声明交换机-->声明队列-->队列绑定交换机(需采用通配符/或指定的routingKey)-->创建消费者（收到消息后的回调处理）-->消费消息
+```
+
+- 通配符/发布订阅/路由模式的区别：
+  - 通配符模式可以实现发布订阅模式和路由模式的功能，发布订阅模式和路由模式可以看作是通配符模式的特殊子集。
+  - 通配符模式在配置routingKey时可以使用通配符，显得更加灵活。
+
+### 12.2.6 远程过程调用模式
+
+**远程过程调用模式（Remote procedure call, RPC）**：
+
+### 12.2.7 发布确认模式
+
+**发布确认模式（Publisher Confirms）：**
+
+## 12.3 整合SpringBoot
+
+> 参考博客文章：[SpringBoot整合RabbitMq](https://blog.csdn.net/qq_35387940/article/details/100514134)、[SpringBoot RabbitMq参数配置详解](https://blog.csdn.net/girlgolden/article/details/97915368)
+
+## 12.4 高级特性
+
+**如何保证消息的可靠性传输：**
+
+1. 持久化（Exchanger/Queue/message都需要持久化）。
+2. 生产者消息确认机制（confirm模式+return模式）。
+3. 消费者消息确认机制Ack。
+4. Broker高可用。
+
+### 12.4.1 消息的可靠性投递
+
+**控制消息的可靠性投递的两种方式：**
+
+- confirm模式
+- return模式
+
+**RabbitMq的消息投递的路径：**
+
+Producer-->RabbitMq broker-->Exchange-->Queue-->Consumer
+
+- 消息从Producer到Exchange则会返回一个confirmCallback（无论成功失败与否，若成功，则ack=true；若失败，则ack=false）。
+- 消息从Exchange到Queue投递失败则会返回一个returnCallback（投递失败才会回调）。
+
+**生产推送消息的消息确认机制：**
+
+生产者推送消息到RabbitMq，可能会触发ConfirmCallback和ReturnCallBack回调。具体分以下四种情况：
+
+- 消息推送到Server，但是在Server里找不到交换机，此时会回调**ConfirmCallback**，并可在ConfirmCallback打印出错原因cause。
+- 消息推送到Server，在Server里找到交换机了，但是没找到队列，此时会回调**ConfirmCallback**和**ReturnCallBack**，并可在ReturnCallBack打印出错消息message。
+- 消息推送到Server，但是在Server里找不到交换机和队列，此时会回调**ConfirmCallback**，并可在ConfirmCallback打印出错原因cause。
+- 消息推送到Server，并推送成功，此时会回调**ConfirmCallback**。
+
+### 12.4.2 消息的可靠性消费
+
+**消费者接收到消息的消息确认机制：**主要有如下三种模式。
+
+- 自动确认（AcknowledgeMode.NONE，默认的消息确认机制）：RabbitMQ成功将消息发出（即将消息成功写入TCP Socket）中立即认为本次投递已经被正确处理，不管消费者端是否成功处理本次投递。
+
+- 根据情况确认（AcknowledgeMode.AUTO）：
+- 手动确认（AcknowledgeMode.MANUAL）：均表示消息已经被处理。
+  - basic.ack：用于肯定确认，表示消息已经被正确处理。
+  - basic.nack：用于否定确认、表示消息没有被正确处理。
+    - `channel.basicNack(deliveryTag, false, true)`：第一个参数依然是当前消息到的数据的唯一id；第二个参数是指是否针对多条消息；如果是true，也就是说一次性针对当前通道的消息的tagID小于当前这条消息的，都拒绝确认；三个参数是指是否重新入列，也就是指不确认的消息是否重新丢回到队列里面去。**使用不确认后重新入列这个确认模式要谨慎，因为这里也可能因为考虑不周出现消息一直被重新丢回去的情况，导致积压。**
+  - basic.reject：用于否定确认，表示消息没有被正确处理（与basic.nack相比有一个限制：一次只能拒绝单条消息 ）。
+    - `channel.basicReject(deliveryTag, true)`：拒绝消费当前消息，如果第二参数传入true，就是将数据重新丢回队列里，那么下次还会消费这消息。设置false，就是告诉服务器，我已经知道这条消息数据了，因为一些原因拒绝它，而且服务器也把这个消息丢掉就行， 下次不想再消费这条消息了。使用拒绝后重新入列这个确认模式要谨慎，因为一般都是出现异常的时候，catch异常再拒绝入列，选择是否重新入列。**如果使用不当会导致一些每次都被你重入列的消息一直消费-入列-消费-入列这样循环，会导致消息积压**。
+
+### 12.4.3 消费端限流
+
+- 配置`spring.rabbitmq.listener.simple.prefetch=1`，表示消费端每次从MQ拉取一条消息来消费，只有确认消费完毕后，才会拉取下一条消息。 
+- 消费端需要设置手动确认模式（AcknowledgeMode.MANUAL）。
+
+### 12.4.4 TTL
+
+**TTL（Time To Live，存活时间/过期时间）**： 当消息到达存活时间后，还没有被消费，会被自动清除。
+
+- RabbitMQ可以对整个队列（Queue）设置过期时间（队列到期后所有队列里的消息都会被清除）。
+  - `QueueBuilder.ttl(int ttl)`：使用建造者模式创建队列，并设置队列里消息的过期时间（即`x-message-ttl`）。
+  - `QueueBuilder.expires(int expires)`：使用建造者模式创建队列，并设置队列的过期时间（即`x-expires`）。
+- RabbitMQ也可以对消息设置过期时间（消息过期后，只有消息在队列顶端，才会判断其是否过期，然后才会移除掉过期消息）。
+  - `rabbitTemplate.convertAndSend(String exchange, String routingKey, final Object message,final MessagePostProcessor messagePostProcessor)`：在MessagePostProcessor 对象里设置message的过期消息。
+
+- 若队列和消息都设置了过期时间，则以时间短的为准。
+
+### 12.4.5 死信队列
+
+**死信队列**：Dead Letter Exchange(DLX)，死信交换机。当消息成为Dead message后，可以被重新发送到另一个交换机，这个交换机就是DLX。
+
+![image-20201228143410946](README.assets/image-20201228143410946.png)
+
+**消息成为死信的三种情况：**
+
+1. 队列消息长度到达限制。
+   - `new QueueBuilder().maxLength(int count)`：`x-max-length`。
+2. 消费者拒接消费消息（basicNack/basicReject），并且不把消息重新放入原目标队列（requeue=false）。
+   - `channel.basicReject(long deliveryTag, boolean requeue)`。
+   - `channel.basicNack(long deliveryTag, boolean multiple, boolean requeue)`。
+3. 原队列存在消息过期设置，消息到达超时时间未被消费。
+
+**队列绑定死信交换机和死信路由：**当消息成为死信时，如果该队列绑定了死信交换机，则死信会被死信交换机路由到死信队列。
+
+- `new QueueBuilder().deadLetterExchange(String dlx)`：使用建造者模式给队列设置死信交换机（`x-dead-letter-exchange`）。
+- `new QueueBuilder().deadLetterRoutingKey(String dlrk)`：使用建造者模式给队列设置死信路由键（`x-dead-letter-routing-key`）。
+
+![image-20201228144844331](README.assets/image-20201228144844331.png)
+
+### 12.4.6 延迟队列
+
+**延迟队列**：消息进入队列后不会立即被消费，只有到达指定时间后，才会被消费。
+
+**常见应用场景**：
+
+- 下单后，30分钟未支付，取消订单，回滚库存。
+- 新用户注册成功7天后，发送短信问候。
+
+**实现方式：**RabbitMQ没有提供延迟队列功能，但可以使用**TTL+死信队列**实现延迟队列。
+
+### 12.4.8 消息追踪
+
+- 使用Firehose插件来实现消息追踪。
+- 使用rabbitmq_tracing插件来实现消息追踪。
+
+## 12.5 RabbitMq应用
+
+### 12.5.1 消息可靠性保证
+
+如何能够保证消息的 100% 发送成功？
+
+虽然任何系统都不能保证消息的100%投递成功，但是可以保证消息最高最可靠的发送给目标方。在RabbitMQ中采用**消息补充机制**来保证消息的可靠性。
+
+![image-20201228165654706](README.assets/image-20201228165654706.png)
+
+**步骤分析：**
+
+参与部分：消息生产者、消息消费者、数据库、三个队列（Q1、Q2、Q3）、交换机、回调检查服务、定时检查服务。
+
+1. 消息的生产者将业务数据存到数据库中。
+2. 发送消息给队列Q1。
+3. 消息的生产者等待一定的时间后，再发送一个延迟消息给队列Q3。
+4. 消息的消费方监听Q1队列消息，成功接收后。
+5. 消息的消费方会发送 一条确认消息给队列Q2。
+6. 回调检查服务监听队列Q2发送的确认消息。
+7. 回调检查服务接收到确认消息后，将消息写入到消息的数据库表中。
+8. 回调检查服务同时也会监听队列Q3延迟消息， 如果接收到消息会和数据库比对消息的唯一标识。
+9. 如果发现没有接收到确认消息，那么回调检查服务就会远程调用消息生产者，重新发送消息。
+10. 重新执行2-7步骤，保证消息的可靠性传输。
+11. 如果发送消息和延迟消息都出现异常，定时检查服务会监控消息库中的消息数据，如果发现不一致的消息然后远程调用消息的生产者重新发送消息。
+
+### 12.5.2 消息幂等性处理
+
+**幂等性**指一次和多次请求某一个资源，对于资源本身应该具有同样的结果。也就是说，其任意多次执行对资源本身所产生的影响均与一次执行的影响相同。在MQ中指，消费多条相同的消息，得到与消费该消息一次相同的结果。
+
+下图使用**乐观锁机制**保证消息的幂等操作。
+
+![image-20201228165436333](README.assets/image-20201228165436333.png)
+
+### 12.5.3 集群
+
+使用集群的目的：**保证可靠性**、**增加消息吞吐量**。
+
+集群的配置：集群配置+负载均衡（HAProxy）。
+
+- 单机多实例部署：https://www.rabbitmq.com/clustering.html。
+- 多机单实例部署
+
+## 12.6 RabbitMq源码
+
+- 大量使用建造者模式：QueueBuilder、ExchangeBuilder、BindingBuilder。
+
+  
+
+
+
+# 13 ElasticSearch
+
+# 14 面试点总结
+
+**必须掌握的手写代码**：
 
 1. 双重检查+volatile单例模式
 2. 死锁+阻塞队列实现的死锁
+3. KMP算法的实现
+
+**分布式锁的实现方式**：
+
+1. 数据库乐观锁
+
+2. 基于Redis的分布式锁：https://blog.csdn.net/yb223731/article/details/90349502
+
+   - 加锁：`set(String key, String value, String nxxx, String expx, long time)`
+
+   - 解锁：使用Lua脚本（保证事务的原子性）
+
+     ```lua
+     if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end
+     ```
+
+3. 基于zookeeper的分布式锁
+
+**分布式事务的实现方式**：https://zhuanlan.zhihu.com/p/183753774
+
+1. 2PC（Two-phase commit protocol）：二阶段提交
+2. 3PC
+3. TCC
+4. 本地消息表
+5. 消息事务
 

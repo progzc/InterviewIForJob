@@ -1,0 +1,110 @@
+@startuml
+/'NIO框架'/
+/'Buffer缓冲区'/
+abstract class Buffer{
+  - int mark = -1; // 标记: 在调用reset方法时，会将缓冲区的position位置重置为该索引
+  - int position = 0; // 位置: 代表下一个要读取或写入元素的index
+  - int limit; // 限制: 代表第一个不应该读取或写入元素的index
+  - int capacity; // 容量
+  + {abstract} boolean isReadOnly(); // 判断是否为只读缓冲区
+  + {abstract} boolean isDirect(); // 判断是否为直接缓冲区
+  + {abstract} boolean hasArray(); // 判断是否有底层实现的数组（直接内存没有将数据存在hb[]数组中，而是直接存在内存中）
+  + {abstract} int arrayOffset(); // 返回此缓冲区的底层实现数组中第一个缓冲区元素的偏移量
+  + final Buffer clear(); // 还原缓冲区的状态
+  + final Buffer flip(); // 反转缓冲区
+  + final boolean hasRemaining(); // 判断在当前位置和限制之间是否有元素
+  + final Buffer rewind(); // 重绕缓冲区，将位置设置为0，并丢弃标记
+}
+abstract class ByteBuffer{
+  + static ByteBuffer wrap(byte[] array);
+  + static ByteBuffer wrap(byte[] array,int offset, int length);
+
+  + static ByteBuffer allocate(int capacity); // 分配在JVM分配堆上
+  + static ByteBuffer allocateDirect(int capacity); // 分配在JVM直接内存
+
+  + {abstract} byte get(); // 以相对位置获取单个字节
+  + ByteBuffer get(byte[] dst) // 以相对位置获取批量字节
+  + {abstract} byte get(int index); // 以绝对位置获取单个字节
+  + ByteBuffer get(byte[] dst, int offset, int length); // 以绝对位置获取批量字节
+  + {abstract} ByteBuffer put(byte b); // 以相对位置写单个字节
+  + final ByteBuffer put(byte[] src); // 以相对位置写批量字节
+  + ByteBuffer put(byte[] src, int offset, int length); // 以相对位置写部分批量字节
+
+  + {abstract} Xxx getXxx(int index); // 可以相对位置获取基本类型的值（会进行类型自动转换）
+  + {abstract} ByteBuffer putXxx(xxx value); // 可以相对位置写基本类型的值（会进行类型自动转换）
+
+  + {abstract} ByteBuffer compact(); // 压缩
+  + {abstract} ByteBuffer duplicate(); // 复制
+  + {abstract} ByteBuffer slice(); // 截取
+}
+abstract class CharBuffer{
+  + static CharBuffer wrap(CharSequence csq); // 创建只读字符缓冲区
+
+  + abstract char get(); // 以相对位置获取单个字符
+  + CharBuffer get(char[] dst); // 以相对位置获取批量字符
+  + {abstract} char get(int index); // 以绝对位置获取单个字符
+  + CharBuffer get(char[] dst, int offset, int length); // 以绝对位置获取批量字符
+  + {abstract} CharBuffer put(char c); // 以相对位置写单个字符
+  + final CharBuffer put(char[] src); // 以相对位置写批量字符
+  + CharBuffer put(char[] src, int offset, int length); // 以相对位置写部分批量字符
+  + CharBuffer put(CharBuffer src); // 以相对位置写批量字符
+  + {abstract} CharBuffer put(int index, char c); // 以绝对位置写单个字符
+  + final CharBuffer put(String src); // 以相对位置写批量字符
+  + CharBuffer put(String src, int start, int end); 以相对位置写部分字符
+
+  + CharBuffer append(char c); // 以相对位置写单个字符
+  + CharBuffer append(CharSequence csq); // 以相对位置写字符序列
+  + CharBuffer append(CharSequence csq, int start, int end); // 以相对位置写部分字符序列
+
+  + final char charAt(int index); // 以绝对位置获取当字符
+  + int read(CharBuffer target); // 试图将当前字符缓冲区中的字符写入指定的字符缓冲区
+  + {abstract} CharBuffer subSequence(int start, int end); // 创建表示相对于当前位置的此缓冲区的指定序列
+  + final int length(); // 返回此字符缓冲区position到limit之间的长度（等同于remaining）
+
+}
+abstract class DoubleBuffer
+abstract class FloatBuffer
+abstract class IntBuffer
+abstract class LongBuffer
+abstract class ShortBuffer
+ByteBuffer -up-|> Buffer
+note right of ByteBuffer: 重点掌握
+CharBuffer -up-|> Buffer
+note right of CharBuffer: 重点掌握
+DoubleBuffer -up-|> Buffer
+FloatBuffer -up-|> Buffer
+IntBuffer -up-|> Buffer
+LongBuffer -up-|> Buffer
+ShortBuffer -up-|> Buffer
+
+class HeapByteBuffer
+class HeapCharBuffer
+class HeapDoubleBuffer
+class HeapFloatBuffer
+class HeapIntBuffer
+class HeapLongBuffer
+class HeapShortBuffer
+HeapByteBuffer -up-|> ByteBuffer
+HeapCharBuffer -up-|> CharBuffer
+HeapDoubleBuffer -up-|> DoubleBuffer
+HeapFloatBuffer -up-|> FloatBuffer
+HeapIntBuffer -up-|> IntBuffer
+HeapLongBuffer -up-|> LongBuffer
+HeapShortBuffer -up-|> ShortBuffer
+
+abstract class MappedByteBuffer
+MappedByteBuffer -up-|> ByteBuffer
+class DirectByteBuffer
+DirectByteBuffer -up-|> MappedByteBuffer
+
+class ByteBufferAsCharBufferB
+class ByteBufferAsCharBufferL
+class ByteBufferAsCharBufferRB
+class ByteBufferAsCharBufferRL
+ByteBufferAsCharBufferB -up-|> CharBuffer
+ByteBufferAsCharBufferL -up-|> CharBuffer
+ByteBufferAsCharBufferRB -up-|> ByteBufferAsCharBufferB
+ByteBufferAsCharBufferRL -up-|> ByteBufferAsCharBufferL
+
+
+@enduml

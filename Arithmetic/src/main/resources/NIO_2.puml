@@ -1,0 +1,166 @@
+@startuml
+/'通道接口'/
+interface AutoCloseable{
+  // 结合try可实现自动关闭；\n不要求幂等，不可重复调用
+}
+interface Closeable{
+  // 可自动或手动关闭IO流；\n幂等，可重复调用
+}
+interface Channel{
+  // 代表数据到硬件设备、文件、\n网络套接字的连接
+  + boolean isOpen();
+  + void close();
+}
+Closeable -up-|> AutoCloseable
+Channel -up-|> Closeable
+
+interface AsynchronousChannel{
+  // 使通道支持异步IO操作
+}
+AsynchronousChannel -up-|> Channel
+interface AsynchronousByteChannel{
+  + Future<Integer> read(ByteBuffer dst);
+  + void read(ByteBuffer dst,A attachment,CompletionHandler handler);
+
+  + Future<Integer> write(ByteBuffer src);
+  + void write(ByteBuffer src,A attachment,CompletionHandler handler);
+}
+AsynchronousByteChannel -up-|> AsynchronousChannel
+
+interface ReadableByteChannel{
+  // 使通道允许对字节进行读操作
+  + int read(ByteBuffer dst);
+}
+ReadableByteChannel -up-|> Channel
+interface ScatteringByteChannel{
+  + long read(ByteBuffer[] dsts, int offset, int length);
+  + long read(ByteBuffer[] dsts);
+}
+ScatteringByteChannel -up-|> ReadableByteChannel
+
+interface WritableByteChannel{
+  // 使通道允许对字节进行写操作
+  + int write(ByteBuffer src);
+}
+WritableByteChannel -up-|> Channel
+interface GatheringByteChannel{
+  + long write(ByteBuffer[] srcs, int offset, int length);
+  + long write(ByteBuffer[] srcs);
+}
+GatheringByteChannel -up-|> WritableByteChannel
+
+interface ByteChannel
+ByteChannel -up-|> ReadableByteChannel
+ByteChannel -up-|> WritableByteChannel
+
+interface SeekableByteChannel{
+  + long position();
+  + SeekableByteChannel position(long newPosition);
+  + long size();
+  + SeekableByteChannel truncate(long size);
+}
+SeekableByteChannel -up-|> ByteChannel
+
+interface NetworkChannel{
+  // 使通道与Socket进行关联
+  + NetworkChannel bind(SocketAddress local);
+  + SocketAddress getLocalAddress();
+  + NetworkChannel setOption(SocketOption<T> name, T value);
+  + T getOption(SocketOption<T> name);
+  + Set<SocketOption<?>> supportedOptions();
+}
+NetworkChannel -right-|>Channel
+
+interface MulticastChannel{
+ + MembershipKey join(InetAddress group, NetworkInterface interf);
+ + MembershipKey join(InetAddress group, NetworkInterface interf, InetAddress source);
+}
+MulticastChannel-up-|>NetworkChannel
+
+interface InterruptibleChannel{
+  // 使通道能以异步的方式进行\n关闭与中断
+}
+InterruptibleChannel -up-|> Channel
+
+/'通道实现类'/
+abstract class AbstractInterruptibleChannel{
+ # final void begin();
+ # final void end(boolean completed);
+ # abstract void implCloseChannel();
+ ~ static void blockedOn(Interruptible intr);
+}
+AbstractInterruptibleChannel .up.|> InterruptibleChannel
+
+abstract class FileChannel{
+  + {abstract} int write(ByteBuffer src);
+  + {abstract} int read(ByteBuffer dst);
+
+  + final long write(ByteBuffer[] srcs);
+  + final long read(ByteBuffer[] dsts);
+
+  + {abstract} long write(ByteBuffer[] srcs, int offset, int length);
+  + {abstract} long read(ByteBuffer[] dsts, int offset, int length);
+
+  + {abstract} int write(ByteBuffer src, long position);
+  + {abstract} int read(ByteBuffer dst, long position);
+
+  + {abstract} FileChannel position(long newPosition);
+  + {abstract} long position();
+  + {abstract} long size();
+
+  + {abstract} FileChannel truncate(long size); // 截断缓冲区
+  + {abstract} long transferTo(long position,long count,WritableByteChannel target);
+  + {abstract} long transferFrom(ReadableByteChannel src,long position, long count);
+
+  // (共享锁是自己和其他人都只能读，不能写；独占锁只能自己读写，其他人不能读写)
+  // (共享锁和共享锁之间是非互斥关系；其他共享锁和独占锁的组合都是互斥关系)
+  + {abstract} FileLock lock(long position, long size, boolean shared); // 会阻塞
+  + final FileLock lock(); // 会阻塞，提前对整体独占锁定
+  // (不会阻塞，调用会立即返回)
+  + {abstract} FileLock tryLock(long position, long size, boolean shared);
+  + final FileLock tryLock();
+
+  // (强制将所有对通道文件的更新写入包含文件的本地设备上，但是效率很低)
+  + abstract void force(boolean metaData);
+
+  // (将通道文件区域直接映射到内存)
+  + {abstract} MappedByteBuffer map(MapMode mode,long position, long size);
+
+  // (打开一个文件并获取通道)
+  + static FileChannel open(Path path, OpenOption... options);
+
+  + final boolean isOpen();
+
+}
+FileChannel -up-|> AbstractInterruptibleChannel
+FileChannel .up.|> SeekableByteChannel
+FileChannel .up.|> GatheringByteChannel
+FileChannel .up.|> ScatteringByteChannel
+class FileChannelImpl
+FileChannelImpl -right-|> FileChannel
+
+interface OpenOption
+enum StandardOpenOption{
+  READ, // 读取
+  WRITE,
+  APPEND, // 在末尾追加写
+  TRUNCATE_EXISTING, // 将文件长度截断为0（磁盘上的文件内容会被清空）
+  CREATE, // 搭配CREATE使用可以当文件不存在时创建文件
+  CREATE_NEW, // 若文件不存在则新建；若存在则抛出异常
+  DELETE_ON_CLOSE, // 关闭时删除
+  // 稀疏文件（文件大小很大，但是占用空间依赖于\n实际写入的字节，占用空间较小）
+  SPARSE,
+  // 文件内容和元数据的每次更新都同步写入存储设备，效率很低
+  SYNC,
+  // 文件内容每次更新需要同步写入存储设备，效率较高
+  DSYNC;
+}
+enum LinkOption
+enum ExtendedOpenOption
+StandardOpenOption .up.|> OpenOption
+LinkOption .up.|> OpenOption
+ExtendedOpenOption .up.|> OpenOption
+
+interface Path
+
+@enduml

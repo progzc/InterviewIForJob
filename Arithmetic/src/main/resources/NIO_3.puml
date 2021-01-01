@@ -1,0 +1,143 @@
+@startuml
+/'获取网络设备信息'/
+class NetworkInterface{
+  + static NetworkInterface getByIndex(int index);
+  + static NetworkInterface getByName(String name);
+  + static NetworkInterface getByInetAddress(InetAddress addr);
+
+  + boolean isPointToPoint();
+  + boolean supportsMulticast();
+}
+note right of NetworkInterface: 对应网络设备信息
+class InetAddress{
+  + static InetAddress getByName(String host);
+  + static InetAddress[] getAllByName(String host);
+  + static InetAddress getByAddress(byte[] addr);
+  + static InetAddress getByAddress(String host, byte[] addr);
+  + static InetAddress getLocalHost();
+}
+note right of InetAddress: 对应IP地址信息
+class Inet6Address
+class Inet4Address
+Inet6Address -up-|> InetAddress
+Inet4Address -up-|> InetAddress
+class InterfaceAddress{
+  + InetAddress getAddress();
+  + InetAddress getBroadcast();
+}
+note right of InterfaceAddress: 对应网络接口信息
+NetworkInterface o-down->InterfaceAddress
+InterfaceAddress -down->InetAddress
+
+/'Socket套接字'/
+interface AutoCloseable
+interface Closeable
+Closeable -left-|> AutoCloseable
+class Socket{
+  + Socket();
+  // (host和port分别表示连接到的服务器的主机名和端口地址)
+  + Socket(String host, int port);
+  + Socket(InetAddress address, int port);
+
+  // (绑定客户端的Socket地址,绑定需要在连接之前进行设置)
+  + void bind(SocketAddress bindpoint);
+  // (连接到服务器的Socket地址，常和Socket无参构造器联合使用)
+  + void connect(SocketAddress endpoint);
+  + void connect(SocketAddress endpoint, int timeout);
+  + synchronized void close();
+
+  + int getPort();//获取连接到的端口
+  + int getLocalPort();//获取绑定的本机端口
+  + InetAddress getLocalAddress();//获取本地绑定的IP地址
+  + SocketAddress getLocalSocketAddress();//获取本地绑定的套接字地址
+  + InetAddress getInetAddress();//获取连接的IP地址
+  + SocketAddress getRemoteSocketAddress();//获取连接的套接字地址
+
+  + boolean isBound();
+  + boolean isConnected();
+  + boolean isClosed();
+
+  // (半读状态:调用端不能获取输入流，对端却能获得输入流)
+  + void shutdownInput();
+  // (半写状态:调用端不能获取输出流，对端却能获得输出流)
+  + void shutdownOutput();
+  + boolean isInputShutdown();//判断半读状态
+  + boolean isOutputShutdown();//判断半写状态
+  + void setTcpNoDelay(boolean on);//是否禁用Nagle算法(合并数据包发送)
+  + synchronized void setSendBufferSize(int size);//设置发送缓冲区大小
+  // (on设置为true，关闭后会逗留；反之不会逗留)
+  + void setSoLinger(boolean on, int linger);
+  + synchronized void setSoTimeout(int timeout);//设置阻塞读的时间
+  + void setOOBInline(boolean on);//是否接受紧急数据(默认禁止)
+  + void sendUrgentData (int data);//发送紧急数据(会优先发送)
+  + void setKeepAlive(boolean on);//设置是否启用心跳机制(确保识别客户端宕机)
+  // (设置连接的服务质量:发送成本低0x02/高可靠性0x04/最高吞吐量0x08/最小延迟0x10)
+  + void setTrafficClass(int tc);
+
+}
+class ServerSocket{
+  + ServerSocket(int port);
+  // (连接数超过backlog后拒绝不设置默认值是50)
+  + ServerSocket(int port, int backlog);
+  + ServerSocket(int port, int backlog, InetAddress bindAddr);
+
+  + synchronized void setSoTimeout(int timeout);
+  + Socket accept(); // 监听客户端连接,会阻塞
+  // (常和ServerSocket无参构造器联合使用)
+  + void bind(SocketAddress endpoint);
+  // windows下backlog的极限值是200
+  + void bind(SocketAddress endpoint, int backlog);
+  + SocketAddress getLocalSocketAddress();
+  + int getLocalPort();
+  + void close();
+  + boolean isClosed();
+  + boolean isBound();
+  + InetAddress getInetAddress();
+  // (用来开启端口复用)
+  + void setReuseAddress(boolean on);
+  // (设置内部套接字缓冲区大小)
+  + synchronized void setReceiveBufferSize (int size);
+
+}
+class DatagramSocket{
+  + DatagramSocket();
+  + DatagramSocket(int port);
+  + DatagramSocket(SocketAddress bindaddr);
+  + DatagramSocket(int port, InetAddress laddr);
+
+  // (接受数据报包，会阻塞)
+  + synchronized void receive(DatagramPacket p);
+  + void send(DatagramPacket p);//发送数据报包
+  + synchronized void setBroadcast(boolean on);//设置广播模式
+}
+class DatagramPacket{
+  + DatagramPacket(byte buf[], int length);
+
+  + synchronized void setData(byte[] buf);
+  + synchronized void setLength(int length);
+  + synchronized void setData(byte[] buf, int offset, int length);
+  + synchronized byte[] getData();
+  + synchronized int getOffset();
+}
+DatagramSocket --> DatagramPacket
+Socket ..|> Closeable
+ServerSocket ..|> Closeable
+DatagramSocket .up.|> Closeable
+class MulticastSocket
+MulticastSocket -up-|>DatagramSocket
+note left of DatagramSocket: 可以实现单播和广播
+note left of MulticastSocket: 可以实现多播
+abstract class SocketAddress
+class InetSocketAddress{
+  + InetSocketAddress(InetAddress addr, int port);
+  + InetSocketAddress(String hostname, int port);
+
+  + final String getHostName(); // 进行DNS解析,反向查找域名
+  + final String getHostString(); // 不进行反向查找
+  + final InetAddress getAddress();
+  + static InetSocketAddress createUnresolved(String host, int port);
+  + final boolean isUnresolved();
+}
+InetSocketAddress -up-|> SocketAddress
+
+@enduml

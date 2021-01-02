@@ -2688,7 +2688,78 @@ class MyThread implements Runnable{
 1. 查看日志。
 2. 查看堆栈信息。（这样比较专业）
 
-> [B站多线程教程](https://www.bilibili.com/video/BV1B7411L7tE)、[线程的六种状态及切换](https://blog.csdn.net/qq_22771739/article/details/82529874)、[volatile关键字](https://www.cnblogs.com/zhengbin/p/5654805.html#_label0)、[transient关键字](https://baijiahao.baidu.com/s?id=1636557218432721275&wfr=spider&for=pc)、[B站并发编程](https://www.bilibili.com/video/BV1B7411L7tE)、[Java内存模型](https://www.cnblogs.com/null-qige/p/9481900.html)、[CAS](https://blog.csdn.net/v123411739/article/details/79561458)、[周明志-深入理解JAVA虚拟机]()
+### 2.2.21 关于中断
+
+结束线程的方法：
+
+1. Thread类的`public final void stop()`方法，但这个方法被标记为了过时，简单的说，我们不应该使用它，可以忽略它。
+
+2. 使用中断机制：中断并不是强迫终止一个线程，它是一种协作机制，是给线程传递一个取消信号，但是由线程来决定如何以及何时退出。
+
+   - Thread类的`public boolean isInterrupted()`方法
+     - 属于实例方法，需要通过线程对象调用。
+     - 返回对应线程的中断标志位是否为true。
+   - Thread类的`public void interrupt()`方法
+     - 属于实例方法，需要通过线程对象调用。
+     - 调用该方法的线程的状态将被置为"中断"状态。注意：线程中断仅仅是设置线程的中断状态位，不会停止线程。需要用户自己去监视线程的状态为并做处理。支持线程中断的方法（也就是线程中断后会抛出InterruptedException的方法，比如这里的sleep，以及Object.wait等方法）就是在监视线程的中断状态，一旦线程的中断状态被置为"中断状态"，就会抛出中断异常。
+
+   - Thread类的`public static boolean interrupted()`方法
+     - 属于静态方法，实际会调用Thread.currentThread()操作当前线程。
+     - 返回当前线程的中断标志位是否为true，但它还有一个重要的副作用，就是清空中断标志位，也就是说，连续两次调用interrupted()，第一次返回的结果为true，第二次一般就是false (除非同时又发生了一次中断)。
+
+   ```java
+   public class Interrupt  {
+       public static void main(String[] args) throws Exception {
+           Thread t = new Thread(new Worker());
+           t.start();
+           
+           Thread.sleep(200);
+           t.interrupt();
+           
+           System.out.println("Main thread stopped.");
+       }
+       
+       public static class Worker implements Runnable {
+           public void run() {
+               System.out.println("Worker started.");
+               
+               try {
+                   Thread.sleep(500);
+               } catch (InterruptedException e) {
+                   Thread curr = Thread.currentThread();
+                   //再次调用interrupt方法中断自己，将中断状态设置为“中断”
+                   curr.interrupt();
+                   System.out.println("Worker IsInterrupted: " + curr.isInterrupted());
+                   System.out.println("Worker IsInterrupted: " + curr.isInterrupted());
+                   System.out.println("Static Call: " + Thread.interrupted());//clear status
+                   System.out.println("---------After Interrupt Status Cleared----------");
+                   System.out.println("Static Call: " + Thread.interrupted());
+                   System.out.println("Worker IsInterrupted: " + curr.isInterrupted());
+                   System.out.println("Worker IsInterrupted: " + curr.isInterrupted());
+               }
+               
+               System.out.println("Worker stopped.");
+           }
+       }
+   }
+   // 输出
+   Worker started.
+   Main thread stopped.
+   Worker IsInterrupted: true
+   Worker IsInterrupted: true
+   Static Call: true
+   ---------After Interrupt Status Cleared----------
+   Static Call: false
+   Worker IsInterrupted: false
+   Worker IsInterrupted: false
+   Worker stopped.
+   ```
+
+   
+
+   
+
+> [B站多线程教程](https://www.bilibili.com/video/BV1B7411L7tE)、[线程的六种状态及切换](https://blog.csdn.net/qq_22771739/article/details/82529874)、[volatile关键字](https://www.cnblogs.com/zhengbin/p/5654805.html#_label0)、[transient关键字](https://baijiahao.baidu.com/s?id=1636557218432721275&wfr=spider&for=pc)、[B站并发编程](https://www.bilibili.com/video/BV1B7411L7tE)、[Java内存模型](https://www.cnblogs.com/null-qige/p/9481900.html)、[CAS](https://blog.csdn.net/v123411739/article/details/79561458)、[周明志-深入理解JAVA虚拟机]()、**[中断线程的几种方法对比](https://www.cnblogs.com/Hermioner/p/9860511.html)**
 
 ## 2.3 并发编程实战
 
@@ -3469,29 +3540,96 @@ ReentrantLock与synchronized的选择：
 - NIO方式适用于连接数目多且连接比较短（轻操作）的架构，比如聊天服务器，并发局限于应用中，编程比较复杂，JDK1.4开始支持。
 - AIO方式使用于连接数目多且连接比较长（重操作）的架构，比如相册服务器，充分调用OS参与并发操作，编程比较复杂，JDK7开始支持。
 
-### 3.2.1 NIO
+### 3.2.1 NIO 
 
-**NIO与IO的主要区别：**NIO的核心在于通道（Channel，打开到IO设备（如文件、套接字）的连接，**负责传输**）和缓冲区（Buffer，**负责存储**）。
+**NIO与IO的主要区别：**NIO的核心在于通道（Channel，打开到IO设备（如文件、套接字）的连接，**负责传输**）、缓冲区（Buffer，**负责存储**）和选择器（NIO的核心，作用是实现**非阻塞**）。
 
-|            IO             |               NIO               |
-| :-----------------------: | :-----------------------------: |
-| 面向流（Stream Oriented） |  面向缓冲区（Buffer Oriented）  |
-| 同步阻塞IO（Blocking IO） | 同步非阻塞IO（Non Blocking IO） |
-|             -             |       选择器（Selectors）       |
+|                IO                 |                  NIO                  |
+| :-------------------------------: | :-----------------------------------: |
+| 面向流（Stream Oriented）：单向的 | 面向缓冲区（Buffer Oriented）：双向的 |
+|     同步阻塞IO（Blocking IO）     |    同步非阻塞IO（Non Blocking IO）    |
+|                 -                 |          选择器（Selectors）          |
+
+#### 3.2.1.1 缓冲区(Buffer)
+
+缓冲区(Buffer)用法总结：
+
+![image-20201230215759367](README.assets/image-20201230215759367.png)
+
+#### 3.2.1.2 通道(Channel)
+
+通道(Channel)用法总结：
+
+![image-20201231182855615](README.assets/image-20201231182855615.png)
+
+#### 3.2.1.3 套接字(Socket)
+
+套接字(Socket)用法总结：
+
+![image-20210101154853579](README.assets/image-20210101154853579.png)
+
+#### 3.2.1.4 选择器(Selector)
+
+选择器(Selector)用法总结：
+
+![image-20210102150605875](README.assets/image-20210102150605875.png)
+
+#### 3.2.1.5 NIO知识点
+
+**NIO的三大核心**：Channel通道、Buffer缓冲区、Selector选择器
+
+**直接缓冲区与非直接缓冲区：**字节缓冲区要么时直接的，要么是非直接的。如果为直接字节缓冲区，则Java虚拟机会尽最大努力直接在此缓冲区上执行本机IO操作。也就是说，在每次调用基础操作系统的一个本机I/O操作之前（或之后），虚拟机都会尽量避免将缓冲区的内容复制到中间缓冲区中（或从中间缓冲区中复制内容）。
+
+1. 非直接缓冲区通过allocate()方法分配缓冲区，将缓冲区建立在JVM内存中。
+2. 直接缓冲区通过allocateDirect()方法分配直接缓冲区，将缓冲区建立在操作系统的物理内存中，可以提供效率。
+   - allocateDirect()方法返回的缓冲区进**行分配和取消分配所需成本**通常高于非直接缓冲区。
+   - 直接缓冲区的内容可以**驻留在常规的垃圾回收堆之外**，因此对应用程序的内存需求量造成的影响可能并不明显。建议将直接缓冲区主要分配给那些易受基础系统的本机I/O操作影响的大型、持久的缓冲区。一般情况下，最好仅在直接缓冲区能在程序性能方面带来明显好处时分配它们。
+   - 直接字节缓冲区还可以通过FileChannel的map()方法（返回MappedByteBuffer）将文件区域直接映射到内存中来创建。Java平台的实现有助于通过JNI从本机代码创建直接字节缓冲区。如果以上这些缓冲区中的某个缓冲区实例指的是不可访问的内存区域，则试图访问该区域不会更改该缓冲区的内容，并且将会在访问期间或稍后的某个时间导致抛出不确定的异常。
+
+![image-20210102175516410](README.assets/image-20210102175516410.png)
 
 
 
+<img src="README.assets/image-20210102180324262.png" alt="image-20210102180324262" style="zoom:80%;" />
 
+**通道与DMA**：
 
+<img src="README.assets/image-20210102181130925.png" alt="image-20210102181130925" style="zoom:80%;" />
 
+通道的主要实现类：FileChannel、SocketChannel、ServerSocketChannel、DatagramChannel...
+
+获取通道的几种方法：
+
+1. 使用getChannel()方法：FileInputStream/FileOutputStream/RandomAccessFile（针对本地IO）、Socket/ServerSocket/DatagramSocket（针对网络IO）。
+2. 在NIO中针对各个通道的静态open()方法。
+3. 在NIO中的Files工具类的newByteChannel()方法。
+
+**select/poll/epoll的区别**：
+
+select缺点：
+
+1. bitmap数组默认大小为1024，虽然可以自己设置，但还是大小有限。
+2. FD_SET不可重用。
+3. 用户态到内核态切换存在开销。
+4. 判断哪一个socket有数据需要进行遍历（轮询），时间复杂度为O(n)。
+
+poll：解决了缺点1（因为基于链表处理）和缺点2。
+
+epoll：解决了select的缺点1、2、3、4，具有广泛的应用（Redis/Nginx/Java NIO(Linux下)）。
 
 ### 3.2.2 AIO
 
+AIO的用法总结：
+
+![image-20210102171609911](README.assets/image-20210102171609911.png)
 
 
 
 
-> 参考博客文章：[Java IO中的设计模式](https://www.cnblogs.com/wxgblogs/p/5649933.html)、[BIO/NIO/AIO整理](https://blog.csdn.net/guanghuichenshao/article/details/79375967)
+
+
+
+> 参考博客文章：[Java IO中的设计模式](https://www.cnblogs.com/wxgblogs/p/5649933.html)、[BIO/NIO/AIO整理](https://blog.csdn.net/guanghuichenshao/article/details/79375967)、[select/poll/epoll的区别](https://www.cnblogs.com/aspirant/p/9166944.html)、[**<<NIO与Socket编程技术指南>>**]()、[直接缓冲区与非直接缓冲区的区别](https://www.cnblogs.com/shamo89/p/9612794.html)、[JVM直接内存的使用与回收](https://blog.csdn.net/weixin_45505313/article/details/105310477)
 
 # 4 集合源码
 
@@ -5865,6 +6003,16 @@ ACOS( COS(latA) * COS(latB) * COS(lonA-lonB) + SIN(latA) * SIN(latB) ) * R
 
 # 7 微服务
 
+SpringCloud+SpringCloud Alibaba
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6013,9 +6161,9 @@ Java中栈和队列都可以用LinkedList来模拟；此外，栈还可以用Sta
 
 - 对于引用对象，需要考虑是否能改变原对象，不然要先进行拷贝。
 
-**高难度：**
+**难点：**
 
-- 红黑树
+- 红黑树：解决查询时二叉树退化成链表的问题；关键是插入和删除时二叉树的旋转。
 
 
 
@@ -8142,7 +8290,7 @@ info replication  # 查看当前库主从复制的信息
 
 ### 12.2.7 发布确认模式
 
-**发布确认模式（Publisher Confirms）：**
+**发布确认模式（Publisher Confirms）：**详见`12.4.1`。
 
 ## 12.3 整合SpringBoot
 
@@ -8152,10 +8300,10 @@ info replication  # 查看当前库主从复制的信息
 
 **如何保证消息的可靠性传输：**
 
-1. 持久化（Exchanger/Queue/message都需要持久化）。
+1. 持久化（Exchange/Queue/message都需要持久化）+镜像队列机制（集群节点）。
 2. 生产者消息确认机制（confirm模式+return模式）。
 3. 消费者消息确认机制Ack。
-4. Broker高可用。
+4. Broker高可用（集群）。
 
 ### 12.4.1 消息的可靠性投递
 
@@ -8203,7 +8351,7 @@ Producer-->RabbitMq broker-->Exchange-->Queue-->Consumer
 
 **TTL（Time To Live，存活时间/过期时间）**： 当消息到达存活时间后，还没有被消费，会被自动清除。
 
-- RabbitMQ可以对整个队列（Queue）设置过期时间（队列到期后所有队列里的消息都会被清除）。
+- RabbitMQ可以对整个队列（Queue）设置过期时间（队列里的消息过期后会被清除）。
   - `QueueBuilder.ttl(int ttl)`：使用建造者模式创建队列，并设置队列里消息的过期时间（即`x-message-ttl`）。
   - `QueueBuilder.expires(int expires)`：使用建造者模式创建队列，并设置队列的过期时间（即`x-expires`）。
 - RabbitMQ也可以对消息设置过期时间（消息过期后，只有消息在队列顶端，才会判断其是否过期，然后才会移除掉过期消息）。
@@ -8217,7 +8365,7 @@ Producer-->RabbitMq broker-->Exchange-->Queue-->Consumer
 
 ![image-20201228143410946](README.assets/image-20201228143410946.png)
 
-**消息成为死信的三种情况：**
+**消息成为死信的三种情况：**队列达到最大长度、消息被拒绝且requeue为false、消息过期。
 
 1. 队列消息长度到达限制。
    - `new QueueBuilder().maxLength(int count)`：`x-max-length`。
@@ -8296,13 +8444,27 @@ Producer-->RabbitMq broker-->Exchange-->Queue-->Consumer
 
 - 大量使用建造者模式：QueueBuilder、ExchangeBuilder、BindingBuilder。
 
-  
+
+
+# 13 Dubbo
 
 
 
-# 13 ElasticSearch
 
-# 14 面试点总结
+
+
+
+# 14 Zookeeper
+
+
+
+
+
+
+
+# 15 ElasticSearch
+
+# 16 面试点总结
 
 **必须掌握的手写代码**：
 

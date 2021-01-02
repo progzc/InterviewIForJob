@@ -1,0 +1,53 @@
+@startuml
+interface AutoCloseable
+interface Closeable
+interface Channel
+interface AsynchronousChannel
+abstract class AsynchronousFileChannel{
+  + static AsynchronousFileChannel open(Path file, OpenOption... options);
+
+  + final Future<FileLock> lock();
+  + {abstract} Future<FileLock> lock(long position, long size, boolean shared);
+  + final <A> void lock(A attachment,CompletionHandler<FileLock,? super A> handler);
+  + {abstract} <A> void lock(long position,long size,boolean shared,\nA attachment,CompletionHandler<FileLock,? super A> handler);
+
+  + {abstract} Future<Integer> read(ByteBuffer dst, long position);
+  + {abstract} <A> void read(ByteBuffer dst,long position,\nA attachment,CompletionHandler<Integer,? super A> handler);
+  + {abstract} Future<Integer> write(ByteBuffer src, long position);
+  + {abstract} <A> void write(ByteBuffer src,long position,\nA attachment,CompletionHandler<Integer,? super A> handler);
+
+  + {abstract} long size();
+  + boolean isOpen();
+}
+Closeable -left-|> AutoCloseable
+Channel -left-|> Closeable
+AsynchronousChannel -up-|> Channel
+AsynchronousFileChannel .up.|> AsynchronousChannel
+
+interface AsynchronousByteChannel{
+  + Future<Integer> read(ByteBuffer dst);
+}
+AsynchronousByteChannel -left-|> AsynchronousChannel
+
+abstract class AsynchronousServerSocketChannel{
+  + static AsynchronousServerSocketChannel open();
+
+  + final AsynchronousServerSocketChannel bind(SocketAddress local);
+  + {abstract} AsynchronousServerSocketChannel bind(SocketAddress local, int backlog);
+
+  + {abstract} Future<AsynchronousSocketChannel> accept();
+  + {abstract} <A> void accept(A attachment,\nCompletionHandler<AsynchronousSocketChannel,? super A> handler);
+}
+AsynchronousServerSocketChannel .up.|> AsynchronousChannel
+abstract class AsynchronousSocketChannel{
+  + static AsynchronousSocketChannel open();
+
+  + {abstract} Future<Void> connect(SocketAddress remote);
+  + {abstract} <T> AsynchronousSocketChannel setOption(SocketOption<T> name, T value)
+
+  + {abstract} SocketAddress getRemoteAddress();
+}
+AsynchronousSocketChannel .up.|> AsynchronousByteChannel
+
+
+@enduml

@@ -1,0 +1,131 @@
+@startuml
+/'选择器'/
+interface AutoCloseable
+interface Closeable
+Closeable -left-|> AutoCloseable
+abstract class Selector{
+  + static Selector open();//创建Selector实例
+
+  + {abstract} Set<SelectionKey> keys();
+  + {abstract} Set<SelectionKey> selectedKeys();
+  + {abstract} int select();
+  + {abstract} int select(long timeout);
+  + {abstract} int selectNow();
+  + {abstract} Selector wakeup();
+  + {abstract} void close();
+  + {abstract} boolean isOpen();
+  + {abstract} SelectorProvider provider();
+}
+abstract class AbstractSelector
+AbstractSelector -up-|> Selector
+abstract class SelectorImpl
+SelectorImpl -right-|> AbstractSelector
+class WindowsSelectorImpl
+WindowsSelectorImpl -up-|>SelectorImpl
+Selector .up.|> Closeable
+abstract class SelectionKey{
+  + final boolean isAcceptable();
+  + final boolean isConnectable();
+  + {abstract} SelectableChannel channel();
+  + {abstract} void cancel();
+  + {abstract} boolean isValid();
+  + final boolean isReadable();
+  + final boolean isWritable();
+  + {abstract} Selector selector();
+  + {abstract} int interestOps();
+  + {abstract} SelectionKey interestOps(int ops);
+  + {abstract} int readyOps();
+}
+interface Channel
+interface InterruptibleChannel{
+  // 使通道能够以异步的方式\n进行关闭与中断
+}
+abstract class AbstractInterruptibleChannel{
+  // 提供一个可以被中断的通道基本实现类
+}
+abstract class SelectableChannel{
+  // SelectableChannel可以通过Selector实现IO多路复用
+  // 要么处于阻塞模式，要么处于非阻塞模式
+  + final SelectionKey register(Selector sel, int ops);
+  + {abstract} SelectionKey register(Selector sel, int ops, Object att);
+  + {abstract} boolean isRegistered();
+  + {abstract} boolean isBlocking();
+  + {abstract} int validOps();
+}
+SelectableChannel-left->Selector
+Channel -left-|> Closeable
+InterruptibleChannel -left-|> Channel
+AbstractInterruptibleChannel .left.|>InterruptibleChannel
+SelectableChannel -up-|> AbstractInterruptibleChannel
+Selector -left->SelectionKey
+abstract class AbstractSelectionKey
+AbstractSelectionKey -right-|> SelectionKey
+class SelectionKeyImpl
+SelectionKeyImpl -down-|> AbstractSelectionKey
+
+abstract class AbstractSelectableChannel{
+  // (设置是否为阻塞模式：true为阻塞，false为非阻塞)
+  + final SelectableChannel configureBlocking(boolean block);
+
+  + final boolean isOpen();
+  + final Object blockingLock();//获得阻塞锁对象
+  // (根据Selector找到SelectionKey)
+  + final SelectionKey keyFor(Selector sel);
+  + final SelectorProvider provider();
+}
+abstract class DatagramChannel{
+  + static DatagramChannel open();
+  + {abstract} int send(ByteBuffer src, SocketAddress target);
+  + {abstract} DatagramChannel connect(SocketAddress remote);
+  + {abstract} DatagramChannel disconnect();
+  + MembershipKey join(InetAddress group, NetworkInterface interf);
+}
+class DatagramChannelImpl
+DatagramChannelImpl -up-|> DatagramChannel
+abstract class SocketChannel{
+  + static SocketChannel open(SocketAddress remote);
+
+  + {abstract} int read(ByteBuffer dst);
+  + {abstract} long read(ByteBuffer[] dsts, int offset, int length);
+  + final long read(ByteBuffer[] dsts);
+  + {abstract} boolean connect(SocketAddress remote);
+}
+class SocketChannelImpl
+SocketChannelImpl -up-|> SocketChannel
+abstract class ServerSocketChannel{
+  + static ServerSocketChannel open();
+
+  + final ServerSocketChannel bind(SocketAddress local);
+  + {abstract} ServerSocketChannel bind(SocketAddress local, int backlog);
+
+  + {abstract} ServerSocket socket();
+  + {abstract} SocketChannel accept();
+  + final void close();//标记关闭
+  # final void implCloseChannel();//完成真正关闭操作
+  + {abstract} <T> ServerSocketChannel setOption(SocketOption<T> name, T value)
+
+}
+abstract class Pipe.SinkChannel
+abstract class Pipe.SourceChannel
+AbstractSelectableChannel -up-|> SelectableChannel
+DatagramChannel -up-|> AbstractSelectableChannel
+SocketChannel -up-|> AbstractSelectableChannel
+ServerSocketChannel -up-|> AbstractSelectableChannel
+Pipe.SinkChannel -left-|> AbstractSelectableChannel
+Pipe.SourceChannel -left-|> AbstractSelectableChannel
+interface NetworkChannel{
+  + Set<SocketOption<?>> supportedOptions();
+  + SocketAddress getLocalAddress();
+}
+ServerSocketChannel ..|> NetworkChannel
+SocketChannel ..|> NetworkChannel
+class ServerSocketChannelImpl
+ServerSocketChannelImpl -up-|> ServerSocketChannel
+
+abstract class SelectorProvider
+abstract class SelectorProviderImpl
+SelectorProviderImpl -up-|> SelectorProvider
+class WindowsSelectorProvider
+WindowsSelectorProvider -up-|>SelectorProviderImpl
+Selector-->SelectorProvider
+@enduml

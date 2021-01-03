@@ -42,6 +42,11 @@ class AutoResource {
     }
 
     public void addAtomicInteger() {
+        // getAndAdd：i++
+        // addAndGet: ++i
+        // getAndDecrement: i--
+        // decrementAndGet: --i
+        // getAndSet: 设置新值,返回旧值
         atomicInteger.getAndIncrement();
     }
 }

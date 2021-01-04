@@ -19,7 +19,7 @@ public class ContainerNotSafeDemo {
     public static void main(String[] args) {
         listNotSafe();
         setNoSafe();
-//        mapNotSafe();
+        mapNotSafe();
     }
 
     private static void mapNotSafe() {

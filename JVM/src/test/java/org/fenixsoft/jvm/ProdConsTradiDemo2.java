@@ -20,7 +20,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class ProdConsTradiDemo2 {
     public static void main(String[] args) {
-        ShareData shareData = new ShareData();
+        ShareData2 shareData = new ShareData2();
 
         new Thread(() -> {
             for (int i = 0; i < 5; i++) {
@@ -43,7 +43,7 @@ public class ProdConsTradiDemo2 {
     }
 }
 
-class ShareData {
+class ShareData2 {
     private int number = 0;
     private Lock lock = new ReentrantLock();
     private Condition condition = lock.newCondition();

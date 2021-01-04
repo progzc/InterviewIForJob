@@ -18,7 +18,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class ContainerNotSafeDemo {
     public static void main(String[] args) {
         listNotSafe();
-//        setNoSafe();
+        setNoSafe();
 //        mapNotSafe();
     }
 

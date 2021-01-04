@@ -40,7 +40,6 @@ public class ProdConsTradiDemo1 {
                     }
                 }
             }, "Consumer" + j).start();
-
         }
     }
 }

@@ -22,24 +22,30 @@ public class ProdConsTradiDemo2 {
     public static void main(String[] args) {
         ShareData2 shareData = new ShareData2();
 
-        new Thread(() -> {
-            for (int i = 0; i < 5; i++) {
-                try {
-                    shareData.increment();
-                } catch (Exception e) {
-                    e.printStackTrace();
+        // 实现多个生产者和消费者对资源类的消费和生产，资源类的最大生产数量为1
+        for (int j = 0; j < 10; j++) {
+            new Thread(() -> {
+                for (int i = 0; i < 5; i++) {
+                    try {
+                        shareData.increment();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
-        }, "Producer").start();
-        new Thread(() -> {
-            for (int i = 0; i < 5; i++) {
-                try {
-                    shareData.decrement();
-                } catch (Exception e) {
-                    e.printStackTrace();
+            }, "Producer" + j).start();
+        }
+
+        for (int j = 0; j < 10; j++) {
+            new Thread(() -> {
+                for (int i = 0; i < 5; i++) {
+                    try {
+                        shareData.decrement();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
-        }, "Consumer").start();
+            }, "Consumer" + j).start();
+        }
     }
 }
 
@@ -52,7 +58,7 @@ class ShareData2 {
         lock.lock();
         try {
             //1 判断
-            while (number != 0) {
+            while (number == 1) {
                 //等待，不能生产
                 condition.await();
             }

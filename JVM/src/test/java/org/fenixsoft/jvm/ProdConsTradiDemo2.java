@@ -1,7 +1,7 @@
 package org.fenixsoft.jvm;
 
 /**
- * @Description 传统版本的生产者消费者模式
+ * @Description 传统版本的生产者消费者模式：使用Lock+Condition实现精准通知
  * @Author zhaochao
  * @Date 2021/1/4 16:54
  * @Email zcprog@foxmail.com

@@ -63,4 +63,7 @@ note right of Deque: 双端队列接口
 note right of LinkedList: 可用作队列和栈
 note right of Stack: 常用作栈
 
+class WeakHashMap
+WeakHashMap -up-|> AbstractMap
+
 @enduml

@@ -15,17 +15,17 @@ public class ReferenceQueueDemo {
         Object o1 = new Object();
         ReferenceQueue<Object> referenceQueue = new ReferenceQueue<>();
         WeakReference<Object> weakReference = new WeakReference<>(o1, referenceQueue);
-        System.out.println(o1);
-        System.out.println(weakReference.get());
-        System.out.println(referenceQueue.poll());
+        System.out.println(o1); // java.lang.Object@330bedb4
+        System.out.println(weakReference.get()); // java.lang.Object@330bedb4
+        System.out.println(referenceQueue.poll()); // null
 
         System.out.println("==========");
         o1 = null;
         System.gc();
         Thread.sleep(500);
-        System.out.println(o1);
-        System.out.println(weakReference.get());
-        System.out.println(referenceQueue.poll());
+        System.out.println(o1); // null
+        System.out.println(weakReference.get()); // null
+        System.out.println(referenceQueue.poll()); // java.lang.ref.WeakReference@2503dbd3
 
     }
 }

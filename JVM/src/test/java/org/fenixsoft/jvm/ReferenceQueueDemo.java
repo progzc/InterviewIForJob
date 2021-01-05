@@ -26,6 +26,5 @@ public class ReferenceQueueDemo {
         System.out.println(o1); // null
         System.out.println(weakReference.get()); // null
         System.out.println(referenceQueue.poll()); // java.lang.ref.WeakReference@2503dbd3
-
     }
 }

@@ -15,17 +15,17 @@ public class PhantomReferenceDemo {
         Object o1 = new Object();
         ReferenceQueue<Object> referenceQueue = new ReferenceQueue<>();
         PhantomReference phantomReference = new PhantomReference(o1, referenceQueue);
-        System.out.println(o1);
-        System.out.println(phantomReference.get());
-        System.out.println(referenceQueue.poll());
+        System.out.println(o1); // java.lang.Object@330bedb4
+        System.out.println(phantomReference.get()); // null
+        System.out.println(referenceQueue.poll()); // null
 
         System.out.println("===========");
 
         o1 = null;
         System.gc();
         Thread.sleep(500);
-        System.out.println(o1);
-        System.out.println(phantomReference.get());
-        System.out.println(referenceQueue.poll());
+        System.out.println(o1); // null
+        System.out.println(phantomReference.get()); // null
+        System.out.println(referenceQueue.poll()); // java.lang.ref.PhantomReference@2503dbd3
     }
 }

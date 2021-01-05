@@ -1,0 +1,93 @@
+@startuml
+/'多线程'/
+interface Runnable
+interface RunnableFuture
+interface Callable
+class FutureTask{
+  + FutureTask(Callable<V> callable);
+  + FutureTask(Runnable runnable, V result);
+
+  + V get();
+  + boolean isDone();
+  + boolean isCancelled();
+}
+class Thread{
+  + Thread();
+  + Thread(String name);
+  + Thread(Runnable target);
+  + Thread(Runnable target, String name);
+}
+RunnableFuture -up-|>Runnable
+FutureTask .up.|> RunnableFuture
+Thread .up.|> Runnable
+FutureTask o-right-> Callable
+Thread o--> Runnable
+
+/'线程池'/
+interface Executor{
+  + void execute(Runnable command);
+}
+interface ExecutorService{
+  + <T> Future<T> submit(Callable<T> task);
+  + <T> Future<T> submit(Runnable task, T result);
+  + Future<?> submit(Runnable task);
+
+  + void shutdown();
+  + List<Runnable> shutdownNow();
+}
+interface ScheduledExecutorService
+ExecutorService -up-|> Executor
+abstract class AbstractExecutorService
+AbstractExecutorService .up.|> ExecutorService
+ScheduledExecutorService -up-|> ExecutorService
+class ThreadPoolExecutor{
+  + static class AbortPolicy;
+  + static class CallerRunsPolicy;
+  + static class DiscardPolicy;
+  + static class DiscardOldestPolicy;
+
+  + ThreadPoolExecutor(int corePoolSize,int maximumPoolSize,long keepAliveTime,\nTimeUnit unit,BlockingQueue<Runnable> workQueue);
+  + ThreadPoolExecutor(int corePoolSize,int maximumPoolSize,long keepAliveTime,\nTimeUnit unit,BlockingQueue<Runnable> workQueue,ThreadFactory threadFactory)
+  + ThreadPoolExecutor(int corePoolSize,int maximumPoolSize,long keepAliveTime,\nTimeUnit unit,BlockingQueue<Runnable> workQueue,RejectedExecutionHandler handler)
+  + ThreadPoolExecutor(int corePoolSize,int maximumPoolSize,long keepAliveTime,\nTimeUnit unit,BlockingQueue<Runnable> workQueue,ThreadFactory threadFactory,RejectedExecutionHandler handler)
+}
+ThreadPoolExecutor -up-|> AbstractExecutorService
+class ScheduledThreadPoolExecutor
+ScheduledThreadPoolExecutor -up-|> ThreadPoolExecutor
+ScheduledThreadPoolExecutor .up.|> ScheduledExecutorService
+class Executors{
+  // (获得默认线程工厂)
+  static ThreadFactory defaultThreadFactory()
+
+  // (一池固定线程，重点掌握)
+  + static ExecutorService newFixedThreadPool(int nThreads)
+  + static ExecutorService newFixedThreadPool(int nThreads, ThreadFactory threadFactory);
+
+  // (一池单个线程，重点掌握)
+  + static ExecutorService newSingleThreadExecutor();
+  + static ExecutorService newSingleThreadExecutor(ThreadFactory threadFactory);
+
+  // (一池多个线程，重点掌握)
+  + static ExecutorService newCachedThreadPool();
+  + static ExecutorService newCachedThreadPool(ThreadFactory threadFactory);
+
+  // (带时间调度的线程池,了解即可)
+  + static ScheduledExecutorService newScheduledThreadPool(int corePoolSize);
+  + static ScheduledExecutorService newScheduledThreadPool(int corePoolSize, ThreadFactory threadFactory)
+
+  // (带时间调度的执行单个任务的线程池，了解即可)
+  + static ScheduledExecutorService newSingleThreadScheduledExecutor();
+  + static ScheduledExecutorService newSingleThreadScheduledExecutor(ThreadFactory threadFactory);
+
+  // (jDK8新增，使用目前机器上可用的处理器作为其并行级别，了解即可)
+  + static ExecutorService newWorkStealingPool();
+  + static ExecutorService newWorkStealingPool(int parallelism);
+
+}
+Executors -[hidden]left> ThreadPoolExecutor
+note bottom of Executors: 核心工具类
+note top of ThreadPoolExecutor: 核心类，线程池的底层\n就是这个类
+
+interface ThreadFactory
+
+@enduml

@@ -6130,7 +6130,7 @@ Java中栈和队列都可以用LinkedList来模拟；此外，栈还可以用Sta
 | [0092.反转链表 II](https://leetcode-cn.com/problems/reverse-linked-list-ii/)⭐ |            **迭代**/**两次递归**            |       O(1)/O(n)        |      O(1)/O(n)      |
 | [0094.二叉树的中序遍历](https://leetcode-cn.com/problems/binary-tree-inorder-traversal/) |             迭代(中序遍历)/递归             |       O(n)/O(n)        |      O(n)/O(n)      |
 | [0098.验证二叉搜索树](https://leetcode-cn.com/problems/validate-binary-search-tree/) |             迭代(中序遍历)/递归             |                        |                     |
-|                                                              |                                             |                        |                     |
+| [0146.LRU缓存机制](https://leetcode-cn.com/problems/lru-cache/)⭐ |       继承LinkedHashMap/HashMap+链表        |       O(1)/O(1)        |      O(n)/O(n)      |
 
 **算法题总结**：
 
@@ -8468,7 +8468,7 @@ Producer-->RabbitMq broker-->Exchange-->Queue-->Consumer
 
 
 
-# 13 Dubbo
+# 13 Nginx
 
 
 
@@ -10151,7 +10151,7 @@ Executor框架：
 1. **互斥条件**：该资源任意一个时刻只由一个线程占用。
 2. **请求与保持条件**：一个线程因请求资源而阻塞时，对已获得的资源保持不放。
 3. **不剥夺条件**：线程已获得的资源在未使用之前不能被其他线程强行剥夺，只有自己使用完毕后才释放资源。
-4. **循环等到条件**：若干进程之间形成一种头尾相接的循环等待资源关系。
+4. **循环等待条件**：若干进程之间形成一种头尾相接的循环等待资源关系。
 
 **死锁编码**：
 
@@ -10210,7 +10210,1115 @@ public class DeadLockDemo {
 
 ![image-20210105150211873](README.assets/image-20210105150211873.png)
 
+## 16.43 关于GC Roots
 
+**垃圾**：内存中已经不再被使用到的空间就是垃圾。
+
+**如何判断一个对象是垃圾**？
+
+1. 引用计数法：计数为0的对象就是垃圾。
+2. 枚举根节点（GC Roots，在GC Set集合中）做可达性分析（**复制/标记清除/标记压缩**都使用可达性算法判断垃圾）：不可达对象就是垃圾。
+
+**哪些对象可以作为GC Roots的根**？
+
+1. 虚拟机栈（栈帧中的局部变量区，也称作局部变量表）中引用的对象。
+2. 方法区中的类静态属性引用的对象。
+3. 方法区中常量引用的对象。
+4. 本地方法栈中JNI（Native方法）引用的对象。
+
+## 16.44 JVM参数类型
+
+常用的几个命令：`javac hello.java`（编译）、`java hello`（执行）、`javap hello`（反编译）
+
+**JVM的参数类型**：分为三类
+
+- 标配参数：`-version`、`-help`、`-showversion`
+
+- X参数(了解)
+
+  - `-Xint`：解释执行。
+  - `-Xcomp`：第一次使用就编译成本地代码。
+  - `-Xmixed`：混合模式（先编译再执行），JVM默认是混合模式。
+
+- **XX参数**：
+
+  - Boolean类型：`-XX:+或者-某个属性值`（+表示开启，-表示关闭）
+    - `-XX:+PrintGCDetails`：打印GC收集细节。
+    - `-XX:-PrintGCDetails`：不打印GC收集细节。
+    - `jps -l`：查看正在运行的java程序的进程号。
+    - `jinfo -flag PrintGCDetails 进程号`：查看正在运行的java程序是否已开启打印GC收集细节。
+  - KV设值类型：`-XX:属性key=属性值value`
+    - `-xx:MetaspaceSize=128m`：设置元空间大小为128Mb。
+    - `-XX:MaxTenuringThreshold=15`：设置Young区经过多少次存活才能进入Old区。
+    - `jps -l`：查看正在运行的java程序的进程号。
+    - `jinfo -flag MetaspaceSize 进程号`：查看正在运行的java程序的元空间大小。
+  - jinfo的使用：**`jinfo -flag 配置项 进程编号`**、**`jinfo -flags 进程编号`**（打印出主要的配置参数）
+    - `jinfo -flag InitialHeapSize 进程号`：查看初始堆的大小。
+    - `jinfo -flag UseSerialGC 进程号`
+    - `jinfo -flag UseParallelGC 进程号`
+    - `jinfo -flag MaxHeapSize 进程号`
+
+  **既然JVM的参数类型分为三类，那么对于两个经典的参数`-Xms`和`-Xmx`又作何解释**？
+
+  - `-Xms`等价于`-XX:InitialHeapSize`（`-Xms`相当于别名）。
+  - `-Xmx`等价于`-XX:MaxHeapSize`（`-Xms`相当于别名）。
+
+## 16.45 查看JVM初始默认值
+
+**查看JVM初始默认值**：`java -XX:+PrintFlagsInitial`
+
+**查看修改和更新（包括人工修改或JVM根据机器硬件自动修改）的内容**：`java -XX:+PrintFlagsFinal`（修改的内容前面有一个冒号）
+
+**查看垃圾回收器的种类以及其他常见值**：`java -XX:+PrintCommandLineFlags -version`
+
+**运行java命令的同时设置并打印出参数**：`java -XX:+PrintFlagsFinal -Xss128k 类名`
+
+![image-20210105172722161](README.assets/image-20210105172722161.png)
+
+## 16.46 通过程序获得堆栈信息
+
+**java 8的内存空间如下**：
+
+![image-20210105190747487](README.assets/image-20210105190747487.png)
+
+```java
+// 通过程序获得堆栈信息
+public class HelloGC {
+    public static void main(String[] args) {
+        // java虚拟机中的内存总量
+        long totalMemory = Runtime.getRuntime().totalMemory();
+        // java虚拟机试图使用的最大内存量
+        long maxMemory = Runtime.getRuntime().maxMemory();
+        System.out.println("TOTAL_MEMORY(-Xms)=" + totalMemory + "(字节)" + (totalMemory / 1024 / 2014) + "MB");
+        System.out.println("MAX_MEMORY(-Xmx)=" + maxMemory + "(字节)" + (maxMemory / 1024 / 2014) + "MB");
+    }
+}
+```
+
+## 16.47 JVM常用的基本配置参数
+
+**典型的配置**：`-Xms128m -Xmx4096m -Xss1024k -XX:MetaspaceSize=512m -XX:+PrintCommandLineFlags -XX:PrintGCDetails -XX:+UseSerialGC`
+
+**常用的基础参数如下**：
+
+- `-Xms`：等价于`-XX:InitialHeapSize`，初始大小堆内存，默认为物理内存1/64。
+- `-Xmx`：等价于`-XX:MaxHeapSize`，最大分配堆内存，默认为物理内存1/4。
+- `-XX:MaxDirectMemorySize`：最大本地直接内存大小，默认为物理内存的1/2（**存疑?**)。
+- `-Xss`：等价于`-XX:ThreadStackSize`，设置单个线程栈的大小，一般默认为512k~1024k，window下依赖于虚拟内存的大小。
+- `-Xmn`：设置年轻代的大小，一般不需要调整(`年轻代:老年代=1:2`、年轻代中`Eden:S0:S1=8:1:1`）。
+- `-XX:MetaspaceSize`：`-Xms10m -Xmx10m -XX:MetaspaceSize=1024m -XX:+PrintFlagsFinal`。
+  - 元空间的本质和永久代类似，都是JVM规范中方法区的实现，不过元空间与永久代之间最大的区别在于：元空间并不在虚拟机中，而是使用本地内存。默认情况下，元空间的大小仅受本地内存限制。**不过，JVM给元空间设置的大小默认为21M左右**。
+- `-XX:+PrintGCDetails`：输出详细GC收集日志信息。
+- `-XX:SurvivorRatio`：设置年轻代中Eden区与Survivor的比例，默认为8。
+- `-XX:NewRatio`：设置老年代与年轻代在堆中的比例，默认为2。
+- `-XX:MaxTenuringThreshold`：设置年轻到到老年代的最大年龄，默认为15。
+
+## 16.48 强/软/弱/虚引用的理解
+
+![image-20210105214001075](README.assets/image-20210105214001075.png)
+
+**强/软/弱/虚引用的理解**：
+
+![image-20210106091615566](README.assets/image-20210106091615566.png)
+
+- **Reference（强引用）**：当内存不足，JVM开始垃圾回收；对于强引用的对象，就算是出现了OOM也不会对该对象进行回收，**死都不收**。强引用时造成Java内存泄漏的主要原因之一。
+- **SoftReference（软引用）**：是一种相对强引用弱化了的引用，可以让对象豁免一些垃圾收集。**当系统内存充足时不会被回收，当系统内存不足时会回收**。软引用一般用作缓存（如MyBatis里的实现）。
+
+- **WeakReference（弱引用）**：不管内存是否足够，**只要发生GC，就回收**。
+
+- **PhantomReference（虚引用）**：顾名思义，虚引用即**形同虚设**，虚引用并不会决定对象的生命周期。
+
+  - 如果一个对象仅持有虚引用，那么它就和没有任何引用一样，在任何时候都可能被垃圾回收器回收。
+  - 虚引用不能单独使用，也不能通过它访问对象，**虚引用必须和引用队列（ReferenceQueue）联合使用**。
+  - **虚引用的主要作用是跟踪对象被垃圾回收的状态。仅仅提供了一种确保对象被finalize以后，做某些事情的机制**。
+
+  ```java
+  // 比较new WeakReference<>(o1, referenceQueue)和new PhantomReference(o1, referenceQueue)的区别
+  public class ReferenceQueueDemo {
+      public static void main(String[] args) throws InterruptedException {
+          Object o1 = new Object();
+          ReferenceQueue<Object> referenceQueue = new ReferenceQueue<>();
+          WeakReference<Object> weakReference = new WeakReference<>(o1, referenceQueue);
+          System.out.println(o1); // java.lang.Object@330bedb4
+          System.out.println(weakReference.get()); // java.lang.Object@330bedb4
+          System.out.println(referenceQueue.poll()); // null
+  
+          System.out.println("==========");
+          o1 = null;
+          System.gc();
+          Thread.sleep(500);
+          System.out.println(o1); // null
+          System.out.println(weakReference.get()); // null
+          System.out.println(referenceQueue.poll()); // java.lang.ref.WeakReference@2503dbd3
+      }
+  }
+  
+  public class PhantomReferenceDemo {
+      public static void main(String[] args) throws InterruptedException {
+          Object o1 = new Object();
+          ReferenceQueue<Object> referenceQueue = new ReferenceQueue<>();
+          PhantomReference phantomReference = new PhantomReference(o1, referenceQueue);
+          System.out.println(o1); // java.lang.Object@330bedb4
+          System.out.println(phantomReference.get()); // null
+          System.out.println(referenceQueue.poll()); // null
+  
+          System.out.println("===========");
+  
+          o1 = null;
+          System.gc();
+          Thread.sleep(500);
+          System.out.println(o1); // null
+          System.out.println(phantomReference.get()); // null
+          System.out.println(referenceQueue.poll()); // java.lang.ref.PhantomReference@2503dbd3
+      }
+  }
+  ```
+
+**软引用/弱引用的使用场景**：假如有一个应用需要读取大量的本地图片，若每次都从硬盘读取会严重影响性能，而一次性全部加载到内存又可能造成内存溢出。此时可以使用软引用解决这个问题：**用一个HashMap来保存图片的路径和相应图片对象关联的软引用之间的映射关系，在内存不足时，JVM会自动回收这些缓存图片所占用的空间，从而有效地避免了OOM的问题**。
+
+```java
+Map<String,SoftReference<Bitmap>> imageCache = new HashMap<String, SoftReference<Bitmap>>();
+```
+
+## 16.49 关于WeakHashMap
+
+**关于WeakHashMap**：
+
+- WeakHashMap继承于AbstractMap，实现了Map接口。和HashMap一样，WeakHashMap 也是一个散列表，它存储的内容也是键值对(key-value)映射，而且键和值都可以是null。 
+- 和HashMap一样，WeakHashMap是不同步的。可以使用 Collections.synchronizedMap 方法来构造同步的 WeakHashMap。
+- 不过**WeakHashMap的键是"弱键"**，里面存放了键对象的弱引用，当某个键不再正常使用时，会从WeakHashMap中被自动移除。当一个键对象被垃圾回收，那么相应的值对象的引用会从Map中删除。WeakHashMap能够节约存储空间，可用来缓存那些非必须存在的数据。
+
+**实现原理**：通过WeakReference和ReferenceQueue实现
+
+1. 创建WeakHashMap，将"键-值对"添加到WeakHashMap中。实际上，WeakHashMap是通过数组table保存Entry(键值对)；每一个Entry实际上是一个单向链表，即Entry是键值对链表。
+2. 当某"弱键"不再被其它对象引用，并被GC回收时。在GC回收该"弱键"时，这个"弱键"也同时会被添加到ReferenceQueue(queue)队列中。
+3. 当下一次我们需要操作WeakHashMap时，会先同步table和queue。table中保存了全部的键值对，而queue中保存被GC回收的键值对；同步它们，就是删除table中被GC回收的键值对。 这就是"弱键"如何被自动从WeakHashMap中删除的步骤了。 
+
+**WeakHashMap的使用**：
+
+```java
+public class WeakHashMapDemo {
+    public static void main(String[] args) {
+        myHashMap();
+        System.out.println("===============");
+        myWeakHashMap();
+    }
+
+    private static void myHashMap() {
+        HashMap<Integer, String> map = new HashMap<>();
+        Integer key = new Integer(1);
+        String value = "HashMap";
+        map.put(key, value);
+        System.out.println(map); // {1=HashMap}
+
+        key = null;
+        System.out.println(map); // {1=HashMap}
+        System.gc();
+        System.out.println(map + "\t" + map.size()); // {1=HashMap}	1
+    }
+
+    private static void myWeakHashMap() {
+        WeakHashMap<Integer, String> map = new WeakHashMap<>();
+        Integer key = new Integer(1);
+        Integer key2 = new Integer(2);
+        String value = "WeakHashMap";
+        String value2 = "WeakHashMap2";
+        map.put(key, value);
+        map.put(key2, value2);
+        map.put(new Integer(3), "WeakHashMap3");
+        System.out.println(map); // {3=WeakHashMap3, 2=WeakHashMap2, 1=WeakHashMap}
+
+        key = null;
+        System.out.println(map); // {3=WeakHashMap3, 2=WeakHashMap2, 1=WeakHashMap}
+
+        System.gc();
+        System.out.println(map + "\t" + map.size()); // {2=WeakHashMap2}	1
+    }
+}
+```
+
+## 16.50 关于OOM
+
+**java的异常体系**：
+
+![image-20210106093035681](README.assets/image-20210106093035681.png)
+
+1. `java.lang.StackOverflowError`：栈内存溢出。
+
+   ```java
+   public class StackOverflowErrorDemo {
+       public static void main(String[] args) {
+           stackOverflowError();
+       }
+   
+       private static void stackOverflowError() {
+           stackOverflowError();
+       }
+   }
+   ```
+
+2. `java.lang.OutOfMemoryError: Java heap space`：堆内存溢出。
+
+   ```java
+   //-Xms10m -Xmx10m -XX:MaxDirectMemorySize=5m -XX:+PrintGCDetails
+   public class JavaHeapSpaceDemo {
+       public static void main(String[] args) {
+           String str = "adf";
+           while (true) {
+               str += str + new Random().nextInt(1111111) + new Random().nextInt(222222);
+               str.intern();
+           }
+       }
+   }
+   ```
+
+3. `java.lang.OutOfMemoryError: GC overhead limit exceeded`：**GC回收时间过长**会抛出OutOfMemoryError。**过长的定义是超过98%的时间用来做GC，并且回收了不到2%的堆内存，连续多次GC都只回收了不到2%的极端情况下才会抛出**。假如不抛出GC overhead limit exceeded错误会发生什么情况呢？那就是GC清理的这么点内存很快就会再次填满，迫使GC再次执行，形成恶性循环。CPU的使用率一直是100%，而GC却没有任何成果。
+
+   ```java
+   //-Xms10m -Xmx10m -XX:MaxDirectMemorySize=5m -XX:+PrintGCDetails
+   public class GCOverheadDemo {
+       public static void main(String[] args) {
+           int i = 0;
+           List<String> list = new ArrayList<>();
+           try {
+   
+               while (true) {
+                   list.add(String.valueOf(++i).intern());
+               }
+           } catch (Exception e) {
+               System.out.println("************i" + i);
+               e.printStackTrace();
+               throw e;
+           }
+       }
+   }
+   ```
+
+4. `java.lang.OutOfMemoryError: Direct buffer memory`：直接内存溢出。
+
+   ```java
+   //-Xms10m -Xmx10m -XX:MaxDirectMemorySize=5m -XX:+PrintGCDetails
+   public class DirectBufferMemoryDemo {
+       public static void main(String[] args) {
+           System.out.println("配置的maxDirectMemory: " + (sun.misc.VM.maxDirectMemory() / (double) 1024 / 1024) + "MB");
+           try {
+               Thread.sleep(300);
+           } catch (Exception e) {
+               e.printStackTrace();
+           }
+           ByteBuffer byteBuffer = ByteBuffer.allocateDirect(6 * 1024 * 1024);
+       }
+   }
+   ```
+
+5. `java.lang.OutOfMemoryError: unable to create new native thread`：高并发请求服务器时，经常出现该异常（准确地讲，native thread异常与对应的平台有关）。
+
+   **导致的原因**：
+
+   - 应用创建了太多线程，一个应用进程创建多个线程，超过了系统承载极限。
+   - 服务器并不允许应用程序创建这么多线程，Linux系统默认允许单个进程可以创建的线程数是1024个。
+
+   **解决办法**：
+
+   - 降低应用程序创建线程的数量，分析应用是否真的需要创建这么多线程，如果不是，改代码将线程数降到最低。
+   - 对于有的应用，确实需要创建很多线程，远超果Linux系统默认1024个线程的限制，可以通过修改Linux服务器配置，扩大Linux默认限制。
+
+   ```java
+   // 请再Linux下允许模拟该程序
+   public class UnableCreateNewThreadDemo {
+       public static void main(String[] args) {
+           for (int i = 0; ; i++) {
+               System.out.println("***********" + i);
+               new Thread(() -> {
+                   try {
+                       Thread.sleep(Integer.MAX_VALUE);
+                   } catch (InterruptedException e) {
+                       e.printStackTrace();
+                   }
+               }, "" + i).start();
+           }
+       }
+   }
+   ```
+
+6. `java.lang.reflect.InvocationTargetException`：元空间（主要存放：虚拟机加载的类信息、静态变量、即时编译后的代码）内存溢出。
+
+   ```java
+   // -XX:MetaspaceSize=8m -XX:MaxMetaspaceSize=20m
+   public class MetaspaceOOMDemo {
+       public static void main(String[] args) {
+           // 模拟计数多少次以后发生异常
+           int i = 0;
+           try {
+               while (true) {
+                   i++;
+                   Enhancer enhancer = new Enhancer();
+                   enhancer.setSuperclass(OOMTest.class);
+                   enhancer.setUseCache(false);
+                   enhancer.setCallback(new MethodInterceptor() {
+                       @Override
+                       public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
+                           return methodProxy.invoke(o, args);
+                       }
+                   });
+                   enhancer.create();
+               }
+           } catch (Throwable e) {
+               System.out.println("********多少次后发生了异常：" + i);
+               e.printStackTrace();
+           }
+       }
+   
+       static class OOMTest {
+       }
+   }
+   ```
+
+## 16.51 关于垃圾收集器
+
+**垃圾回收算法与垃圾收集器的关系**：
+
+GC算法（引用计数/复制/标记清除/标记整理）是内存回收的方法论，垃圾回收器就是算法的落地实现。因为目前为止还没有完美的收集器出现，更加没有万能的收集器，只是针对具体应用最合适的收集器。
+
+**四种主要的垃圾收集器**：
+
+- Serial：**串行**收集器，为单线程环境设计且只使用一个线程进行垃圾回收，会暂停所有的用户线程，所以不适合服务器环境。
+- Parallel：**并行**收集器（默认），多个垃圾收集线程并行工作，此时用户线程是暂停的，适用于科学计算/大数据处理平台处理等弱交互场景。
+- CMS：**并发标记清除**收集器，用户线程和垃圾收集线程同时执行（不一定是并行，可能交替执行），不需要停顿用户线程，互联网公司多用它，适用于对响应时间有要求的场景。
+- Garbage First：**G1**收集器，将堆内存分割成不同的区域然后并发的对其进行垃圾回收。
+
+**查看垃圾回收器的种类以及其他常见值**：`java -XX:+PrintCommandLineFlags -version`
+
+**运行应用时指定垃圾回收器**：`java -XX:+UseParallelGC`
+
+**运行应用后查看指定的垃圾回收器**：`jinfo -flag UserParallelGC 进程号`
+
+![image-20210106133629893](README.assets/image-20210106133629893.png)
+
+## 16.52 七大默认垃圾收集器
+
+**参数说明**：
+
+| 名称       | 解释                                                | 说明                   |
+| ---------- | --------------------------------------------------- | ---------------------- |
+| DefNew     | Default New Generation，**对应Serial收集器**        | 新生代串行回收         |
+| Tenured    | Old，**对应Serial Old收集器**                       | 老年代串行回收         |
+| ParNew     | Parallel New Generation，**对应Parallel收集器**     | 新生代并行回收         |
+| PSYoungGen | Parallel Scavenge，**对应Parallel Scavenge收集器**  | 新生代吞吐量优先收集器 |
+| ParOldGen  | Parallel Old Generation，**对应Parallel Old收集器** | 老年代并行回收         |
+
+**Server/Client模式**：只需掌握Server模式，Client模式基本不会用。
+
+- 32位Windows操作系统，不论硬件如何都默认使用Client的JVM模式。
+- 32位其他操作系统，2G内存同时有2个CPU以上用Server模式，低于该配置还是Client模式。
+- 64位操作系统只有Server模式。
+
+**七大默认垃圾收集器**：若设置了新生代收集器，那么老年代收集器会自动选择关联。
+
+![image-20210106210327674](README.assets/image-20210106210327674.png)
+
+1. **Serial**：**串行收集器，用于新生代**。Serial收集器是最古老、最稳定以及效率最高的收集器，只使用一个线程去回收但其在进行垃圾收集过程中可能会产生较长的停顿（STW状态），虽然在收集过程中需要暂停所有其他工作线程，但是它简单高效，**对于限定单个CPU环境来说，没有线程交互的开销可以获得最高的单线程垃圾收集效率**。Serial收集器是java虚拟机运行在Client模式下默认的新生代垃圾收集器。
+
+   - 对应的JVM参数：`-XX:+UseSerialGC`，开启后会使用Serial（Young区用）+Serial Old（Old区用）的收集器组合；表示新生代、老年代都会使用串行回收收集器，**新生代使用复制算法，老年代使用标记-整理算法**。
+
+     ```java
+     // DefNew+Tenured
+     // -Xms10m -Xmx10m -XX:+PrintGCDetails -XX:+PrintCommandLineFlags -XX:+UseSerialGC
+     ```
+
+2. **ParNew**：**并行收集器，用于新生代**。**ParNew收集器是Serial收集器新生代的并行多线程版本**，最常见的应用场景是配合老年代的CMS收集器工作，其余的行为和Serial收集器完全一致，ParNew垃圾收集器在垃圾收集过程中同样也要暂停所有其他的工作线程。ParNew收集器是很多java虚拟机运行在Server模式下新生代的默认垃圾收集器。
+
+   - 对应的JVM参数：`-XX:+UseParNewGC`，开启后会使用ParNew（Young区用）+Serial Old（Old区用），**新生代使用复制算法，老年代使用标记-整理算法**。ParNew（Young区用）+Serial Old（Old区用）is deprecated.
+
+     ```java
+     // ParNew+Tenured
+     // -Xms10m -Xmx10m -XX:+PrintGCDetails -XX:+PrintCommandLineFlags -XX:+UseParNewGC
+     ```
+
+3. **Parallel Scavenge**：**并行收集器（吞吐量优先），用于新生代**。类似ParNew，使用复制算法，是一个并行的垃圾收集器，俗称吞吐量优先收集器。简言之，Parallel Scavenge是串行收集器在新生代和老年代的并行化。
+
+   - 可控的吞吐量：`吞吐量=运行用户代码时间/(运行用户代码时间+垃圾收集时间)`，比如程序运行100分钟，垃圾收集器1分钟，吞吐量就是99%。高吞吐量一位置高效利用CPU的时间，多用于在后台运算而不需要太多交互的任务。
+
+   - 自适应调节策略也是Parallel Scavenge收集器与ParNew收集器的一个重要区别。**自适应调节策略**：虚拟机会根据当前系统的运行情况收集性能监控信息，动态调整这些参数以提供最合适的停顿时间（`-XX:MaxGCPauseMillis`）或最大的吞吐量。
+
+   - 对应的JVM参数：
+
+     - `-XX:+UseParallelGC`或`-XX:+UseParallelOldGC`（可相互激活），开启后会使用Parallel Scavenge（Young区用）+Parallel Old（Old区用），**新生代采用复制算法，老年代采用标记整理算法**。
+     - `-XX:ParallelGCThreads=数字N`表示启动多少个GC线程；CPU>8时，N=5/8，CPU<8时，N=CPU实际核数。
+
+     ```java
+     // PSYoungGen+ParOldGen
+     // -Xms10m -Xmx10m -XX:+PrintGCDetails -XX:+PrintCommandLineFlags -XX:+UseParallelGC
+     // -Xms10m -Xmx10m -XX:+PrintGCDetails -XX:+PrintCommandLineFlags -XX:+UseParallelOldGC
+     ```
+
+4. **Serial Old**：**串行收集器，用于老年代**。Serial Old是Serial垃圾收集器的老年代版本，同样是个单线程的收集器，使用**标记-整理**算法。
+
+   - Client模式下，java虚拟机中默认的老年代垃圾收集器是Serial Old。
+   - Server模式下，主要有两个用途（了解，版本已经到8及以后）
+     - 在JDK1.5之前版本中与新生代的Parallel Scavenge收集器搭配使用，使用Parallel Scavenge（Young区）+Serial Old（Old区）。
+     - 作为老年代中使用CMS收集器的后备垃圾收集方案。
+
+5. **Parallel Old**：**并行收集器，用于老年代**。Parallel Old收集器是Parallel Scavenge的老年代版本，使用多线程的标记-整理算法，Parallel Old收集器在JDK1.6才开始提供。在JDK1.6之前，使用Parallel Scavenge（Young区）+Serial Old（Old区）。
+
+   - Parallel Old正是为了在老年代同样提供吞吐量优先的垃圾收集器，如果系统对吞吐量要求比较高，JDK1.8后可以优先考虑新生代Parallel Scavenge和老年代Parallel Old收集器的搭配策略。在JDK1.8后，使用Parallel Scavenge（Young区）+Parallel Old（Old区）。
+
+   - 对应的JVM参数：`-XX:+UseParallelOldGC`，开启后会使用Parallel Scavenge（Young区用）+Parallel Old（Old区用），**新生代采用复制算法，老年代采用标记整理算法**。
+
+     ```java
+     // PSYoungGen+ParOldGen
+     // -Xms10m -Xmx10m -XX:+PrintGCDetails -XX:+PrintCommandLineFlags -XX:+UseParallelOldGC
+     // -Xms10m -Xmx10m -XX:+PrintGCDetails -XX:+PrintCommandLineFlags -XX:+UseParallelGC
+     ```
+
+6. **CMS**：**CMS收集器**（Concurrent Mark Sweep：并发标记清除），**用于老年代**。CMS收集器是一种以获得最短回收停顿时间为目标的收集器，适合应用在互联网站或者B/S系统的服务器上，这类应用尤其重视服务器的响应速度，希望系统**停顿时间最短**。CMS非常适合堆内存大、CPU核数多的服务端应用，也是G1出现之前大型应用的首选收集器。
+
+   - CMS垃圾收集分为4步：黑白灰三色标记法
+     - 初始标记：STW，标记GC Roots能直接关联到的对象，速度很快。
+     - 并发标记：不需要停顿，对图的遍历。
+     - 重新标记：STW，停顿时间比初始标记长，但远比并发标记短，修正并发标记时因用户程序继续运行导致标记变动。
+     - 并发清除：不需要停顿，清除掉标记阶段的已经死亡的对象。
+
+   - 对应的JVM参数：
+
+     - `-XX:+UseConcMarkSweepGC`：开启后会自动将`-XX:+UseParNewGC`打开，使用ParNew（Young区用）+CMS（Old区用）+Serial Old的收集器组合，Serial Old将作为CMS出错的后备收集器，**新生代采用复制算法，老年代采用标记清除算法**。
+     - `-XX:CMSFullGCsBeforeCompaction`：默认为0，即每次都进行内存整理。该参数可以用来指定多少次CMS收集之后，再进行一次压缩的Full GC。
+
+     ```java
+     // ParNew+CMS+Tenured
+     // -Xms10m -Xmx10m -XX:+PrintGCDetails -XX:+PrintCommandLineFlags -XX:+UseConcMarkSweepGC
+     ```
+
+   - CMS为什么可能会失败？由于并发标记，CMS在收集时会与用户线程同时进行，会增加对堆内存的占用，也就是说，CMS必须要在老年代堆内存用尽之前完成垃圾回收，否则CMS回收失败时，将触发担保机制，Serial Old收集器将会以STW的方式进行一次GC，从而造成较大停顿时间。
+
+7. G1：Garbage First，**G1收集器，用于新生代+老年代**。一款面向服务端应用的收集器，在实现**高吞吐量**的同时，尽可能满足垃圾收集**暂停时间**的要求。**整体上采用标记整理算法，局部上采用复制算法**。
+
+   - 以前收集器的特点：
+
+     1. 年轻代和老年代是各自独立且连续的内存块（Youg(Eden:S0:S1=8:1:1):Old=1:2）。
+     2. 年轻代收集使用单Eden+S0+S1进行复制算法。
+     3. 老年代收集必须扫描整个老年代区域。
+     4. 都是以尽可能少而快速地执行GC为设计原则。
+
+   - **G1收集器的特点**：
+
+     1. 与CMS一样，能与应用程序并发执行（**初始标记+并发标记+修正标记+筛选回收**）。
+     2. 将堆内存划分为Region（最多设置2048个区域），每块大小在1M~32M。整理空闲空间更快，且**不会产生空间碎片**（小区域收集+形成连续的内存块）。
+        - G1堆内存没有了Young区、Old区的物理隔离，但是在每个Region依然划分为Eden或Survior或Old或Humongous（逻辑上的分代概念），而这些区域不需要物理连续。
+     3. 与预测和控制**指定停顿时间**。
+     4. 高吞吐量性能。
+
+   - 对应的JVM参数：
+
+     - `-XX:+UseG1GC`：开启G1收集器。
+
+     - `-XX:G1HeapRegionSize=n`：设置G1收集器Region的大小，值是2的幂，范围为1MB~32MB。目标是根据最小的java堆大小划分为出约2048个区域。
+     - `-XX:MaxGCPauseMillis=n`：最大GC停顿时间，这是个软目标，JVM将尽可能（但不保证）停顿小于这个时间。
+     - `-XX:InitiatingHeapOccupancyPercent=n`：堆占用了多少的时候就触发GC，默认为45。
+     - `-XX:ConcGCThreads=n`：并发GC使用的线程数。
+     - `-XX:G1ReservePercent=n`：设置作为空闲空间的预留内存百分比，以降低目标空间溢出的风险，默认值是10。
+
+     ```java
+     // G1
+     // -Xmx32g -XX:+PrintGCDetails -XX:+PrintCommandLineFlags -XX:+UseG1GC -XX:MaxGCPauseMillis=100
+     ```
+
+   - **G1相比CMS的优势**：
+
+     - 化整为零，避免全内存扫描，只需要按照区域来进行扫描即可；且**不会产生内存碎片**。
+
+     - G1可精确控制停顿，该收集器是把整个堆（新生代、老年代）划分成多个固定大小的区域，每次根据允许停顿的时间去收集垃圾最多的区域。
+
+**如何选择垃圾收集器？**
+
+- 组合的选择：
+  - 单CPU或小内存，单机程序：`-XX:+UseSerialGC`
+  - 多CPU，需要最大吞吐量，如后台计算型应用：`-XX:+UseParallelGC`或`-XX:UseParallelOldGC`
+  - 多CPU，追求低停顿时间，需快速响应如互联网应用：`-XX:+UseConcMarkSweepGC`+`-XX:+ParNewGC`
+
+|                        参数                        | 新生代垃圾收集器  |        新生代算法        |    老年代垃圾收集器    |        老年代算法         |
+| :------------------------------------------------: | :---------------: | :----------------------: | :--------------------: | :-----------------------: |
+|                 `-XX:UseSerialGC`                  |      Serial       |           复制           |       Serial Old       |         标记整理          |
+|                 `-XX:+UseParNewGC`                 |      ParNew       |           复制           |       Serial Old       |         标记整理          |
+| `-XX:+UseParallelGC`/<br />`-XX:+UseParallelOldGC` | Parallel Scavenge |           复制           |      Parallel Old      |         标记整理          |
+|             `-XX:+UseConcMarkSweepGC`              |      ParNew       |           复制           | CMS+Serial Old（后备） | 标记清除+标记整理（后备） |
+|                   `-XX:+UseG1GC`                   |  整体上标记整理   | 局部复制（避免内存碎片） |                        |                           |
+
+## 16.53 JVM项目调优
+
+可以使用Undertow来代替Tomcat，使用JMeter进行高并发压力测试。
+
+```java
+// 使用war或jar包测试
+// java -jar -Xms1024m -Xmx1024m -XX:+UseG1GC xxxx.war
+```
+
+## 16.54 生产环境服务器变慢，诊断思路和性能评估？
+
+生产环境服务器变慢，诊断思路和性能评估？
+
+1. 整机：
+   - `top`：可查看进程号，程序占用CPU、内存大小，以及系统负载率。
+   - `uptime`：top的精简版。
+
+![image-20210106212034963](README.assets/image-20210106212034963.png)
+
+2. CPU：
+   - `vmstat -n 2 3`：每2秒采集一次，共计采样3次。
+   - `mpstat -P ALL 2`：查看所有CPU核的信息。
+   - `pidstat -u 1 -p 进程编号`：每个进程使用CPU的用量分解信息。
+
+![image-20210106212830615](README.assets/image-20210106212830615.png)
+
+![image-20210106213036655](README.assets/image-20210106213036655.png)
+
+3. 内存：
+
+   - `free`
+
+   - `free -g`
+
+   - `free -m`
+
+     ```yaml
+     # 应用程序可用内存/系统物理内存>70%内存充足
+     # 应用程序可用内存/系统物理内存<20%内存不足，需要增加内存
+     # 20%<应用程序可用内存/系统物理内存<70%
+     ```
+
+   - `pidstat -p 进程号 -r 采样间隔秒数`：查看进程所占内存信息。
+
+![image-20210106213825433](README.assets/image-20210106213825433.png)
+
+![image-20210106214524778](README.assets/image-20210106214524778.png)
+
+4. 硬盘
+   - `df`：查看磁盘剩余空间数。
+   - `df -h`：查看磁盘剩余空间数，更加友好。
+
+![image-20210106214802313](README.assets/image-20210106214802313.png)
+
+5. 磁盘IO
+   - `iostat -xdk 2 3`：磁盘IO性能评估。
+   - `pidstat -d 采用间隔秒数 -p 进程号`：磁盘IO性能评估。
+
+![image-20210106215225413](README.assets/image-20210106215225413.png)
+
+6. 网络IO
+   - `ifstat 1`：需要先安装ifstat。
+
+![image-20210106215459673](README.assets/image-20210106215459673.png)
+
+## 16.55 CPU占用过高的定位分析思路
+
+**CPU占用过高怎么解决**？
+
+结合Linux和JDK命令一起分析。
+
+1. 先用`top`命令找出CPU占比最高的进程号。
+2. 使用`ps -ef|grep java|grep -v grep`或者`jps -l`进一步定位，得知是怎么样的一个后台程序出问题了。
+3. 使用`ps -mp 进程号 -o THREAD,tid,time`定位到具体的线程。
+   - -m显示所有的线程
+   - -p pid进程使用CPU的时间
+   - -o 该参数后是用户自定义格式
+4. 将需要的线程ID转换为16进制格式（英文小写格式）。
+5. `jstack 进程ID|grep 16进制线程ID小写英文 -A60`，定位具体哪段代码出了问题。
+
+![image-20210106220337665](README.assets/image-20210106220337665.png)
+
+![image-20210106221613699](README.assets/image-20210106221613699.png)
+
+## 16.56 JVM监控和性能分析工具
+
+JDK自带的JVM监控和性能分析工具有哪些？一般你是怎么用的。
+
+1. jps：虚拟机进程状况工具。
+2. jinfo：Java配置信息工具。
+3. jmap：内存映像工具（使用MAT工具查看内存映像）。
+4. jstat：统计信息监控工具。
+5. jstack：堆栈异常跟踪工具。
+6. jvisualvm:
+7. jconsole：
+
+## 16.57 如何利用GitHub检索
+
+出问题了检索工具：Google+StackOverFlow+Github
+
+**常用词**：
+
+- watch：会持续收到该项目的动态。
+- fork：复制某个项目到自己的Github仓库中。
+- star：可以理解为点赞。
+- clone：将项目下载至本地。
+- follow：关注你感兴趣的作者，会受到它们的动态。
+
+**in关键词限制搜素范围**：`xxx关键词 in:name或description或readme`
+
+- 查找名称和readme中包含seckill的项目：`seckill in:name,readme`
+
+**stars或fork数量关键词查询**：`xxx关键词 stars 通配符`
+
+- 查找stars数大于等于5000的SpringBoot项目：`SpringBoot stars:>=5000`
+- 查找forks数大于500的SpringCloud项目：`SpringCloud forks:>500`
+
+- 查找forks数在100到200之间并且stars数在80到100之间的SpringBoot项目：`SpringBoot forks:100..200 stars:80..100`
+
+**awesome加强搜素**：`awesome xxx关键词`，一般用来收集学习、工具、书籍类相关的项目。
+
+- 搜素优秀的redis相关的项目，包括框架、教程：`awesome redis`
+
+**高亮显示某一行代码**：
+
+- 一行：地址后面紧跟#L数字
+- 多行：地址后面紧跟#L数字-L数字
+
+**项目内搜索**：英文t
+
+- Github快捷键查看：https://docs.github.com/en/free-pro-team@latest/github/getting-started-with-github/keyboard-shortcuts
+
+**搜索某个地区内的大佬**：`location:地名 language:编程语言`
+
+- 北京地区的Java方向的用户：`location:beijing language:java`
+
+## 16.58 String.intern()返回引用
+
+*此面试题出自《深入理解Java虚拟机》*
+
+**String::intern()**是一个本地方法，它的作用是如果字符串常量池中已经包含一个等于此String对象的字符串，则返回代表池中这个字符串的String对象的引用；否则，会将此String对象包含的字符串添加到常量池中，并返回此String对象的引用。
+
+```java
+public class StringPoolDemo {
+    public static void main(String[] args) {
+        String str1 = new StringBuilder("ja").append("va").toString();
+        System.out.println(str1.intern() == str1); // JDK1.6：false；JDK1.7及以上：false
+
+        String str2 = new StringBuilder("软件").append("工程").toString();
+        System.out.println(str2.intern() == str2); // JDK1.6: false; JDK1.7及以上：true
+        String str3 = new String(new StringBuilder("物联网").append("工程").toString());
+        System.out.println(str3.intern() == str3); // JDK1.6: false; JDK1.7及以上：true
+        String str4 = new String("物联网");
+        System.out.println(str4.intern() == str4); // JDK1.6: false; JDK1.7及以上：false
+    }
+}
+```
+
+- 在JDK1.6中，intern()方法会将**首次遇到**的**字符串实例**复制到永久代的字符串常量池中存储，返回的也是永久代里面这个字符串实例的引用，而由StringBuilder创建的字符串对象实例在Java堆上，所以必然不可能是同一个引用。
+  - str2.intern() == str2的结果为什么为false，这里可以这么看，在"软件工程"这个对象构建完成之后，常量池里面其实存放的只有"软件","工程"这两个字符串，而"软件工程"这个字符串是存放于堆内存中的。JDK1.6执行了intern后会把"软件工程"复制到常量池中，并返回常量池中的对象。常量池中的"软件工程"跟堆内存中的软件工程并不是同一个。
+- 在JDK1.7及以上中，intern()方法不需要拷贝字符串的实例到永久代了，既然字符串常量池已经移到堆中，那只需要在常量池里记录一下**首次出现的实例引用**即可，因此intern()方法返回的引用和由StringBuilder创建的那个字符串实例就是同一个。
+  - str4直接用new String("物联网")创建，"物联网"这字符串在一出现就自动创建成对象存放到常量池中，所以常量池里面存放的是"物联网"字符串的引用，并不是str4创建的对象的引用。
+  - str2是通过StringBuilder构建的，在new StringBuilder("软件").append("工程").toString方法运行后,"软件工程"这个字符串对象才第一次出现。执行了intern方法后str5才被放到常量池中，此时str2跟str2.intern是同一个对象。
+  - str3是作为对照组出现，这里为了确认StringBuilder在toString方法执行后会不会把最终字符串放进常量池。很显然并没有，所以str3的intern才会跟str3是同一个对象。同时它也能验证出str4的new String()方式在初始化的时候就会把"物联网"字符串放进常量池中，同理我们可以得出在str2构建的时候常量池里面加入了"软件"、"工程"这两个字符串。
+- 至于，JDK1.7中对`str1.intern() == str1`返回false，这是因为"java"这个字符串在执行StringBuilder.toString()之前就已经出现过了（**它是在加载`sun.misc.Version`这个类时进入常量池的**），字符串常量池中已经有它的引用，不符合intern()方法要求的"首次遇到"的原则。
+
+## 16.59 LockSupport
+
+**可重入锁**：同一个线程可以多次获得同一把锁。
+
+**LockSupport**：是用来创建锁和其他同步类的基本线程阻塞原语。**相当于线程等待唤醒机制（wait/notify）的加强改良版**。
+
+- park()：作用是阻塞线程（**消耗凭证，消耗不到凭证就会阻塞**）。
+- unpark()：解除线程阻塞（**发放凭证，相当于通知唤醒**）。
+
+**三种让线程等待和唤醒的方法**：
+
+1. 使用Object中的wait()方法让线程等待，使用Object中的notify()方法唤醒线程。
+
+   - wait方法和notify方法，两个都去掉同步代码块，会出现`java.lang.IllegalMonitorStateException`异常。**Object类中的wait、notify、notifyAll用于线程等待和唤醒的方法，都必须在synchronized内部执行，必须用到关键字synchronized**。
+   - 将notify放到wait方法前面，程序无法唤醒**。先wait后notify、notifyAll方法，等待中的线程才会被唤醒，否则无法唤醒**。
+
+2. 使用JUC包中的Condition的await()方法让线程等待，使用signal()方法唤醒线程（**lcok与synchronized有相同的局限性**）。
+
+   - 线程要先获得并持有锁，必须在锁块（lock）中。
+   - 必须要先等待后唤醒，线程才能够被唤醒。
+
+3. LockSupport类可以阻塞当前线程以及唤醒指定被阻塞的线程。
+
+   - LockSupport类使用了一种名为Permit（许可）的概念来做到阻塞和唤醒线程的功能，每个线程都有一个许可（permit），permit只有两个值1和0，默认是0。可以把许可看成是一种(0,1)信号量（Semaphore），但与Semaphore不同的是，许可的累加上限是1。
+
+   ```java
+   // 通知可以在阻塞前，这时阻塞会失效
+   private static void lockSupportPackUnpack() {
+       Thread a = new Thread(() -> {
+           try {
+               TimeUnit.SECONDS.sleep(3L);
+           } catch (InterruptedException e) {
+               e.printStackTrace();
+           }
+           System.out.println(Thread.currentThread().getName() + "\t" + "-----come in");
+           LockSupport.park(); // 被阻塞，等待通知等待放行，需要通过需要许可证
+           System.out.println(Thread.currentThread().getName() + "\t" + "-----被唤醒");
+       }, "a");
+       a.start();
+   
+       Thread b = new Thread(() -> {
+           LockSupport.unpark(a);
+           System.out.println(Thread.currentThread().getName() + "\t" + "-----通知了");
+       }, "b");
+       b.start();
+   }
+   ```
+
+**为什么LockSupport可以先唤醒线程后阻塞线程**？
+
+- unpark获得了一个凭证，之后再调用park方法，就可以名正言顺的凭证消费，故不会阻塞。
+
+**为什么唤醒两次后阻塞两次，但最终结果还会阻塞线程**？
+
+- 凭证的数量最多为1，连读调用两次unpark和调用一次unpark效果一样，只会增加一个凭证；而调用两次park却需要消费两个凭证，证不够，不能放行。
+
+## 16.60 AQS(AbstractQueuedSynchronizer)
+
+![image-20210107184326960](README.assets/image-20210107184326960.png)
+
+**AQS**：即AbstractQueuedSynchronizer，抽象的队列同步器。AQS是用来**构建锁或者其他同步器组件**的重量级基础框架及整个JUC体系的**基石**，通过内置的FIFO队列来完成资源获取线程的排队工作，并通过一个**int类型变量**表示持有锁的状态。
+
+**AQS为什么是JUC内容中最重要的基石**？
+
+- **和AQS有关的锁**：ReentrantLock、CountDownLatch、ReentrantReadWriteLock、Semaphore...
+- **锁和AQS**：
+  - 锁是面向锁的**使用者**，使用者定义了程序员和锁交互的使用层API，隐藏了实现细节，程序元只需调用即可。
+  - AQS是面向锁的**实现者**，实现者提出统一的规范并简化了锁的实现，屏蔽了同步状态管理、阻塞线程排队和通知、唤醒机制等。
+
+**AQS的工作原理**：底层结构是**int变量+双向的CLH队列**
+
+- 抢到资源的线程直接使用处理业务逻辑，抢不到资源的必然涉及一种排队等候机制，抢占资源失败的线程继续去等待，但等候线程仍然保留获取锁的可能且获取锁的流程仍在继续。
+- 若共享资源被占用，就需要一定的阻塞等待唤醒机制来保证锁分配，这个机制主要用的是CLH队列的变体实现的，将暂时获取不到锁的线程加入到队列中，这个队列就是AQS的抽象表现，它将请求共享资源的线程封装成**FIFO队列的结点（Node）**，通过**CAS**、**自旋**以及**LockSupport.park()**的方式，维护**state**变量（volatile的int变量）的状态，使并发达到同步的控制效果。
+
+![image-20210107155222949](README.assets/image-20210107155222949.png)
+
+<img src="README.assets/image-20210107163204596.png" alt="image-20210107163204596" style="zoom:67%;" />
+
+## 16.61 Spring AOP顺序
+
+Sring=IOC+AOP+TX
+
+**关于版本**：SpringBoot1(Spring4)-->SpringBoot2(Spring5)
+
+**AOP的常用注解**： 
+
+- @Before：前置通知（目标方法之前执行）。
+- @After：后置通知（目标方法之后执行（始终执行））。
+- @AfterReturning：返回后通知（执行方法结束前执行，异常不执行）。
+- @AfterThrowing：异常通知（出现异常时候执行）。
+- @Around：环绕通知（环绕目标方法执行）。
+
+![image-20210107203136372](README.assets/image-20210107203136372.png)
+
+**执行顺序**：
+
+![image-20210107203838838](README.assets/image-20210107203838838.png)
+
+- Spring4
+
+  ````java
+  //正常执行：@Around(环绕通知)-->@Before(前置通知)-->业务逻辑-->@Around环绕通知-->@After后置通知-->@AfterReturning(返回后通知)
+  //异常执行：@Around(环绕通知)-->@Before(前置通知)-->业务逻辑-->@After后置通知-->@AfterThrowing(异常通知)
+  ````
+
+- Spring5
+
+  ```java
+  //正常执行：@Around(环绕通知)-->@Before(前置通知)-->业务逻辑-->@AfterReturning(返回后通知)-->@After后置通知-->@Around环绕通知
+  //异常执行：@Around(环绕通知)-->@Before(前置通知)-->业务逻辑-->@AfterThrowing(异常通知)-->@After后置通知
+  ```
+
+## 16.62 Spring循环依赖
+
+**循环依赖**：多个Bean之间相互依赖，形成了一个闭环，比如：A依赖于B、B依赖于C、C依赖于A。
+
+**两种注入方式对循环依赖的影响**：
+
+- **构造注入**可能产生循环依赖问题
+- **setter注入**则没有循环依赖问题
+
+**Spring中的循环的问题**：
+
+- 默认的单例（singleton）的场景是支持循环依赖的，不会报错。
+- 原型（Prototype）的场景是不支持循环依赖的，会报错（`BeanCurrentlyInCreationException`）。
+
+**问题解决**：Spring内部是通过**三级缓存**来解决循环依赖问题的。只有单例的Bean才会通过三级缓存提前暴露来解决循环依赖的问题；而非单例的Bean，每次从容器中获取都是一个新的对象，都会重新创建，所以非单例的Bean是没有缓存的，不会将其放到三级缓存中。
+
+- **第一级缓存（单例池）singletonObjects**：存放已经经历了完整生命周期的Bean对象。
+- **第二级缓存earlySingletonObjects**：存放早期暴露出来的Bean对象，Bean的生命周期未结束（属性还未填充完毕）。
+- **第三季缓存singletonFactories**：存放可以生成Bean的工厂。
+
+**单例模式下，AB循环依赖解决的运行过程**：
+
+1. A创建过程中需要B，于是A将自己放到三级缓存里面，去实例化B。
+2. B实例化的时候发现需要A，于是B先查一级缓存，没有，再查二级缓存，还是没有，再查三级缓存，找到了A然后把三级缓存里面的这个A放到二级缓存里面，并删除三级缓存里面的A。
+3. B顺序初始化完毕，将自己放到一级缓存里面（此时B里面的A依然是创建中状态），然后回来接着创建A，此时B已经创建结束，直接从一级缓存里面拿到B，然后完成创建，并将A自己放到一级缓存里面。
+
+![image-20210107210800803](README.assets/image-20210107210800803.png)
+
+## 16.63 Redis的落地应用
+
+**查看Redis的版本**：
+
+- Linux下：`redis- server -v`。
+- 进入到Redis后：`info`。
+
+**Redis的数据类型**：String、List、Hash、Set、Zset、Bitmap、HyperLogLog、Geo、Stream。
+
+**注意事项**：
+
+- Redis命令不区分大小写，而key是区分大小写的。
+- 查看具体命令的用法：`help @命令名称`（例`help @string`）。
+
+**主要应用**：
+
+1. String：
+   - 分布式锁：`setnx key value`、`set key value [EX seconds] [PX milliseconds] [NX|XX]`（实际项目中会使用**[redisson](https://github.com/redisson/redisson)**）
+   - 商品编号、订单号采用INCR命令生成。
+   - 喜欢的文章、阅读量。
+
+2. Hash：存储商品信息。
+
+3. List：微信文章订阅公众号。
+4. Set：
+   - 微信抽奖小程序。
+   - 微信朋友圈点赞。
+   - 微博好友的关注社交关系。
+   - QQ内堆可能认识的人。
+
+5. Zset：
+   - 根据商品销售对商品进行排序显示。
+   - 抖音热搜。
+
+## 16.64 Redis分布式锁
+
+**单机版的锁**：JVM层面的锁。
+
+**分布式锁**：分布式微服务架构拆分后，各个微服务之间为了避免冲突和数据故障而加入的一种锁。
+
+**分布式锁的实现**：一般互联网公司习惯用Redis做分布式锁（redisson）。
+
+- MySQL
+- Zookeeper
+- Redis
+
+**解决方案的Bug**：
+
+1. 加synchronized、ReentrantLock，前者不见不散，后者可以做到过期不候。使用**JMeter**进压力测试，单机锁无法解决超卖问题（若是电商）。
+
+2. 使用redis的`SETNX`命令可以创建分布式锁：
+
+   - 加锁：`# SET key value [EX seconds|PX milliseconds|KEEPTTL] [NX|XX] [GET]`
+
+   - 解锁：使用Lua脚本（来自于[Redis官网](https://redis.io/commands/set)）
+
+     ```lua
+     if redis.call("get",KEYS[1]) == ARGV[1]
+     then
+         return redis.call("del",KEYS[1])
+     else
+         return 0
+     end
+     ```
+
+![image-20210108090117532](README.assets/image-20210108090117532.png)
+
+3. 方案二如果出异常的话，可能无法释放锁，必须要在代码层面finally释放锁。
+
+![image-20210108090704606](README.assets/image-20210108090704606.png)
+
+4. 若方案三在finally块前宕机了怎么办？解决方案是**对加减锁有过期时间的设定**。
+
+![image-20210108091125028](README.assets/image-20210108091125028.png)
+
+5. 方案四的问题在于设置锁以及给锁添加过期时间这两个步骤合起来并**不具备原子性**。
+
+![image-20210108091357561](README.assets/image-20210108091357561.png)
+
+6. 方案五的问题在于，若业务执行时间超过key设定的过期时间，就会导致**张冠李戴，删除了别了的锁**。解决方案是**删除锁前先判断**。
+
+![image-20210108091949038](README.assets/image-20210108091949038.png)
+
+![image-20210108092202324](README.assets/image-20210108092202324.png)
+
+7. 方案六的问题在于：finally块的判断+del解锁不是一个原子性的操作，可能会导致误解锁。解决方案是使用**Lua脚本**（天生是原子性的）解锁或使用**redis事务（MULTI、EXEC、DISCARD、WATCH）**。
+
+![image-20210108094715290](README.assets/image-20210108094715290.png)
+
+![image-20210108100531380](README.assets/image-20210108100531380.png)
+
+8. 方案七的问题一在于缓存的生命周期设置为10s，**无法确保redisLock过期时间大于业务执行时间的问题**；问题二在于**redis异步复制（redis集群基于AP思想）可能会造成锁的丢失**（主节点没来得及把刚刚set进来的这条数据给从节点，就宕机了）。Redis分布式锁如何实现续期？**可以采用RedLock之Redisson落地实现**。
+   - CAP：Zookeeper是基于CP思想（**为了保证数据一致性牺牲了高可用**）、Redis集群基于AP思想（**为了保证高可用牺牲了数据的一致性**）。
+     - C(Consistency，表示**选择一致性**)：为了保证数据库的一致性，我们必须等待失去联系的节点恢复过来，在这个过程中，那个节点是不允许对外提供服务的，这时候系统处于不可用状态(失去了A属性))。
+     - A(Availability，表示**选择可用性**)：那个失去联系的节点依然可以向系统提供服务，不过它的数据就不能保证是同步的了（失去了C属性）。
+     - P(Partition，表示分**布式系统**)：在分布式环境中，由于网络的问题可能导致某个节点和其它节点失去联系，这时候就形成了P(Partition)，也就是由于网络问题，将系统的成员隔离成了2个区域，互相无法知道对方的状态，这在分布式环境下是非常常见的。
+
+![image-20210108103849930](README.assets/image-20210108103849930.png)
+
+9. 方案八的问题在于程序的健壮性。若解锁的时候线程不是同一个，并且锁的状态变得不持有，就会出现`IllegalMonitorStateException`异常。解决办法是加2层判断。
+
+![image-20210108104518468](README.assets/image-20210108104518468.png)
+
+## 16.65 Redis内存淘汰策略
+
+**redis默认内存是多少**？**在哪里查看及如何设置修改**？**内存设置为多大合适**？
+
+- 默认内存：若未设置内存大小或者设置了最大内存大小为0，在64位操作系统下不限制内存大小，在32位操作系统下最多使用3GB内存。
+- 设置内存大小：
+  - 在`redis.config`配置文件中：设置maxmemory参数，maxmemory是bytes字节类型，注意转换。
+  - 使用命令行设置：`config set maxmemory 字节数`，查看设置的内存大小：`config get maxmemory`。
+  - 使用`info memory`可以查询redis内存相关信息。
+- 一般推荐redis设置内存为最大物理内存的四分之三（类似于HashMap的负载因子为0.75）。
+
+![image-20210108105743747](README.assets/image-20210108105743747.png)
+
+**redis内存打满了怎么办（若redis内存使用超出了设置的最大值会怎么样）**?**怎么避免出现内存打满**？
+
+redis内存打满后**会出现OOM**。
+
+- 尽量只将热点数据存储在redis中。
+- 设置最大内存和缓存淘汰策略。
+
+![image-20210108112651923](README.assets/image-20210108112651923.png)
+
+**三种不同的删除策略如下**：若一个键是过期的，那么到了过期时间后键并不会立即就从内存中被删除。
+
+1. **定时删除**：为key设置过期时间，到期立即删除。
+   - 能保证内存中数据的最大新鲜度，但是对CPU不友好（会产生大量的性能消耗，同时也会影响数据的读取操作），用处理器性能换取存储时间（拿时间换空间）。
+2. **惰性删除**：数据到达过期时间，不做处理；等下次访问该数据时，若未过期，返回数据，若发现已经过期，删除并返回不存在；若过期后一直未访问，过期数据会一直滞留在内存中，产生类似于"内存泄漏"的问题。
+   - 惰性删除对memory不友好，用存储空间换取CPU性能（拿空间换时间）。
+
+3. **定期删除**：是定时删除和惰性删除的折衷，每隔一段时间执行一次删除过期键（随机抽样）操作，难点在于如何确定删除操作执行的**时长**和**频率**来减少删除操作对CPU时间的影响。
+   - 定期**抽样**key，判断是否过期（过期就删除），存在"漏网之鱼"。
+
+**为了解决三种删除策略的弊端，redis引入了缓存淘汰策略**：
+
+redis缓存策略：在`redis.config`配置文件中设置`maxmemory-policy 淘汰策略`，默认的淘汰策略是`noeviction`，生产上一般使用`allkeys-lru`。总结：**两个维度**（过期键中筛选和所有键中筛选）以及**四个方面**（lru、lfu、random、ttl）
+
+1. noeviction：不会驱逐任何key（默认）。
+2. volatile-ttl：删除马上要过期的key。
+3. **allkeys-lru**：对所有key使用**LRU算法（Least Recently Used最近最少使用）**进行删除。
+4. volatile-lru；对所有设置了过期时间的key使用**LRU算法（Least Recently Used最近最少使用）**进行删除。
+5. allkeys-random：对所有key随机删除。
+6. volatile-random：对所有设置了过期时间的key随机删除。
+7. allkeys-lfu：对所有key使用**LFU算法（Least Frequently Used最不经常使用）**进行删除。
+8. volatile-lfu：对所有设置了过期时间的key使用**LFU算法（Least Frequently Used最不经常使用）**进行删除。
+
+配置方法：
+
+- 在`redis.config`配置文件中：设置`maxmemory-policy allkeys-lru`。
+- 在命令行中配置：`config set maxmemory-policy allkeys-lru`。
+- 用命令行查看：`config get maxmemory-policy`或`info memory`。
+
+## 16.66 LRU算法的实现
+
+LRU算法：Least Recently Used最近最少使用，即淘汰最长时间没有被使用的。
+
+LFU算法：Least Frequently Used最不经常使用，即淘汰一段时间内，使用次数最少的。
+
+**方法一**：LRU算法的需要使用**哈希表+链表**结构完成，而**LinkedHashMap天生支持LRU缓存**，所有可以直接继承LinkedHashMap来解决。
+
+```java
+static class LRUCacheHashMap extends LinkedHashMap<Integer, Integer> {
+    private int capacity;
+    public LRUCacheHashMap(int capacity) {
+        super(capacity, 0.75F, true);
+        this.capacity = capacity;
+    }
+    public int get(int key) {
+        return super.getOrDefault(key, -1);
+    }
+    public void put(int key, int value) {
+        super.put(key, value);
+    }
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<Integer, Integer> eldest) {
+        return size() > capacity;
+    }
+}
+```
+
+**方法二**：自己使用HashMap+链表来实现。
+
+```java
+public class LRUCache {
+    class DLinkedNode {
+        int key;
+        int value;
+        DLinkedNode prev;
+        DLinkedNode next;
+        public DLinkedNode() {}
+        public DLinkedNode(int _key, int _value) {key = _key; value = _value;}
+    }
+
+    private Map<Integer, DLinkedNode> cache = new HashMap<Integer, DLinkedNode>();
+    private int size;
+    private int capacity;
+    private DLinkedNode head, tail;
+
+    public LRUCache(int capacity) {
+        this.size = 0;
+        this.capacity = capacity;
+        // 使用伪头部和伪尾部节点
+        head = new DLinkedNode();
+        tail = new DLinkedNode();
+        head.next = tail;
+        tail.prev = head;
+    }
+
+    public int get(int key) {
+        DLinkedNode node = cache.get(key);
+        if (node == null) {
+            return -1;
+        }
+        // 如果 key 存在，先通过哈希表定位，再移到头部
+        moveToHead(node);
+        return node.value;
+    }
+
+    public void put(int key, int value) {
+        DLinkedNode node = cache.get(key);
+        if (node == null) {
+            // 如果 key 不存在，创建一个新的节点
+            DLinkedNode newNode = new DLinkedNode(key, value);
+            // 添加进哈希表
+            cache.put(key, newNode);
+            // 添加至双向链表的头部
+            addToHead(newNode);
+            ++size;
+            if (size > capacity) {
+                // 如果超出容量，删除双向链表的尾部节点
+                DLinkedNode tail = removeTail();
+                // 删除哈希表中对应的项
+                cache.remove(tail.key);
+                --size;
+            }
+        }
+        else {
+            // 如果 key 存在，先通过哈希表定位，再修改 value，并移到头部
+            node.value = value;
+            moveToHead(node);
+        }
+    }
+
+    private void addToHead(DLinkedNode node) {
+        node.prev = head;
+        node.next = head.next;
+        head.next.prev = node;
+        head.next = node;
+    }
+
+    private void removeNode(DLinkedNode node) {
+        node.prev.next = node.next;
+        node.next.prev = node.prev;
+    }
+
+    private void moveToHead(DLinkedNode node) {
+        removeNode(node);
+        addToHead(node);
+    }
+
+    private DLinkedNode removeTail() {
+        DLinkedNode res = tail.prev;
+        removeNode(res);
+        return res;
+    }
+}
+```
 
 
 

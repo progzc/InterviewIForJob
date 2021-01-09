@@ -8466,17 +8466,480 @@ Producer-->RabbitMq broker-->Exchange-->Queue-->Consumer
 
 - 大量使用建造者模式：QueueBuilder、ExchangeBuilder、BindingBuilder。
 
-
-
 # 13 Nginx
 
+**Nginx**是一个**高性能的HTTP和反向代理服务器**，特点是占有内存小，并发能力强，事实上Nginx的并发能力确实在同类型的网页服务器中表现较好。Nginx专为性能优化而开发，性能是其最重要的考量，实际上非常非常注重效率，能经受高负载的考验，有报告表明能支持高达**50000**个并发连接数。
+
+**Nginx的主要作用**：正向代理、反向代理、负载均衡、动静分离。
+
+## 13.1 系统安装
+
+在云服务器上可以选择安装Linux CentOS 7系统。
+
+### 13.1.1 配置yum源
+
+由于国外服务器下载一般速度较慢，这里配置阿里云yum源，以下为具体步骤：
+
+1. 进入`cd /etc/yum.repos.d`，创建备份文件夹`mkdir repos_backup`
+
+2. 将yum.repos.d文件夹下所有以.repo结尾的文件移动到repos_backup文件夹中备份：`mv *.repo ./repos_backup `
+
+3. 下载CentOS7的yum源到yum.repos.d文件夹中：`wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo`
+
+4. 清空旧的yum缓存：`yum clean all`
+
+5. 生成新的yum仓库缓存：`yum makecache`
+
+6. 配置一个第三方的额外仓库源（epel源），这个源的作用是，如果阿里云源找不到这个软件，就在这里找：
+
+   `wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo`
+
+SecureCRT连接云服务器ECS实例出现**信号灯超时问题**的解决办法：
+
+`Options->Session Options->Terminal->Anti-idle->勾选Send protocol NO-OP`（后面的设置时间默认的是60秒，要求小于自动断开连接的时限）
+
+### 13.1.2 Nginx的安装
+
+Nginx的安装步骤如下：**Nginx1.8需要搭配CentOS 7安装，在CentOS 8上安装会出错**
+
+1. 进入到目标文件夹下：`cd /usr/src`
+
+2. 安装准备环境：
+
+   `yum install gcc gcc-c++ automake pcre pcre-devel zlip zlib-devel openssl openssl-devel`
+
+3. 下载[Nginx](http://nginx.org/)安装包：`wget http://nginx.org/download/nginx-1.8.1.tar.gz`
+
+4. 解压安装包：`tar  xvf nginx-1.8.1.tar.gz`
+
+5. 进入解压后的文件夹：`cd nginx-1.8.1`
+
+6. 编译检查：
+
+   ```bash
+   ./configure  --prefix=/usr/local/nginx  --sbin-path=/usr/local/nginx/sbin/nginx --conf-path=/usr/local/nginx/conf/nginx.conf --error-log-path=/var/log/nginx/error.log  --http-log-path=/var/log/nginx/access.log  --pid-path=/var/run/nginx/nginx.pid --lock-path=/var/lock/nginx.lock  --user=nginx --group=nginx --with-http_ssl_module --with-http_stub_status_module --with-http_gzip_static_module --http-client-body-temp-path=/var/tmp/nginx/client/ --http-proxy-temp-path=/var/tmp/nginx/proxy/ --http-fastcgi-temp-path=/var/tmp/nginx/fcgi/ --http-uwsgi-temp-path=/var/tmp/nginx/uwsgi --http-scgi-temp-path=/var/tmp/nginx/scgi --with-pcre
+   ```
+
+7. 编译生成脚本及配置文件：`make`
+
+8. 安装Nginx：`make install`
+
+9. 安装完成后，Nginx的启动位置在`/usr/local/nginx/sbin`，配置文件在`/usr/local/nginx/conf`（可修改端口号）
+
+10. 进入到Nginx的启动位置，启动Nginx：`./nginx`
+
+    查看占用端口号：`netstat -anl|grep 端口号`
+
+    下图表明Nginx已经启动成功：
+
+    ![image-20210108221341533](README.assets/image-20210108221341533.png)
+    Nginx启动成功后，浏览器却访问不了，原因在于防火墙，解决步骤：
+
+    1. 查看开放的端口号：`firewall-cmd --list-all`
+    2. 增加开放的端口号：`sudo firewall-cmd --add-port=80/tcp --permanent`
+    3. 重启防火墙：`firewall-cmd --reload`
+
+> 参考博客文章：[编译安装Nginx 1.8.1及配置](https://www.cnblogs.com/zhang-shijie/p/5294162.html)、[Nginx启动成功，浏览器不能访问](https://www.cnblogs.com/chenleideblog/p/10499807.html)
+
+## 13.2 常用命令
+
+使用Nginx操作的常用命令需要进入到Nginx的目录：`cd /usr/local/nginx/sbin`
+
+- 查看Nginx的版本号：`./nginx -v`
+- 启动Nginx：`./nginx`
+- 关闭Nginx：`./nginx -s stop`
+
+- 修改nginx.conf后，在不关闭Nginx的情况下，可以使用重新加载Nginx：`./nginx -s reload`
+
+## 13.3 配置文件
+
+Nginx的配置文件位置：`/usr/local/nginx/conf/nginx.conf`
+
+**Nginx的配置文件由三部分组成**：
+
+1. **全局块**：从配置文件开始到events块之间的内容，主要会设置一些影响Nginx服务器整体运行的配置指令。
+
+- `worker_processes 1;`：worker_processes值越大，可以支持的并发处理量也越多。
+
+2. **events块**：涉及的指令主要影响Nginx服务器与用户的网络连接。
+
+- `worker_connections 1024;`：支持的最大连接数。
+
+3. **http块**：服务器配置中最频繁的部分，代理、缓存和日志定义等绝大多数功能和第三方模块的配置都在这里。
+
+   - **http全局块**：配置的指令包括文件引入、MIME-TYPE定义、日志自定义、连接超时时间、单链接请求数上限等。
+   - **server块**：每个http块可以包含多个server块，而每个server块就相当于一个虚拟主机。
+     - 全局server块：本虚拟主机的监听位置和本虚拟主机的名称或IP配置。
+     - location块：一个server块可以配置多个location块。
+
+```bash
+#user  nobody;
+worker_processes  1; # 设置等于CPU的核数
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+#error_log  logs/error.log  info;
+
+#pid        logs/nginx.pid;
 
 
+events {
+    worker_connections  1024; # 先设置worker_processes，然后再根据并发数设置worker_connections
+}
 
 
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
 
+    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                  '$status $body_bytes_sent "$http_referer" '
+    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+    #access_log  logs/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+
+    #gzip  on;
+
+    server {
+        listen       8090;
+        server_name  localhost;
+
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+
+        location / {
+            root   html;
+            index  index.html index.htm;
+        }
+
+        #error_page  404              /404.html;
+
+        # redirect server error pages to the static page /50x.html
+        #
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+
+        # proxy the PHP scripts to Apache listening on 127.0.0.1:80
+        #
+        #location ~ \.php$ {
+        #    proxy_pass   http://127.0.0.1;
+        #}
+
+        # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+        #
+        #location ~ \.php$ {
+        #    root           html;
+        #    fastcgi_pass   127.0.0.1:9000;
+        #    fastcgi_index  index.php;
+        #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+        #    include        fastcgi_params;
+        #}
+
+        # deny access to .htaccess files, if Apache's document root
+        # concurs with nginx's one
+        #
+        #location ~ /\.ht {
+        #    deny  all;
+        #}
+    }
+
+
+    # another virtual host using mix of IP-, name-, and port-based configuration
+    #
+    #server {
+    #    listen       8000;
+    #    listen       somename:8080;
+    #    server_name  somename  alias  another.alias;
+
+    #    location / {
+    #        root   html;
+    #        index  index.html index.htm;
+    #    }
+    #}
+
+
+    # HTTPS server
+    #
+    #server {
+    #    listen       443 ssl;
+    #    server_name  localhost;
+
+    #    ssl_certificate      cert.pem;
+    #    ssl_certificate_key  cert.key;
+
+    #    ssl_session_cache    shared:SSL:1m;
+    #    ssl_session_timeout  5m;
+
+    #    ssl_ciphers  HIGH:!aNULL:!MD5;
+    #    ssl_prefer_server_ciphers  on;
+
+    #    location / {
+    #        root   html;
+    #        index  index.html index.htm;
+    #    }
+    #}
+}
+```
+
+> 参考博客文章：[Nginx中文文档](https://www.nginx.cn/doc/index.html)、[Nginx中文手册](https://www.nginx.cn/nginx-how-to)
+
+## 13.4 反向代理
+
+**关于正向代理与反向代理**：见下图
+
+- **正向代理**：如果把局域网外的Internet想象成一个巨大的资源库，则局域网中的客户端要访问Internet，则需要通过代理服务器来访问，这种代理服务就称为正向代理。典型的例子是我们可以通过正向代理访问Google。
+
+- **反向代理**：其实客户端对代理是无感知的，因为客户端不需要任何配置就可以访问，我们只需要将请求发送到反向代理服务器，由反向代理服务器去选择目标服务器获取数据后，再返回给客户端，此时反向代理服务器和目标服务器对外就是一个服务器，暴漏的是代理服务器地址，隐藏了真实服务器IP地址。
+
+<img src="README.assets/image-20210108155317616.png" alt="image-20210108155317616" style="zoom:67%;" />
+
+两个实例：
+
+- 将访问到`www.abc.com`反向代理到http://127.0.0.1:8080。
+
+```yaml
+# 1.对外开放访问的端口：
+firewall-cmd --add-port=80/tcp --permanent
+firewall-cmd --add-port=8080/tcp --permanent
+# 2.在windows系统的host文件进行域名和ip对应关系的配置: 192.168.17.129 www.abc.com
+# 3.在nginx配置文件中进行配置：
+server{
+	listen 80;
+	server_name 192.168.17.129;
+	location / {
+		root html;
+		proxy_pass http://127.0.0.1:8080;
+		index index.html index.htm;
+	}
+}
+```
+
+- 使用nginx反向代理，根据访问的路径跳转到不同端口的服务中。location后的符号说明：
+  - =：用于表示必须与uri严格匹配。
+  - ~：用于表示uri包含正则表达式，并且区分大小写。
+  - ~*：用于表示uri包含正则表达式，并且不区分大小写。
+  - ^~：用于表示uri不包含正则表达式，要求Nginx服务器找到表示uri和请求字符串匹配度最高的location后，立即使用此location处理请求，而不再使用location块中的正则uri和请求字符串做匹配。
+
+```yaml
+server{
+	listen 9001;
+	server_name 192.168.17.129;
+	location ~ /edu/ {
+		proxy_pass http://127.0.0.1:8080;
+	}
+	location ~ /vod/ {
+		proxy_pass http://127.0.0.1:8081;
+	}
+}
+```
+
+## 13.5 负载均衡
+
+**负载均衡**：单个服务器解决不了，我们增加服务器的数量，然后将请求分发到各个服务器上，将原先请求集中到单个服务器上的情况改为将请求分发到多个服务器上，**将负载分发到不同的服务器**，也就是我们所说的负载均衡。
+
+**Nginx负载均衡的策略**：
+
+1. **轮询（默认）**：将请求按顺序轮流地分配到后端服务器上，它均衡地对待后端的每一台服务器，而不关心服务器实际的连接数和当前的系统负载。如果后端服务器宕机，能自动剔除。
+2. **加权轮询法（weight）**：不同的后端服务器可能机器的配置和当前系统的负载并不相同，因此它们的抗压能力也不相同。给配置高、负载低的机器配置更高的权重，让其处理更多的请；而配置低、负载高的机器，给其分配较低的权重，降低其系统负载。**简言之，weight代表权重，默认为1，权重越高被分配的客户端越多**。
+3. **源地址哈希法（ip_hash）**：根据获取客户端的IP地址，通过哈希函数计算得到一个数值，用该数值对服务器列表的大小进行取模运算，得到的结果便是客服端要访问服务器的序号。采用源地址哈希法进行负载均衡，同一IP地址的客户端，当后端服务器列表不变时，它每次都会映射到同一台后端服务器进行访问。**源地址哈希法可以解决session共享的问题**。
+
+4. **最小连接数法（fair）**：按后端服务器的响应时间来分配请求，响应时间短的优先分配。
+
+```yaml
+# 轮询法
+upstream myserver  {
+  server 192.168.17.129.8080;
+  server 192.168.17.129.8081;
+}
+
+# 加权轮询法
+upstream myserver  {
+  server 192.168.17.129.8080 weight=1;
+  server 192.168.17.129.8081 weight=5;
+}
+
+# 源地址哈希法
+upstream myserver  {
+  ip_hash;
+  server 192.168.17.129.8080;
+  server 192.168.17.129.8081;
+}
+
+# 最小连接数法
+upstream myserver  {
+  fair;
+  server 192.168.17.129.8080;
+  server 192.168.17.129.8081;
+}
+```
+
+一个实例：
+
+- 浏览器地址栏输入地址 http://192.168.17.129/edu/a.html，负载均衡效果，平均 8080和8081端口中。
+
+```yaml
+upstream myserver  {
+  server 192.168.17.129.8080;
+  server 192.168.17.129.8081;
+}
+server{
+	listen 9001;
+	server_name 192.168.17.129;
+	location / {
+		proxy_pass http://myserver;
+		root html;
+		index index.html index.hml;
+	}
+}
+```
+
+## 13.6 动静分离
+
+**动静分离**：为了加快网站的解析速度，可以把动态页面和静态页面由不同的服务器来解析，加快解析速度，降低原来单个服务器的压力。
+
+**动静分离分为两种方式**：
+
+1. 把静态文件独立成单独的域名，放在独立的服务器上，是目前主流推崇的方案。
+2. 动态和静态文件混合在一起，通过nginx来分开。
+
+**主要设置**：
+
+1. 通过location指定不同的后缀名实现不同的请求转发。
+2. 通过expires参数设置，可以使浏览器缓存过期时间，减少与服务器之前的请求和流量。expires具体含义：给一个资源设定一个过期时间，也就是说无需去服务端验证，直接通过浏览器自身确认是否过期即可，所以不会产生额外的流量。此种方法非常适合不经常变动的资源（如果经常更新的文件，不建议使用 Expires 来缓存）。例如：expires设置为3d，表示在这3天之内访问这个URL，发送一个请求，比对服务器该文件最后更新时间没有变化，则不会从服务器抓取，返回状态码 304，如果有修改，则直接从服务器重新下载，返回状态码200。
+
+```yaml
+server{
+	listen 80;
+	server_name 192.168.17.129;
+    # 访问192.168.17.129:80/data/www/下的资源
+	location /www/ {
+		root /data/;
+		index index.html index.hml;
+	}
+    # 访问192.168.17.129:80/data/image目录下的所有资源/下的资源
+    location /image/ {
+		root /data/;
+        # 列出image目录下的所有资源
+		autoindex on;
+	}
+}
+```
+
+## 13.7 高可用
+
+**Nginx高可用**：
+
+- 采用**主从服务器**
+- 需要**keepalived**（相当于一个路由，通过脚本检测当前Nginx是否还存活）
+- 需要**虚拟 ip**
+
+![image-20210109101432967](README.assets/image-20210109101432967.png)
+
+**配置步骤**：
+
+1. 安装keepalived：`yum install keepalived –y`
+
+2. 配置keepalived：配置文件位置：`/etc/keepalived/keepalived.conf`
+
+   ```yaml
+   global_defs {
+      notification_email {
+        acassen@firewall.loc
+        failover@firewall.loc
+        sysadmin@firewall.loc
+      }
+      notification_email_from Alexandre.Cassen@firewall.loc
+      smtp_server 192.168.200.1
+      smtp_connect_timeout 30
+      router_id LVS_DEVEL # 配置主机的名字（在/etc/hosts中添加127.0.0.1 LVS_DEVEL）
+      vrrp_skip_check_adv_addr
+      vrrp_strict
+      vrrp_garp_interval 0
+      vrrp_gna_interval 0
+   }
+   vrrp_script chk_http_port{
+      script "/usr/local/src/nginx_check.sh" # 检测脚本的位置
+      interval 2 # 检测脚本的时间间隔为2s
+      weight 2 # 当脚本的条件成立，就将当前权重增加2
+   }
+   
+   vrrp_instance VI_1 {
+       state MASTER # 备份服务器上将MASTER改为BACKUP
+       interface eth0 # 使用ifconifg查看网卡名字
+       virtual_router_id 51 # 主备服务器的virtual_router_id必须相同
+       priority 100 # 主备服务器不同的优先级，主机值较大，备份机值较小
+       advert_int 1 # 每个1秒发送一个心跳检测主服务器是否还存活
+       authentication {
+           auth_type PASS # 权限
+           auth_pass 1111 # 密码
+       }
+       virtual_ipaddress {
+           192.168.200.16 # 虚拟IP地址
+       }
+   }
+   ```
+
+3. 配置脚本文件：位置在`/usr/local/src/nginx_check.sh`
+
+   ```bash
+   #!/bin/bash
+   A=`ps -C nginx –no-header |wc -l`
+   if [ $A -eq 0 ];then
+   	/usr/local/nginx/sbin/nginx
+   	sleep 2
+   	if [ `ps -C nginx --no-header |wc -l` -eq 0 ];then
+   		killall keepalived
+   	fi
+   fi
+   ```
+
+## 13.8 工作原理
+
+**工作原理**：Nginx采用Master和Worker工作机制。客户端（Client）发送请求给Master，Master通知Woker（默认数量为1）去争抢连接，抢到连接的Woker就会处理该请求以及转发服务器的响应消息。
+
+![image-20210109114941954](README.assets/image-20210109114941954.png)
+
+**采用Master-Worker工作机制的好处**：
+
+1. 可以使用Master-Worker工作机制进行热部署（`nginx -s reload`）。
+2. 每个Woker是独立的进程，如果有其中的一个Woker出现问题，其他Woker独立的，继续进行争抢，实现请求过程，不会造成服务中断。
+   - 对于每个Worker来说，属于独立的进程，不需要加锁，省掉了**锁带来的开销**。
+   - 采用独立的进程，Worker之间不会互相影响；当一个Worker进程异常退出（或被强制关闭）后，其他Worker进程还在工作，**不会导致服务的中断，Mater进程会很快启动新的Worker**（热部署的本质）。
+
+**worker的数量设置多少合适**？`worker_processes 1; # 设置等于CPU的核数`
+
+Nginx同redis类似都采用了**IO多路复用**机制，每个worker都是一个独立的进程，每个进程里都只有一个主线程，通过异步非阻塞的方式来处理请求，从而使每个worker的线程可以把一个CPU的性能发挥到极致，所以**woker的数量和服务器CPU的核数应该相等**（设置少了会浪费CPU资源；设置多了会造成CPU频繁切换上下文带来的开销）。
+
+**worker的连接数怎么设置**？首先确定worker_processes，然后根据并发量来计算worker_connections（**静态资源与动态资源的计算方式不同**）。
+
+worker_connections表示每个worker进程所能建立连接的最大值。一个Nginx所能建立的最大连接数，应该是`worker_connections*worker_processes `。
+
+- 对于HTTP请求本地资源来说，能够支持的最大并发数量是`worker_connections*worker_processes`，若是支持HTTP1.1的浏览器每次访问需要占用两个连接，故普通的**静态资源访问的最大并发数是`worker_connections*worker_processes/2`**。
+- 若HTTP作为反向代理来说，最大的并发连接数是`worker_connections*worker_processes/4`，因为作为反向代理服务器，每个并发会建立与客户端的连接和与后端服务器的连接，会占用两个连接。
+
+**常见的两个问题**：
+
+1. 发送一个请求，占用了 woker 的几个连接数？
+   - 访问静态资源（不需要从Tomcat获取数据），占用2个连接数；访问动态资源（需要从Tomcat获取数据）占用4个连接数。
+2. Nginx有一个master，有4个woker，每个woker支持最大的连接数1024，支持的最大并发数是多少？
+   - 如果是访问静态资源（不需要从Tomcat获取数据），支持的最大并发数是2048；如果是访问动态资源（需要从Tomcat获取数据），支持的最大并发数是1024。
 
 # 14 Zookeeper
+
+
+
+
+
+
 
 
 
@@ -11319,6 +11782,1037 @@ public class LRUCache {
     }
 }
 ```
+
+# 17 Undertow+Jmetter压力测试
+
+
+
+
+
+
+
+# 18 Linux
+
+## 18.1 上传下载文件
+
+**使用sftp上传下载文件**：使用`Alt+P`快捷键打开ftp窗口
+
+- 上传：`put C:/Users/zcpro/Documents/aaaa.conf`，会上传到`/root/aaaa.conf`，然后使用mv命令移动到目标文件夹即可。
+
+- 下载：`get /etc/keepalived/keepalived.conf`，会下载到`C:\Users\zcpro\Documents`。
+
+**使用lrzsz上传下载文件**：需要先安装lrzsz（`yum install lrzsz`）
+
+- 上传：`rz`
+
+- 下载：`sz keepalived.conf `
+
+## 18.2 文件权限
+
+### 18.2.1 常用指令
+
+#### 18.2.1.1 su指令
+
+- `su-`：从普通用户切换为root用户
+
+#### 18.2.1.2 exit指令
+
+- `exit`：从root用户切换为普通用户
+
+#### 18.2.1.3 pwd指令
+
+- `pwd`：显示当前所在目录
+
+#### 18.2.1.4 touch指令
+
+**touch指令**：修改文件时间或建置新档 。
+
+```bash
+touch [-acdmt] 文件
+选项与参数：
+-a ：仅修订 access time；
+-c ：仅修改文件的时间，若该文件不存在则不建立新文件；
+-d ：后面可以接欲修订的日期而不用目前的日期，也可以使用 --date="日期或时间"
+-m ：仅修改 mtime ；
+-t ：后面可以接欲修订的时间而不用目前的时间，格式为[YYYYMMDDhhmm]
+```
+
+- `touch a.txt`：创建一个空文件a.txt
+- `touch -d "2 days ago" bashrc`：将日期调整为两天前
+- `touch -t 201406150202 bashrc`：将bashrc日期改为2014/06/15 2:02
+
+#### 18.2.1.5 clear指令
+
+- `clear`：清屏
+
+#### 18.2.1.6 date指令
+
+- `date`：显示当前日期与时间
+- `date +%Y/%m/%d`：按照指定格式输出日期
+- `date +%H:%M`：按照指定格式输出时间
+
+#### 18.2.1.7 cal指令
+
+- `cal`：显示日历
+- `cal 2020`：显示2020全年的日历
+- `cal 10 2015`：显示2015年10月的日历
+
+#### 18.2.1.8 bc指令
+
+- `bc`：使用计算器
+- `scale=3`：设置计算结构保留的小数位
+- `quit`：退出程序
+
+#### 18.2.1.9 Tab键与快捷键
+
+**Tab键的几个强大功能**：
+
+- 命令补全功能：`ca[tab][tab] `（会显示所有以ca开头的命令）
+- 命令参数补全：`date --[tab][tab]   `（会显示所有可用的参数）
+
+- 文件补全：`ls -al ~/.bash[tab][tab]`（会显示所有以 .bash 为开头的文件名）
+
+**Ctrl+c快捷键**：中断目前程序
+
+**Ctrl+d快捷键**：键盘输入结束，相当于exit指令
+
+#### 18.2.1.10 指令求助
+
+- 使用--help：如`date --help`会显示date的用法
+
+- 使用man指令：如`man date`会在线显示date的用法
+
+- 使用info指令：如`info info`查看info指令的用法
+
+#### 18.2.1.11 关机与重启
+
+- `sync  `：将数据同步写入硬盘中
+
+- `shutdown  `：关机
+
+  ```bash
+  /sbin/shutdown [-krhc] [时间] [警告讯息]
+  选项与参数：
+  -k ： 不要真的关机，只是发送警告讯息出去！
+  -r ： 在将系统的服务停掉之后就重新启动(常用)
+  -h ： 将系统的服务停掉后，立即关机。 (常用)
+  -c ： 取消已经在进行的 shutdown 指令内容。
+  时间 ： 指定系统关机的时间！时间的范例底下会说明。若没有这个项目，则默认 1 分钟后自动进行。
+  ```
+
+- `reboot`、`halt`、`poweroff`：重启
+
+### 18.2.2 ls指令
+
+```bash
+ls [-aAdfFhilnrRSt] 文件名或目录名称
+ls [--color={never,auto,always}] 文件名或目录名称..
+ls [--full-time] 文件名或目录名称..
+选项与参数：
+-a ：全部的文件，连同隐藏档( 开头为 . 的文件) 一起列出来(常用)
+-A ：全部的文件，连同隐藏档，但不包括 . 与 .. 这两个目录
+-d ：仅列出目录本身，而不是列出目录内的文件数据(常用)
+-f ：直接列出结果，而不进行排序 (ls 预设会以档名排序！)
+-F ：根据文件、目录等信息，给予附加数据结构，例如：
+*:代表可执行文件； /:代表目录； =:代表 socket 文件； |:代表 FIFO 文件；
+-h ：将文件容量以人类较易读的方式(例如 GB, KB 等等)列出来；
+-i ：列出 inode 号码，inode 的意义下一章将会介绍；
+-l ：长数据串行出，包含文件的属性与权限等等数据；(常用)
+-n ：列出 UID 与 GID 而非使用者与群组的名称 (UID 与 GID 会在账号管理提到！)
+-r ：将排序结果反向输出，例如：原本档名由小到大，反向则为由大到小；
+-R ：连同子目录内容一起列出来，等于该目录下的所有文件都会显示出来；
+-S ：以文件容量大小排序，而不是用档名排序；
+-t ：依时间排序，而不是用档名。
+--color=never ：不要依据文件特性给予颜色显示；
+--color=always ：显示颜色
+--color=auto ：让系统自行依据设定来判断是否给予颜色
+--full-time ：以完整时间模式 (包含年、月、日、时、分) 输出
+--time={atime,ctime} ：输出 access 时间或改变权限属性时间 (ctime)，而非内容变更时间 (modification time)
+```
+
+- `ls`：list的意思，显示文件的文件名和相关属性
+- `ls -al`：列出所有的文件（包括隐藏文件）详细的权限与属性
+- `ls -l --full-time`：列出所有的文件详细的权限与属性（包括完整的时间格式），`ls -l`可缩写为`ll`
+
+### 18.2.3 cp指令
+
+```bash
+cp [-adfilprsu] 来源文件(source) 目标文件(destination)
+cp [options] source1 source2 source3 .... directory
+选项与参数：
+-a ：相当于 -dr --preserve=all 的意思，至于 dr 请参考下列说明；(常用)
+-d ：若来源文件为链接文件的属性(link file)，则复制链接文件属性而非文件本身；
+-f ：为强制(force)的意思，若目标文件已经存在且无法开启，则移除后再尝试一次；
+-i ：若目标文件(destination)已经存在时，在覆盖时会先询问动作的进行(常用)
+-l ：进行硬式连结(hard link)的连结档建立，而非复制文件本身；
+-p ：连同文件的属性(权限、用户、时间)一起复制过去，而非使用默认属性(备份常用)；
+-r ：递归持续复制，用于目录的复制行为；(常用)
+-s ：复制成为符号链接文件 (symbolic link)，亦即『快捷方式』文件；
+-u ：destination 比 source 旧才更新 destination，或 destination 不存在的情况下才复制。
+--preserve=all ：除了 -p 的权限相关参数外，还加入 SELinux 的属性, links, xattr 等也复制了。
+最后需要注意的，如果来源档有两个以上，则最后一个目的文件一定要是『目录』才行！
+```
+
+- `cp .bashrc .bashrc_test`：将.bashrc 这个文件拷贝成为.bashrc_test档名  
+
+### 18.2.4 chgrp/chown/chmod指令
+
+```bash
+# chgrp改变所属群组
+chgrp [-R] dirname/filename ...
+选项与参数：
+-R : 进行递归(recursive)的持续变更，亦即连同次目录下的所有文件、目录都更新成为这个群组之意。常常用在变更某一目录内所有的文件之情况
+
+# chown改变文件拥有者
+chown [-R] 账号名称 文件或目录
+chown [-R] 账号名称:组名 文件或目录
+选项与参数：
+-R : 进行递归(recursive)的持续变更，亦即连同次目录下的所有文件都变更
+
+# 设定文件或目录权限
+chmod [-R] xyz 文件或目录
+选项与参数：
+xyz : 就是刚刚提到的数字类型的权限属性，为rwx属性数值的相加。
+-R : 进行递归(recursive)的持续变更，亦即连同次目录下的所有文件都会变更
+```
+
+- `chmod 777 .bashrc`：将.bashrc 这个文件所有的权限都设定启用
+
+### 18.2.5 cd/mkdir/rmdir
+
+```bash
+cd [相对路径或绝对路径]
+
+mkdir [-mp] 目录名称
+选项与参数：
+-m ：配置文件案的权限喔！直接设定，不需要看预设权限 (umask) 的脸色～
+-p ：帮助你直接将所需要的目录(包含上层目录)递归建立起来！
+
+rmdir [-p] 目录名称
+选项与参数：
+-p ：连同『上层』『空的』目录也一起删除
+```
+
+- `cd /var/spool/mail`：进入/var/spool/mail目录
+- `mkdir -p test1/test2/test3/test4`：建立一个多级目录
+- `rmdir -p test1/test2/test3/test4`：删除一个多级目录
+
+### 18.2.6 rm指令
+
+```bash
+rm [-fir] 文件或目录
+选项与参数：
+-f ：就是 force 的意思，忽略不存在的文件，不会出现警告讯息；
+-i ：互动模式，在删除前会询问使用者是否动作
+-r ：递归删除啊！最常用在目录的删除了！这是非常危险的选项！！！
+```
+
+- `rm -i bashrc.text`：删除文件前先确认
+- `rm -i bashrc*`：透过通配符*的帮忙，将开头为bashrc的文件通通删除
+- `rm -r  bashrc`：递归删除bashrc目录下的文件（会询问）
+- `rm -rf  bashrc`：递归删除bashrc目录下的文件（不会询问）
+- `rm -rf /*`：自杀
+
+### 18.2.7 mv指令
+
+```bash
+mv [-fiu] source destination
+mv [options] source1 source2 source3 .... directory
+选项与参数：
+-f ：force 强制的意思，如果目标文件已经存在，不会询问而直接覆盖；
+-i ：若目标文件 (destination) 已经存在时，就会询问是否覆盖！
+-u ：若目标文件已经存在，且 source 比较新，才会更新 (update)
+```
+
+- `mv mvtest mvtest2`：将目录mvtest重命名为mvtest
+- `mv mvtest.txt mvtest2.txt `：将文件mvtest.txt重命名为mvtest2.txt
+- `mv mvtest.txt mvtest2`：将文件mvtest.txt移动到mvtest2目录中
+
+### 18.2.8 cat/tac/nl指令
+
+**cat指令**：从第一行开始显示内容。
+
+**tac指令**：从最后一行开始显示，可以看出tac是cat的倒写。
+
+**nl指令**：显示的时候，顺道输出行号！
+
+```bash
+cat [-AbEnTv]
+选项与参数：
+-A ：相当于 -vET 的整合选项，可列出一些特殊字符而不是空白而已；
+-b ：列出行号，仅针对非空白行做行号显示，空白行不标行号！
+-E ：将结尾的断行字符 $ 显示出来；
+-n ：打印出行号，连同空白行也会有行号，与 -b 的选项不同；
+-T ：将 [tab] 按键以 ^I 显示出来；
+-v ：列出一些看不出来的特殊字符
+
+nl [-bnw] 文件
+选项与参数：
+-b ：指定行号指定的方式，主要有两种：
+-b a ：表示不论是否为空行，也同样列出行号(类似 cat -n)；
+-b t ：如果有空行，空的那一行不要列出行号(默认值)；
+-n ：列出行号表示的方法，主要有三种：
+-n ln ：行号在屏幕的最左方显示；
+-n rn ：行号在自己字段的最右方显示，且不加 0 ；
+-n rz ：行号在自己字段的最右方显示，且加 0 ；
+-w ：行号字段的占用的字符数。
+```
+
+- `cat /etc/issue`：显示 /etc/issue 这个文件的内容
+- `nl /etc/issue`：用nl列出 /etc/issue 的内容
+
+### 18.2.9 more/less指令
+
+**more指令**：一页一页的显示文件内容。
+
+**less指令**：与more类似，不同的是less可以向前翻页（使用PgUp和PgDn进行上下翻页）。
+
+```bash
+# more指令
+空格键 (space)：代表向下翻一页；
+Enter ：代表向下翻『一行』；
+/字符串 ：代表在这个显示的内容当中，向下搜寻『字符串』这个关键词；
+:f ：立刻显示出文件名以及目前显示的行数；
+q ：代表立刻离开 more ，不再显示该文件内容。
+b 或 [ctrl]-b ：代表往回翻页，不过这动作只对文件有用，对管线无用。
+
+# less指令
+空格键 ：向下翻动一页；
+[pagedown]：向下翻动一页；
+[pageup] ：向上翻动一页；
+/字符串 ：向下搜寻『字符串』的功能；
+?字符串 ：向上搜寻『字符串』的功能；
+n ：重复前一个搜寻 (与 / 或 ? 有关！)
+N ：反向的重复前一个搜寻 (与 / 或 ? 有关！)
+g ：前进到这个资料的第一行去；
+G ：前进到这个数据的最后一行去 (注意大小写)；
+q ：离开 less 这个程序；
+```
+
+- `more /etc/man_db.conf`：一页一页翻动
+- `less /etc/man_db.conf`：一页一页翻动
+
+### 18.2.10 head/tail指令
+
+**head指令**：只看头几行。
+
+**tail指令**：只看尾巴几行。
+
+```bash
+head [-n number] 文件
+选项与参数：
+-n ：后面接数字，代表显示几行的意思
+```
+
+- `head /etc/man_db.conf`：默认的情况下，显示前面10行
+- `head -n 20 /etc/man_db.conf`：显示前面20行
+- `head -n -100 /etc/man_db.conf`：显示后面100行
+
+```bash
+tail [-n number] 文件
+选项与参数：
+-n ：后面接数字，代表显示几行的意思
+-f ：表示持续侦测后面所接的档名，要等到按下[ctrl]-c 才会结束 tail 的侦测
+```
+
+- `tail /etc/man_db.conf`：默认的情况，显示后面10行
+- `tail -n 20 /etc/man_db.conf`：显示后面20行
+- `tail -f /var/log/messages`：持续侦测/var/log/messages的内容
+
+### 18.2.11 od指令
+
+**od指令**：查看非纯文本指令。
+
+```bash
+od [-t TYPE] 文件
+选项或参数：
+-t ：后面可以接各种『类型 (TYPE)』的输出，例如：
+a ：利用默认的字符来输出；
+c ：使用 ASCII 字符来输出
+d[size] ：利用十进制(decimal)来输出数据，每个整数占用 size bytes ；
+f[size] ：利用浮点数(floating)来输出数据，每个数占用 size bytes ；
+o[size] ：利用八进制(octal)来输出数据，每个整数占用 size bytes ；
+x[size] ：利用十六进制(hexadecimal)来输出数据，每个整数占用 size bytes ；
+```
+
+- `od -t c /usr/bin/passwd`：将/usr/bin/passwd的内容使用ASCII方式来展现！
+- `od -t oCc /etc/issue`：将/etc/issue这个文件的内容以8进位列出储存值与ASCII的对照表
+
+### 18.2.12 which/whereis/locate指令
+
+**which指令**：脚本文件名的搜寻 。
+
+**whereis指令**：文件档名的搜寻。
+
+**locate指令**：限定搜寻。
+
+```bash
+which [-a] command
+选项或参数：
+-a ：将所有由 PATH 目录中可以找到的指令均列出，而不止第一个被找到的指令名称
+```
+
+- `which ifconfig`：搜寻ifconfig这个指令的完整文件名
+- `which which`：搜寻which这个指令的完整文件名
+
+```bash
+whereis [-bmsu] 文件或目录名
+选项与参数：
+-l :可以列出 whereis 会去查询的几个主要目录而已
+-b :只找 binary 格式的文件
+-m :只找在说明文件 manual 路径下的文件
+-s :只找 source 来源文件
+-u :搜寻不在上述三个项目当中的其他特殊文件
+```
+
+- `whereis ifconfig`：请找出ifconfig这个档名
+- `whereis passwd`：只找出跟passwd有关的『说明文件』档名(man page)
+- `whereis -m passwd`：只有在man里面的档名才抓出来！
+
+```bash
+locate [-ir] keyword
+选项与参数：
+-i ：忽略大小写的差异；
+-c ：不输出档名，仅计算找到的文件数量
+-l ：仅输出几行的意思，例如输出五行则是 -l 5
+-S ：输出 locate 所使用的数据库文件的相关信息，包括该数据库纪录的文件/目录数量等
+-r ：后面可接正规表示法的显示方式
+```
+
+- `locate -l 5 passwd`：找出系统中所有与 passwd 相关的档名，且只列出 5 个
+- `locate -S`：列出 locate 查询所使用的数据库文件之文件名与各数据数量
+
+### 18.2.13 find指令
+
+**find指令**：查找符合条件的文件。
+
+```bash
+find [PATH] [option] [action]
+选项与参数：
+1. 与时间有关的选项：共有 -atime, -ctime 与 -mtime ，以 -mtime 说明
+-mtime n ：n 为数字，意义为在 n 天之前的『一天之内』被更动过内容的文件；
+-mtime +n ：列出在 n 天之前(不含 n 天本身)被更动过内容的文件档名；
+-mtime -n ：列出在 n 天之内(含 n 天本身)被更动过内容的文件档名。
+-newer file ：file 为一个存在的文件，列出比 file 还要新的文件档名
+
+2. 与使用者或组名有关的参数：
+-uid n ：n 为数字，这个数字是用户的账号 ID，亦即 UID ，这个 UID 是记录在
+/etc/passwd 里面与账号名称对应的数字。这方面我们会在第四篇介绍。
+-gid n ：n 为数字，这个数字是组名的 ID，亦即 GID，这个 GID 记录在
+/etc/group，相关的介绍我们会第四篇说明～
+-user name ：name 为使用者账号名称喔！例如 dmtsai
+-group name：name 为组名喔，例如 users ；
+-nouser ：寻找文件的拥有者不存在 /etc/passwd 的人！
+-nogroup ：寻找文件的拥有群组不存在于 /etc/group 的文件！
+当你自行安装软件时，很可能该软件的属性当中并没有文件拥有者，这是可能的！在这个时候，就可以使用 -nouser 与 -nogroup 搜寻。
+
+3. 与文件权限及名称有关的参数：
+-name filename：搜寻文件名为 filename 的文件；
+-size [+-]SIZE：搜寻比 SIZE 还要大(+)或小(-)的文件。这个 SIZE 的规格有：
+c: 代表 byte， k: 代表 1024bytes。所以，要找比 50KB
+还要大的文件，就是『 -size +50k 』
+-type TYPE ：搜寻文件的类型为 TYPE 的，类型主要有：一般正规文件 (f), 装置文件 (b, c),
+目录 (d), 连结档 (l), socket (s), 及 FIFO (p) 等属性。
+-perm mode ：搜寻文件权限『刚好等于』 mode 的文件，这个 mode 为类似 chmod
+的属性值，举例来说， -rwsr-xr-x 的属性为 4755 ！
+-perm -mode ：搜寻文件权限『必须要全部囊括 mode 的权限』的文件，举例来说，们要搜寻 -rwxr--r-- ，亦即 0744 的文件，使用 -perm -0744，当一个文件的权限为 -rwsr-xr-x ，亦即 4755 时，也会被列出来，因为 -rwsr-xr-x 的属性已经囊括了 -rwxr--r-- 的属性了。
+-perm /mode ：搜寻文件权限『包含任一 mode 的权限』的文件，举例来说，我们搜寻-rwxr-xr-x ，亦即 -perm /755 时，但一个文件属性为 -rw-------也会被列出来，因为他有 -rw.... 的属性存在！
+
+4. 额外可进行的动作：
+-exec command ：command 为其他指令，-exec 后面可再接额外的指令来处理搜寻到的结果。
+-print ：将结果打印到屏幕上，这个动作是预设动作！
+```
+
+- `find / -mtime 0`：将过去系统上面 24 小时内有更动过内容 (mtime) 的文件列出
+- `find /etc -newer /etc/passwd`：寻找 /etc 底下的文件，如果文件日期比 /etc/passwd 新就列出
+- `find /home -user dmtsai`：搜寻 /home 底下属于 dmtsai 的文件
+- `find / -nouser`：搜寻系统中不属于任何人的文件
+- `find / -name passwd`：找出档名为 passwd 这个文件
+- `find / -name "*passwd*"`：找出文件名包含了 passwd 这个关键词的文件
+- `find /run -type s`：找出 /run 目录下，文件类型为Socket的檔名有哪些？
+- `find / -perm /7000`：搜寻文件当中含有 SGID 或 SUID 或 SBIT 的属性
+
+- `find /usr/bin /usr/sbin -perm /7000 -exec ls -l {} \;`：将上个范例找到的文件使用 ls -l 列出来～
+- `find / -size +1M`：找出系统中，大于1MB的文件
+
+### 18.2.14 gzip/tar指令
+
+**gzip指令**：压缩指令。
+
+**tar指令**：打包或解压指令。
+
+```bash
+gzip [-cdtv#] 檔名
+选项与参数：
+-c ：将压缩的数据输出到屏幕上，可透过数据流重导向来处理；
+-d ：解压缩的参数；
+-t ：可以用来检验一个压缩文件的一致性～看看文件有无错误；
+-v ：可以显示出原文件/压缩文件案的压缩比等信息；
+-# ：# 为数字的意思，代表压缩等级，-1 最快，但是压缩比最差、-9 最慢，但是压缩比最好！预设是 -6
+```
+
+- `gzip -v services`：将services文件压缩成services.gz
+
+```bash
+tar [-z|-j|-J] [cv] [-f 待建立的新檔名] filename... <==打包与压缩
+tar [-z|-j|-J] [tv] [-f 既有的 tar 檔名] <==察看檔名
+tar [-z|-j|-J] [xv] [-f 既有的 tar 檔名] [-C 目录] <==解压缩
+选项与参数：
+-c ：建立打包文件，可搭配 -v 来察看过程中被打包的档名(filename)
+-t ：察看打包文件的内容含有哪些档名，重点在察看『档名』就是了；
+-x ：解打包或解压缩的功能，可以搭配 -C (大写) 在特定目录解开
+特别留意的是， -c, -t, -x 不可同时出现在一串指令列中。
+-z ：透过 gzip 的支持进行压缩/解压缩：此时档名最好为 *.tar.gz
+-j ：透过 bzip2 的支持进行压缩/解压缩：此时档名最好为 *.tar.bz2
+-J ：透过 xz 的支持进行压缩/解压缩：此时档名最好为 *.tar.xz
+特别留意， -z, -j, -J 不可以同时出现在一串指令列中
+-v ：在压缩/解压缩的过程中，将正在处理的文件名显示出来！
+-f filename：-f 后面要立刻接要被处理的档名！建议 -f 单独写一个选项啰！(比较不会忘记)
+-C 目录 ：这个选项用在解压缩，若要在特定目录解压缩，可以使用这个选项。
+
+其他后续练习会使用到的选项介绍：
+-p(小写) ：保留备份数据的原本权限与属性，常用于备份(-c)重要的配置文件
+-P(大写) ：保留绝对路径，亦即允许备份数据中含有根目录存在之意；
+--exclude=FILE：在压缩的过程中，不要将 FILE 打包！
+```
+
+- `tar -cvf xxx.tar ./*`：将当前目录下的所有文件打包成xxx.tar
+- `tar -zcvf xxx.tar.gz ./*`：将当前目录下的所有文件打包并压缩成xxx.tar.gz
+- `tar -xvf xxx.tar`：解压xxx.tar文件
+- `tar -zxvf xxx.tar.gz -C /usr/aaa`：解压xxx.tar文件到/usr/aaa目录
+
+### 18.2.15 echo指令
+
+**echo指令**：读取变量或设定。
+
+- `echo $variable`：读取变量variable的值或设置变量（若变量不存在）
+- `echo $PATH`：读取变量PATH的值或设置变量（若变量不存在）
+- `echo ${PATH} `：读取变量PATH的值或设置变量（若变量不存在）
+
+### 18.2.16 >/>>
+
+**\>指令**：重定向输出，覆盖原内容。
+
+**\>\>指令**：重定向输出，有追加功能。
+
+- `cat /etc/passwd > a.txt`：将输出定向到a.txt
+- `cat /etc/passwd >> a.txt`：输出并且追加到a.txt中
+
+### 18.2.17 管线/cut/grep命令
+
+**|指令**：管线命令。
+
+- `ls -al /etc | less`：分页显示文件
+
+**cut指令**：撷取命令，将一段数据经过分析后，取出我们所想要的 。
+
+```bash
+cut -d'分隔字符' -f fields <==用于有特定分隔字符
+cut -c 字符区间 <==用于排列整齐的讯息
+选项与参数：
+-d ：后面接分隔字符。与 -f 一起使用；
+-f ：依据 -d 的分隔字符将一段讯息分区成为数段，用 -f 取出第几段的意思；
+-c ：以字符 (characters) 的单位取出固定字符区间；
+```
+
+- `export | cut -c 12-`：将 export 输出的讯息，取得第 12 字符以后的所有字符串
+
+**gerp指令**：分析一行讯息， 若当中有我们所需要的信息，就将该行拿出来。
+
+```bash
+grep [-acinv] [--color=auto] '搜寻字符串' filename
+选项与参数：
+-a ：将 binary 文件以 text 文件的方式搜寻数据
+-c ：计算找到 '搜寻字符串' 的次数
+-i ：忽略大小写的不同，所以大小写视为相同
+-n ：顺便输出行号
+-v ：反向选择，亦即显示出没有 '搜寻字符串' 内容的那一行！
+--color=auto ：可以将找到的关键词部分加上颜色的显示喔！
+```
+
+- `last | grep 'root'`：将 last 当中，有出现 root 的那一行就取出来
+- `last | grep -v 'root'`：与范例一相反，只要没有 root 的就取出！
+- `last | grep 'root' |cut -d ' ' -f1`：在last的输出讯息中，只要有root就取出，并且仅取第一栏
+
+- `grep --color=auto 'MANPATH' /etc/man_db.conf`：取出 /etc/man_db.conf 内含 MANPATH 的那几行
+
+## 18.3 进程
+
+### 18.3.1 ps指令
+
+**ps指令**：查看进程的信息。
+
+```bash
+ps指令选项与参数：
+-A: 所有的process均显示出来，与-e具有同样的效用;
+-a: 不与 terminal 有关的所有process;
+-u: 有效使用者(effective user)相关的process;
+x: 通常与a这个参数一起使用,可列出较完整信息
+输出格式规划：
+l: 较长、较详细的将该PID的的信息列出
+j: 工作的格式 (jobs format)
+-f: 做一个更为完整的输出
+```
+
+- `ps aux`：查看系统所有进程数据（执行的命令不会显示文件夹）
+- `ps -l`：只查阅自己的bash相关进程
+- `ps -lA`：查看系统所有的进程数据（执行的命令不会显示文件夹）
+- `ps axjf`：查看系统的进程数状态
+- `ps aux|grep nginx`：查看与Nginx相关的进程
+- `ps -ef|grep nginx`：查看与Nginx相关的进程
+
+### 18.3.2 top指令
+
+**top指令**：动态观察进程的变化，相当于windows系统的资源管理器。
+
+```bash
+# top [-d 数字] | top [-bnp]
+选项与参数：
+-d ：后面可以接秒数，就是整个进程画面更新的秒数。预设是 5 秒；
+-b ：以批次的方式执行 top ，还有更多的参数可以使用喔！常会搭配数据流重导向来将批次的结果输出成为文件。
+-n ：与 -b 搭配，意义是，需要进行几次 top 的输出结果。
+-p ：指定某些个 PID 来进行观察监测而已。
+在 top 执行过程当中可以使用的按键指令：
+	? ：显示在 top 当中可以输入的按键指令；
+	P ：以 CPU 的使用资源排序显示；
+	M ：以 Memory 的使用资源排序显示；
+	N ：以 PID 来排序喔！
+	T ：由该 Process 使用的 CPU 时间累积 (TIME+) 排序。
+	k ：给予某个 PID 一个讯号 (signal)
+	r ：给予某个 PID 重新制订一个 nice 值。
+	q ：离开 top 软件的按键。
+```
+
+- `top`：观察动态进程的变化
+- `top -b -n 2 > /tmp/top.txt`：将top的信息进行2次，然后将结果输出到 /tmp/top.txt
+- `top -d 5 -b 2`：将top的信息进次2次，每次间隔5秒
+- `top -d 2 -p 14836`：查看进程号为14836的资源利用信息
+- `echo $$`：查看当前bash的PID
+
+### 18.3.2 pstree指令
+
+**pstree指令**：查看进程树。
+
+```bash
+pstree [-A|U] [-up]
+选项与参数：
+-A ：各进程树之间的连接以 ASCII 字符来连接；
+-U ：各进程树之间的连接以万国码的字符来连接。在某些终端接口下可能会有错误；
+-p ：并同时列出每个 process 的 PID；
+-u ：并同时列出每个 process 的所属账号名称。
+```
+
+- `pstree -A`：列出目前系统上面所有的进程树的相关性
+- `pstree -Aup`：列出目前系统上面所有的进程树的相关性，同时秀出PID与users
+
+### 18.3.3 kill指令
+
+**kill指令**：根据进程号杀掉进程。
+
+```bash
+kill -signal PID
+1 SIGHUP 启动被终止的进程，可让该 PID 重新读取自己的配置文件，类似重新启动
+2 SIGINT 相当于用键盘输入 [ctrl]-c 来中断一个进程的进行
+9 SIGKILL 代表强制中断一个进程的进行，如果该进程进行到一半， 那么尚未完成的部分可能会有『半产品』产生，类似 vim 会有.filename.swp保留下来
+15 SIGTERM 以正常的结束进程来终止该进程。由于是正常的终止， 所以后续的动作会将他完成。不过，如果该进程已经发生问题，就是无法使用正常的方法终止时， 输入这个signal也是没有用的。
+19 SIGSTOP 相当于用键盘输入 [ctrl]-z 来暂停一个进程的进行
+```
+
+- `kill 2868`：杀掉2868进程
+- `kill -9 2868`：强制杀掉2868进程
+
+### 18.3.4 killAll指令
+
+**killAll指令**：根据指令名称杀掉进程。
+
+```bash
+killall [-iIe] [command name]
+选项与参数：
+-i ：interactive 的意思，交互式的，若需要删除时，会出现提示字符给用户；
+-e ：exact 的意思，表示『后面接的 command name 要一致』，但整个完整的指令不能超过 15 个字符。
+-I ：指令名称(可能含参数)忽略大小写
+```
+
+- `killall -1 rsyslogd`：给予rsyslogd这个指令启动的PID一个SIGHUP的讯号
+- `killall -9 httpd`：强制终止所有以httpd启动的进程 （其实并没有此进程在系统内）
+- `killall -i -9 bash`：依次询问每个 bash 程序是否需要被终止运作！
+
+### 18.3.5 free指令
+
+**free指令**：观察内存使用的情况。
+
+```bash
+free [-b|-k|-m|-g|-h] [-t] [-s N -c N]
+选项与参数：
+-b ：直接输入 free 时，显示的单位是 Kbytes，我们可以使用 b(bytes), m(Mbytes)
+k(Kbytes), 及 g(Gbytes) 来显示单位喔！也可以直接让系统自己指定单位 (-h)
+-t ：在输出的最终结果，显示物理内存与 swap 的总量。
+-s ：可以让系统每几秒钟输出一次，不间断的一直输出的意思！对于系统观察挺有效！
+-c ：与 -s 同时处理～让 free 列出几次的意思～
+```
+
+- `free -m`：显示目前系统的内存容量
+
+### 18.3.6 uname指令
+
+**uname指令**：查阅系统与核心相关信息。
+
+```bash
+uname [-asrmpi]
+选项与参数：
+-a ：所有系统相关的信息，包括底下的数据都会被列出来；
+-s ：系统核心名称
+-r ：核心的版本
+-m ：本系统的硬件名称，例如 i686 或 x86_64 等；
+-p ：CPU 的类型，与 -m 类似，只是显示的是 CPU 的类型！
+-i ：硬件的平台 (ix86)
+```
+
+- `uname -a`：输出系统的基本信息
+
+### 18.3.7 uptime指令
+
+**uptime指令**：观察系统启动时间与工作负载。
+
+- `uptime`：观察系统启动时间与工作负载
+
+### 18.3.8 netstat指令
+
+**netstat指令**：追踪网络或插槽文件。
+
+```bash
+netstat -[atunlp]
+选项与参数：
+-a ：将目前系统上所有的联机、监听、Socket 数据都列出来
+-t ：列出 tcp 网络封包的数据
+-u ：列出 udp 网络封包的数据
+-n ：不以进程的服务名称，以埠号 (port number) 来显示；
+-l ：列出目前正在网络监听 (listen) 的服务；
+-p ：列出该网络服务的进程 PID
+```
+
+- `netstat`：列出目前系统已经建立的网络联机与unix socket状态
+- `netstat -tulnp`：找出目前系统上已在监听的网络联机及其PID
+
+### 18.3.9 dmesg指令
+
+**dmesg指令**：分析核心产生的信息。
+
+- `dmesg | more`：输出所有的核心开机时的信息。
+- `dmesg | grep -i vda`：搜寻开机的时候，硬盘的相关信息为何？
+
+### 18.3.10 vmstat指令
+
+**vmstat**指令：侦测系统资源变化。
+
+```bash
+vmstat [-a] [延迟 [总计侦测次数]] <==CPU/内存等信息
+vmstat [-fs] <==内存相关
+vmstat [-S 单位] <==设定显示数据的单位
+vmstat [-d] <==与磁盘有关
+vmstat [-p 分区槽] <==与磁盘有关
+选项与参数：
+-a ：使用 inactive/active(活跃与否) 取代 buffer/cache 的内存输出信息；
+-f ：开机到目前为止，系统复制 (fork) 的进程数；
+-s ：将一些事件 (开机至目前为止) 导致的内存变化情况列表说明；
+-S ：后面可以接单位，让显示的数据有单位。例如 K/M 取代 bytes 的容量；
+-d ：列出磁盘的读写总量统计表
+-p ：后面列出分区槽，可显示该分区槽的读写总量统计表
+```
+
+- `vmstat 1 3`：统计目前主机CPU 状态，每秒一次，共计三次！
+- `vmstat -d`：系统上面所有的磁盘的读写状态
+
+### 18.3.11 lsof指令
+
+**lsof指令**：列出被进程所开启的文件档名。
+
+```bash
+lsof [-aUu] [+d]
+选项与参数：
+-a ：多项数据需要『同时成立』才显示出结果时！
+-U ：仅列出 Unix like 系统的 socket 文件类型；
+-u ：后面接 username，列出该使用者相关进程所开启的文件；
++d ：后面接目录，亦即找出某个目录底下已经被开启的文件！
+```
+
+- `lsof`：列出目前系统上面所有已经被开启的文件与装置
+- `lsof -u root -a -U`：仅列出关于root的所有进程开启的socket文件
+- `lsof +d /dev`：请列出目前系统上面所有的被启动的周边装置
+- `lsof -u root | grep bash`：秀出属于root的bash这支程序所开启的文件
+
+### 18.3.12 pidof指令
+
+pidof指令：找出某支正在执行的程序的PID
+
+```bash
+pidof [-sx] program_name
+选项与参数：
+-s ：仅列出一个 PID 而不列出所有的 PID
+-x ：同时列出该 program name 可能的 PPID 那个进程的 PID
+```
+
+- `pidof systemd rsyslogd`：列出目前系统上面systemd以及rsyslogd这两个程序的PID
+
+## 18.4 服务
+
+### 18.4.1 systemctl指令
+
+**systemctl指令**：管理单一服务 (service unit) 的启动/开机启动与观察状态。
+
+```bash
+systemctl [command] [unit]
+command 主要有：
+start ：立刻启动后面接的 unit
+stop ：立刻关闭后面接的 unit
+restart ：立刻关闭后启动后面接的 unit，亦即执行 stop 再 start 的意思
+reload ：不关闭后面接的 unit 的情况下，重载配置文件，让设定生效
+enable ：设定下次开机时，后面接的 unit 会被启动
+disable ：设定下次开机时，后面接的 unit 不会被启动
+status ：目前后面接的这个 unit 的状态，会列出有没有正在执行、开机预设执行否、登录等信息等！
+is-active ：目前有没有正在运作中
+is-enable ：开机时有没有预设要启用这个 unit
+```
+
+- `systemctl status atd.service`：看目前atd这个服务的状态为何？
+
+- `systemctl stop atd.service`：正常关闭这个atd服务
+- `systemctl mask cups.service`：强迫服务注销，会让启动的脚本变成空的，再也start不起来了
+- `systemctl unmask cups.service`：取消服务的注销
+
+```bash
+systemctl [command] [--type=TYPE] [--all]
+command:
+list-units ：依据 unit 列出目前有启动的 unit。若加上 --all 才会列出没启动的。
+list-unit-files ：依据 /usr/lib/systemd/system/ 内的文件，将所有文件列表说明。
+--type=TYPE：就是之前提到的 unit type，主要有 service, socket, target 等
+```
+
+- `systemctl`：列出系统上面有启动的unit
+- `systemctl list-unit-files`：列出所有已经安装的unit有哪些？
+
+- `systemctl list-units --type=service --all`：只剩下 *.service 的项目才会出现喔！
+- `systemctl list-units --type=service --all | grep cpu`：查询系统上是否有以 cpu 为名的服务？
+- `systemctl poweroff`：系统关机
+- `systemctl reboot` ：重新启动
+-  `systemctl suspend`：进入暂停模式
+- `systemctl hibernate`：进入休眠模式
+- `systemctl rescue`：强制进入救援模式
+- `systemctl emergency`：强制进入紧急救援模式
+
+## 18.5 软件安装
+
+### 18.5.1 configure指令
+
+**configure指令**：侦测用户的作业环境，建立Makefile文件。
+
+### 18.5.2 make指令
+
+**make指令**：make 时，make 会在当时的目录下搜寻Makefile (or makefile) 这个文本文件，而Makefile里面则记录了原始码如何编译的详细信息！make会自动的判别原始码是否经过变动了，而自动更新执行档。**编译前，需要先执行configure指令**。
+
+### 18.5.3 Tarball文件
+
+**Tarball文件**：其实就是将软件的所有原始码文件先以tar打包，然后再以压缩技术来压缩，通常最常见的就是以gzip来压缩了。因为利用了tar与gzip的功能，所以tarball文件一般的扩展名就会写成 *.tar.gz 或者是简写为 *.tgz 。
+
+### 18.5.4 安装软件
+
+关于rpm和yum，有时候傻傻分不清楚，下面对比一下：
+
+|  Distribution  | 软件管理机制 |   使用指令    | 在线升级机制（指令） |
+| :------------: | :----------: | :-----------: | :------------------: |
+| Red Hat/Fedora |     RPM      | rpm，rpmbuild |       YUM(yum)       |
+| Debian/Ubuntu  |     DPKG     |     dpkg      |     APT(apt-get)     |
+
+**RPM**：全名RedHat Package Manager。
+
+**RPM与SRPM**：RPM 文件必须要在相同的Linux环境下才能够安装，而 SRPM 既然是原始码的格式，自然我们就可以透过修改SRPM内的参数配置文件，然后重新编译产生能适合我们Linux环境的RPM文件。
+
+| 文件格式 |  档名格式   | 直接安装与否 |  内含程序类型  | 可否修改参数并编译 |
+| :------: | :---------: | :----------: | :------------: | :----------------: |
+|   RPM    |   xxx.rpm   |      可      |     已编译     |        不可        |
+|   SRPM   | xxx.src.rpm |     不可     | 未编译之原始码 |         可         |
+
+#### 18.5.4.1 RPM安装
+
+```bash
+rpm -ivh package_name
+选项与参数：
+-i ：install 的意思
+-v ：察看更细部的安装信息画面
+-h ：以安装信息列显示安装进度
+```
+
+- `rpm -ivh /mnt/Packages/rp-pppoe-3.11-5.el7.x86_64.rpm`：安装原版光盘上的rp-pppoe软件
+- `rpm -ivh a.i386.rpm b.i386.rpm *.rpm`：一口气安装两个以上的软件时
+- `rpm -ivh http://website.name/path/pkgname.rpm`：直接由网络上面的某个文件安装，以网址来安装
+
+#### 18.5.4.2 RPM查询
+
+**RPM查询**：查询的地方是在/var/lib/rpm/这个目录下的数据库文件；RPM也可以查询未安装的RPM文件内的信息。
+
+```bash
+rpm -qa <==已安装软件
+rpm -q[licdR] 已安装的软件名称 <==已安装软件
+rpm -qf 存在于系统上面的某个文件名 <==已安装软件
+rpm -qp[licdR] 未安装的某个文件名 <==查阅 RPM 文件
+
+选项与参数：
+查询已安装软件的信息：
+-q ：仅查询，后面接的软件名称是否有安装；
+-qa ：列出所有的，已经安装在本机 Linux 系统上面的所有软件名称；
+-qi ：列出该软件的详细信息 (information)，包含开发商、版本与说明等；
+-ql ：列出该软件所有的文件与目录所在完整文件名 (list)；
+-qc ：列出该软件的所有配置文件 (找出在 /etc/ 底下的檔名而已)
+-qd ：列出该软件的所有说明文件 (找出与 man 有关的文件而已)
+-qR ：列出与该软件有关的相依软件所含的文件 (Required 的意思)
+-qf ：由后面接的文件名，找出该文件属于哪一个已安装的软件；
+-q --scripts：列出是否含有安装后需要执行的脚本档，可用以 debug 喔！
+查询某个 RPM 文件内含有的信息：
+-qp[icdlR]：注意 -qp 后面接的所有参数以上面的说明一致。但用途仅在于找出
+某个 RPM 文件内的信息，而非已安装的软件信息！注意！
+```
+
+- `rpm -q logrotate`：找出你的Linux是否有安装logrotate这个软件？
+- `rpm -ql logrotate`：属于该软件所提供的所有目录与文件
+
+- `rpm -qi logrotate`：列出logrotate这个软件的相关说明数据
+- `rpm -qc logrotate`：找出logrotate的配置文件
+- `rpm -qd logrotate`：找出logrotate的说明档
+- `rpm -qR logrotate`：若要成功安装logrotate，他还需要什么文件的帮忙？
+- `rpm -qf /bin/sh`：找出 /bin/sh 是那个软件提供的？
+- `rpm -qpR filename.i386.rpm`：假设我有下载一个 RPM 文件，想要知道该文件的需求文件，该如何？
+
+```bash
+RPM验证与数字签名
+rpm -Va
+rpm -V 已安装的软件名称
+rpm -Vp 某个 RPM 文件的档名
+rpm -Vf 在系统上面的某个文件
+选项与参数：
+-V ：后面加的是软件名称，若该软件所含的文件被更动过，才会列出来；
+-Va ：列出目前系统上面所有可能被更动过的文件；
+-Vp ：后面加的是文件名，列出该软件内可能被更动过的文件；
+-Vf ：列出某个文件是否被更动过～
+```
+
+- `rpm -V logrotate`：列出你的 Linux 内的 logrotate 这个软件是否被更动过？
+- `rpm -Vf /etc/crontab`：查询一下，你的 /etc/crontab 是否有被更动过？
+
+#### 18.5.3 RPM卸载
+
+- `rpm -qa | grep pam`：找出与 pam 有关的软件名称
+- `rpm -e pam`：移除掉pam软件
+- `rpm --rebuilddb`：常常进行安装/移除/升级时，若导致RPM数据库/var/lib/rpm/内的文件破损，可以使用该命令重建数据库
+
+#### 18.5.4.4 YUM查询
+
+```bash
+yum [option] [查询工作项目] [相关参数]
+选项与参数：
+[option]：主要的选项，包括有：
+-y ：当 yum 要等待用户输入时，这个选项可以自动提供 yes 的响应；
+--installroot=/some/path ：将该软件安装在 /some/path 而不使用默认路径
+[查询工作项目] [相关参数]：这方面的参数有：
+search ：搜寻某个软件名称或者是描述 (description) 的重要关键字；
+list ：列出目前 yum 所管理的所有的软件名称与版本，有点类似 rpm -qa；
+info ：同上，不过有点类似 rpm -qai 的执行结果；
+provides：从文件去搜寻软件！类似 rpm -qf 的功能！
+```
+
+- `yum search raid`：搜寻磁盘阵列 (raid) 相关的软件有哪些？
+- `yum info mdadm`：找出 mdadm 这个软件的功能为何
+- `yum list`：列出yum服务器上面提供的所有软件名称
+- `yum list updates  `：列出目前服务器上可供本机进行升级的软件有哪些？
+- `yum provides passwd`：列出提供passwd这个文件的软件有哪些
+
+#### 18.5.4.5 YUM安装/升级
+
+```bash
+yum [option] [安装与升级的工作项目] [相关参数]
+选项与参数：
+install ：后面接要安装的软件！
+update ：后面接要升级的软件，若要整个系统都升级，就直接 update 即可
+```
+
+- `yum install pam-devel`：安装pam-devel
+
+#### 18.5.4.6 YUM卸载
+
+- `yum remove pam-devel`：卸载pam-devel
+
+#### 18.5.4.7 YUM配置
+
+```bash
+# 代表软件库的名字！中括号一定要存在，里面的名称则可以随意取。但是不能有两个相同的软件库名称,否则yum会不晓得该到哪里去找软件库相关软件列表文件
+[centosplus]
+# name只是说明一下这个软件库的意义而已，重要性不高！
+name=CentOS-$releasever - Plus - mirrors.aliyun.com
+failovermethod=priority
+# mirrorlist列出这个软件库可以使用的映射站台，如果不想使用，可以批注到这行
+# mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=os&infra=$infra
+# 这个最重要，因为后面接的就是软件库的实际网址!mirrorlist是由yum程序自行去捉映像站台,baseurl则是指定固定的一个软件库网址！我们刚刚找到的网址放到这里来啦！
+baseurl=http://mirrors.aliyun.com/centos/$releasever/centosplus/$basearch/
+        http://mirrors.aliyuncs.com/centos/$releasever/centosplus/$basearch/
+        http://mirrors.cloud.aliyuncs.com/centos/$releasever/centosplus/$basearch/
+# gpgcheck=1就是指定需要查阅RPM文件内的数字签名！
+gpgcheck=1
+# enable=1就是让这个软件库被启动。如果不想启动可以使用 enable=0 喔！
+enabled=0
+# gpgkey就是数字签名的公钥文件所在位置！使用默认值即可
+gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
+```
+
+- `vim /etc/yum.repos.d/CentOS-Base.repo`：在`CentOS-Base.repo`中配置YUM源
+
+- `yum repolist all`：列出目前yum server所使用的软件库有哪些？
+
+```bash
+yum clean [packages|headers|all]
+选项与参数：
+packages：将已下载的软件文件删除
+headers ：将下载的软件文件头删除
+all ：将所有软件库数据都删除！
+```
+
+- `yum clean all`：删除已下载过的所有软件库的相关数据 (含软件本身与列表)
+
+> 参考博客文章：**[<<鸟哥的Linux私房菜>>]()**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -6019,7 +6019,7 @@ ACOS( COS(latA) * COS(latB) * COS(lonA-lonB) + SIN(latA) * SIN(latB) ) * R
 
 **设置编译版本**：java 8
 
-### 7.1.1 项目模块的创建r
+### 7.1.1 项目模块的创建
 
 **项目模块的创建步骤如下**：建Module-->改POM-->写YML-->主启动-->业务类
 
@@ -6041,6 +6041,491 @@ Hutool：一个Java工具包类库，对文件、流、加密解密、转码、�
 - 配置文件工具：通过Setting对象，提供兼容Properties文件的更加强大的配置文件工具，用于解决中文、分组等JDK配置文件存在的诸多问题。
 - 日志工具：Hutool的日志功能，通过抽象Log接口，提供对Slf4j、LogBack、Log4j、JDK-Logging的全面兼容支持。
 - JDBC工具类：通过db模块，提供对MySQL、Oracle等关系型数据库的JDBC封装，借助ActiveRecord思想，大大简化数据库操作。
+
+### 7.1.4 Eureka服务注册与发现
+
+#### 7.1.4.1 服务注册与发现
+
+**服务治理**：SpringCloud封装了Netflix公司开发的Eureka模块来实现服务治理。在传统的RPC远程调用框架中，管理每个服务与服务之间依赖关系比较复杂，所以需要使用服务治理来管理服务与服务之间的依赖关系，可以实现服务调用、负载均衡、容错等，实现服务发现与注册。
+
+**服务注册与发现**：Eureka采用了CS的设计架构，Eureka Server作为服务注册功能的服务器，它是服务注册的中心，而系统中的其他微服务，使用Eureka的客户端连接到Eureka Server并维持心跳连接。这样系统的维护人员就可以通过Eureka Server来监控系统中各个微服务是否正常运行。
+
+在服务注册与发现中，有一个注册中心。当服务器启动的时候，会把当前自己服务器的信息（比如服务地址、通讯地址等）以别名方式注册到注册中心；另一方（消费者|服务提供者）以该别名的方式去注册中心上获取到实际的服务通讯地址，然后再实现本地RPC调用RPC远程调用框架。核心设计思想在于注册中心，因为使用注册中心管理每个服务与服务之间的一个依赖关系（服务治理概念）。在任何RPC远程框架中，都会有一个注册中心（存放服务地址相关信息（接口地址））。
+
+![image-20210113174244169](README.assets/image-20210113174244169.png)
+
+- **Eureka Server**：提供服务注册服务。各个微服务节点通过配置启动后，会在EurekaServer中进行注册，这样EurekaServer中的服务注册表中将会存储所有可用服务节点的信息，服务节点的信息可以在界面中直观看到。
+
+  作用：
+
+  - 服务注册：将服务信息注册进注册中心
+  - 服务发现：从注册中心上获取服务信息
+  - 实质：存key（服务名），取value（调用地址）
+
+  步骤：
+
+  - 引入依赖`spring-cloud-starter-netflix-eureka-server`
+
+  - 启动类上使用注解@EnableEurekaServer（用于服务注册中心）
+
+  - 配置项：
+
+    ```yaml
+    eureka:
+      instance:
+        hostname: eureka7002.com # Eureka服务端的实例名称
+      client:
+        register-with-eureka: false # false表示不向注册中心注册自己
+        fetch-registry: false # false表示自己就是注册中心，我的职责就是维护服务实例，并不需要去检索服务
+        service-url:
+          # 设置与Eureka Server交互的地址查询服务和注册服务都需要依赖整个地址
+          defaultZone: http://eureka7001.com:7001/eureka/
+    ```
+
+- **Eureka Client**：通过注册中心进行访问。一个Java客户端，用于简化Eureka Server的交互，客户端同时也具备一个内置的、使用轮询（round-robin）负载算法的负载均衡器。在应用启动后，将会向Eureka Server发送心跳（默认周期为30秒）。如果Eureka Server在多个心跳周期内没有接收到某个节点的心跳，Eureka Server将会从服务注册表中把整个服务节点移除（默认90秒）。
+
+  - 引入依赖`spring-cloud-starter-netflix-eureka-client`
+
+  - 启动类上使用注解@EnableEurekaClient（用于服务消费者和服务生产者）
+
+  - RestTemplate上使用@LoadBalanced赋予其负载均衡（**默认是轮询**）的能力
+
+  - @EnableDiscoveryClient+`org.springframework.cloud.client.discovery.DiscoveryClient`可用于服务发现（获取服务信息）
+
+  - 配置项：
+
+    ```yml
+    eureka:
+      client:
+        # 表示是否将自己注册进Eureka Server,默认为true
+        register-with-eureka: true
+        # 是否从Eureka Server抓取已有的注册信息,默认为true。单节点无所谓,集群必须设置为true才能配合Ribbon使用负载均衡
+        fetchRegistry: true
+        service-url:
+          defaultZone: http://eureka7001.com:7001/eureka,http://eureka7002.com:7002/eureka
+      # actuator微服务信息完善
+      instance:
+        instance-id: payment8002 # 主机名称:服务名称修改
+        prefer-ip-address: true # 访问信息有IP地址显示（需要引入spring-boot-starter-actuator）
+    ```
+
+#### 7.1.4.2 自我保护
+
+**Eureka自我保护**：保护模式主要用于一组客户端和Eureka Server之间存在网络分区场景下的保护。一旦进入保护模式，Eureka Server将会尝试保护其服务注册表中的信息，不再删除服务注册表中的数据，也就是不会注销任何微服务。**简言之**，某时刻某一个微服务不可用了，Eureka不会立刻清理，依旧会对该微服务的信息进行保存（**属于CAP里的AP分支**）。
+
+```properties
+# 下面这句话表示Eureka进入了自我保护模式
+EMERGENCY! EUREKA MAY BE INCORRECTLY CLAIMING INSTANCES ARE UP WHEN THEY'RE NOT. RENEWALS ARE LESSER THAN THRESHOLD AND HENCE THE INSTANCES ARE NOT BEING EXPIRED JUST TO BE SAFE.
+```
+
+**为什么会产生Eureka自我保护机制**？为了防止Eureka Client可以正常运行，但是与Eureka Server网络不通情况下，Eureka Server不会立刻将Eureka Client服务剔除。
+
+**什么是自我保护模式**？默认情况下，若Eureka Server在一定时间内没有接收到某个微服务实例的心跳，Eureka Server将会注销该实例（**默认90秒**）。但是当网络分区故障发生（延时、卡顿、拥挤）时，微服务与Eureka Server之间无法正常通信，以上行为可能变得非常危险了，因为微服务本身其实是健康的，此时本不应该注销这个微服务。Eureka通过"自我保护模式"来解决这个问题——当Eueka Server节点在**短时间内丢失过多客户端**时（可能发生了网络分区故障），那么这个节点就会进入自我保护模式。**自我保护模式是一种应对网络异常的安全保护措施，它的设计哲学是宁可同时保留所有微服务（健康的微服务和不健康的微服务都会保留）也不会盲目注销任何健康的微服务。使用自我保护模式，可以让Eureka Server集群更加的健壮、稳定。**
+
+**怎么禁止自我保护**？
+
+- 自我保护默认是开启的
+
+  ```properties
+  # 注册中心Eureka Server将enable-self-preservation设置为false，可以关闭自我保护
+  eureka.server.enable-self-preservation=true
+  ```
+
+- 客户端向注册中心发送心跳的时间间隔
+
+  ```properties
+  # 客户端Eureka Client中可以设置向注册中心Eureka Server发送心跳的时间间隔（默认为30s）
+  eureka.instance.lease-renewal-interval-in-seconds=30
+  ```
+
+- 注册中心剔除服务的超时时间
+
+  ```properties
+  # 客户端Eureka Client中可以设置注册中心Eureka Server剔除服务的时间（默认为90s）
+  eureka.instance.lease-expiration-duration-in-seconds
+  ```
+
+#### 7.1.4.3 Eureka停更
+
+Netflix公司表示Eureka 2.X停更了。
+
+### 7.1.5 Zookeeper服务注册与发现
+
+Eureka停止更新后，可以使用Zookeeper替代Eureka。
+
+关于Zookeeper注册中心：
+
+- Zookeeper是一个分布式协调工具，可以实现注册中心功能
+- 关闭Linux服务器防火墙后启动Zookeeper服务器
+- Zookeeper服务器取代Eureka服务器，作为服务注册中心
+
+**使用Zookeeper作为注册中心的步骤**：
+
+- 引入Zookeeper依赖：
+
+  ```xml
+  <dependency>
+  	<groupId>org.springframework.cloud</groupId>
+  	<artifactId>spring-cloud-starter-zookeeper-discovery</artifactId>
+  </dependency>
+  ```
+
+- 启动类上使用@EnableDiscoveryClient用于向Zookeeper注册服务
+  - Zookeeper的服务节点默认是临时的（非持久性的）
+  - Zookeeper**属于CAP里的AP分支**
+
+- 配置yml
+
+  ```yml
+  server:
+    port: 8004 # 8004表示注册到Zookeeper服务器的支付服务提供者端口号
+  
+  spring:
+    application:
+      name: cloud-provider-payment # 服务别名，注册Zookeeper到注册中心名称
+    cloud:
+      zookeeper:
+        connect-string: 8.129.65.158:2181 # Zookeeper的IP地址加端口号
+  ```
+
+- 服务调用：在RestTemplate上使用@LoadBalanced注解
+
+- 搭建Zookeeper集群？
+
+### 7.1.6 Consul服务注册与发现
+
+[官方地址](https://www.consul.io/)、[中文网站](https://www.springcloud.cc/spring-cloud-consul.html)
+
+**Consul**：一套开源的分布式服务发现和配置管理系统，由HashiCorp公司**用Go语言开发**。提供了微服务系统中的服务治理、配置中心、控制总线等功能，这些功能中的每一个都可以根据需要单独使用，也可以一起使用以构建全方位的服务网络，总之Consul提供了一种完整的服务网格解决方案。它具有很多优点，包括基于raft协议，比较简洁；支持健康检查，**同时支持HTTP和DNS协议支持跨数据中心的WAN集群**，提供图形界面，跨平台，支持Linux、Mac、Windows。Consul的作用：
+
+- 服务发现：提供HTTP和DNS两种发现方式
+- 健康检查：支持多种方式，HTTP、TCP、Docker、Shell脚本定制化
+- KV存储：Key、Value的存储方式
+- 多数据中心：Consul支持多数据中心
+- 可视化Web界面
+
+**使用Consul作为注册中心的步骤**：
+
+- 引入依赖
+
+  ```xml
+  <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-consul-discovery</artifactId>
+  </dependency>
+  ```
+
+- 下载Consul，启动Consul：`consul agent -dev`
+
+- 启动类上使用@EnableDiscoveryClient用于向Zookeeper注册服务
+
+- 配置yml
+
+  ```yml
+  server:
+    port: 8006 # Consul服务端口号
+  
+  spring:
+    application:
+      name: consul-provider-payment # 服务名称
+    cloud:
+      consul:
+        host: localhost # Consul注册中心地址
+        port: 8500
+        discovery:
+          service-name: ${spring.application.name}
+  ```
+
+- 服务调用：在RestTemplate上使用@LoadBalanced注解
+- 搭建Consul集群？
+
+### 7.1.7 三个注册中心的异同点
+
+三个注册中心的异同点：
+
+| 组件名    | 语言 | CAP  | 服务健康检查 | 对外暴露接口 | SpringCloud集成 |
+| :-------- | :--- | :--- | ------------ | ------------ | --------------- |
+| Eureka    | Java | AP   | 可配支持     | HTTP         | 已集成          |
+| Consul    | Go   | CP   | 支持         | HTTP/DNS     | 已集成          |
+| Zookeeper | Java | CP   | 支持         | 客户端       | 已集成          |
+
+**CAP理论**：即Consistency（强一致性）、Availability（可用性）、Partition tolerance（分区容错性）；CAP理论关注粒度是数据，而不是整体系统设计的策略。一个分布式系统不可能同时很好的满足一致性、可用性及分区容错性这三个需求。因此，根据CAP原理将NoSQL数据库分成了满足CA原则、满足CP原则和满足AP原则三大类。
+
+- CA：单点集群，满足一致性、可用性的系统，通常在可扩展性上不太强大。
+- CP：满足一致性，分区容错性的系统，通常性能不是特别高。
+- AP：满足可用性、分区容错性的系统，通常可能对一致性要求低一些。
+
+![image-20210114170624556](README.assets/image-20210114170624556.png)
+
+### 7.1.8 Ribbon负载均衡服务调用
+
+**Ribbon**：是Netflix Ribbon实现的一套客户端，用作负载均衡的工具。简单来说，Ribbon是Netflix发布的开源项目，主要功能是提供客户端的软件负载算法和服务调用。Ribbon客户端组件提供一系列完善的配置项如**连接超时**、**重试**等。简言之，就是在配置文件中列出**Load Balancer**（简称LB）后面所有的机器，Ribbon会自动的帮助你基于某种规则（如简单的**轮询**，**随机连接**等）去连接这些机器我们很容里使用Ribbon实现自定义的负载均衡算法。
+
+**Ribbon目前进入了维护模式**。
+
+**负载均衡（Load Balance，简称LB）是什么**？就是将用户的请求平摊的分配到多个服务上，从而达到系统的HA（高可用）；常见的负载均衡软件有Nginx、LVS、硬件F5等。
+
+**Ribbon本地负载均衡客户端 VS Nginx服务端负载均衡的区别**：
+
+- Nginx是服务端负载均衡（**集中式LB**）：客户端所有的请求都会交给Nginx，然后由Nginx实现请求转发，即负载均衡是由服务端实现的。
+- Ribbon本地负载均衡（**进程内LB**）：在调用微服务接口的时候，会在注册中心上获取注册信息服务列表之后缓存到JVM本地，从而在本地实现RPC远程服务调用技术。
+
+**集中式LB与进程内LB**：
+
+- 集中式LB：即在服务的消费方和提供方之间使用独立的LB设施（可以是硬件，如F5，也可以是软件，如Nginx），由该设施负责把访问请求通过某种策略转发至服务的提供方。
+- 进程内LB：将LB逻辑集成到消费方，消费方从服务注册中心获知有哪些地址可用，然后自己再从这些地址中选择出一个合适的服务器。Ribbon就属于进程内LB，它只是一个类库，集成于消费方进程，消费方通过它来获取到服务提供方的地址。
+
+Ribbon在工作时分为两步：
+
+1. 先选择Eureka Server，它优先选择在同一个区域内负载较少的Server。
+2. 再根据用户指定的策略，在从Server取到的服务注册列表中选择一个地址。其中Ribbon提供了多种策略（比如轮询、随机和根据响应时间加权）。
+
+引入依赖：
+
+```xml
+<!--spring-cloud-starter-netflix-eureka-client中已经引入了Ribbon（spring-cloud-starter-netflix-ribbon）-->
+<dependency>
+	<groupId>org.springframework.cloud</groupId>
+	<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+</dependency>
+```
+
+#### 7.1.8.1 RestTemplate的使用
+
+关于RestTemplate的使用：
+
+- 返回对象为响应体中数据转化成的对象，基本上可以理解为Json
+
+  ```java
+  @GetMapping("/consumer/payment/get/{id}")
+  public ComonResult<Payment> getPayment(@PathVariable("id") Long id){
+      return restTemplate.getForObject(PAYMENT_SRV+"/payment/get/"+id, CommonResult.class); 
+  }
+  ```
+
+- 返回对象为ResponseEntity对象，包含了响应中的一些重要信息，比如响应头、响应状态码、响应体等
+
+  ```java
+  @GetMapping("/consumer/payment/getForEntity/{id}")
+  public CommonResult<Payment> getPayment2(@PathVariable("id") Long id){
+      ResponseEntity<CommonResult> entity = restTemplate.getForEntity(PAYMENT_URL + "/payment/get/" + id, CommonResult.class);
+      if (entity.getStatusCode().is2xxSuccessful()){
+          return entity.getBody();
+      }else{
+          return new CommonResult<>(444, "操作失败");
+      }
+  }
+  ```
+
+#### 7.1.8.2 IRule负载均衡规则
+
+**IRule**：根据特定算法从服务列表中选取一个要访问的服务。常用的算法如下：
+
+- RoundRobinRule：轮询
+- RandomRule：随机
+- RetryRule：先按照RoundRobinRule的策略获取服务，如果获取服务失败则在指定时间内会进行重试
+- WeightedResponseTimeRule：对RoundRobinRule的扩展，响应速度越快的实例选择权重越大，越容易被选择
+- BestAvailableRule：会先过滤掉由于多次访问故障而处于断路器跳闸状态的服务，然后选择一个并发量最小的服务
+- AvailabilityFilteringRule：先过滤掉故障实例，再选择并发较小的实例
+- ZoneAvoidanceRule：默认规则，复合判断server所在区域的性能和server的可用性选择服务器
+
+![image-20210114183420120](README.assets/image-20210114183420120.png)
+
+如何替换默认的负载均衡规则？
+
+1. 负载均衡配置类不能放在@ComponentScan所扫描的当前包下以及子包下，否则我们自定义的这个配置类就会被所有的Ribbon客户端所共享，达不到特殊化定制的目的。
+
+2. 新建MySelfRule类
+
+   ```java
+   @Configuration
+   public class MySelfRule {
+       @Bean
+       public IRule myRule(){
+           //定义为随机
+           return new RandomRule();
+       }
+   }
+   ```
+
+3. 主启动类上添加@RibbonClient注解
+
+   ```java
+   @RibbonClient(name = "CLOUD-PAYMENT-SERVICE", configuration = MySelfRule.class)
+   ```
+
+#### 7.1.8.3 自定义负载均衡算法
+
+**轮询负载均衡算法的原理**：rest接口第几次请求数%服务器集群总数量=实际调用服务器位置下标
+
+- 每次服务重启动后rest接口计数从1开始
+- 服务器位置下标从0开始
+
+**自定义负载均衡算法的步骤**：关键是原子变量+CAS+自旋锁
+
+1. 在RestTemplate上去掉@LoadBalanced注解
+
+2. 采用原子变量+CAS+自旋锁定义负载均衡算法
+
+   ```java
+   // 定义接口
+   public interface LoadBalancer {
+       ServiceInstance instances(List<ServiceInstance> serviceInstances);
+   }
+   
+   // 采用原子变量+CAS+自旋锁定义负载均衡算法
+   @Component
+   public class MyLB implements LoadBalancer {
+       private AtomicInteger atomicInteger = new AtomicInteger(0);
+       public final int getAndIncrement() {
+           int current;
+           int next;
+           do {
+               current = this.atomicInteger.get();
+               next = current >= Integer.MAX_VALUE ? 0 :current+1;
+           }while (!this.atomicInteger.compareAndSet(current, next));
+           System.out.println("*****第几次访问,次数next: "+next);
+           return next;
+       }
+   
+       @Override
+       public ServiceInstance instances(List<ServiceInstance> serviceInstances) {
+           int index = getAndIncrement() % serviceInstances.size();
+           return serviceInstances.get(index);
+       }
+   }
+   ```
+
+3. 服务消费者Controller的编写
+
+   ```java
+   @GetMapping(value = "/consumer/payment/lb")
+   public String getPaymentLB() {
+       List<ServiceInstance> instances = discoveryClient.getInstances("CLOUD-PAYMENT-SERVICE");
+       if (CollectionUtils.isEmpty(instances)) {
+           return null;
+       }
+       ServiceInstance serviceInstance = loadBalancer.instances(instances);
+       URI uri = serviceInstance.getUri();
+       System.out.println(uri);
+       return restTemplate.getForObject(uri + "/payment/lb", String.class);
+   }
+   ```
+
+### 7.1.9 OpenFeign服务调用
+
+[官方地址](https://cloud.spring.io/spring-cloud-static/Hoxton.SR1/reference/htmlsingle/#spring-cloud-openfeign)
+
+**OpenFeign**：Feign是一个声明式的web服务客户端，让编写web服务客户端变得非常容易，只需创建一个接口并在接口上添加注解即可。
+
+- Feign指在使编写Java HTTP客户端变得更容易。前面在使用Ribbon+RestTemplate时，利用RestTemplate对HTTP请求的封装处理，形成了一套模板化的调用方法。但是在实际开发中，由于对服务的调用可能不止一处，往往一个接口会被多处调用，所以通常都会针对每个微服务自行封装一些客户端类来包装这些依赖服务的调用。所以，Feign在此基础上做了进一步封装，由它来帮助我们定义和实现依赖服务接口的定义。在Feign的实现下，我们只需创建一个接口并使用注解的方式来配置它（以前是Dao接口上面标注Mapper注解，现在是一个微服务接口上面标注一个Feign注解即可），即可完成对服务提供方的接口绑定，简化了使用SpringCloud Ribbon时，自动封装服务调用客户端的开发量。
+- Feign集成了Ribbon，利用Ribbon维护了Payment的服务列表信息，并且通过轮询实现了客户端的负载均衡；而与Ribbon不同的是，通过Feign只需要定义服务绑定接口且以声明式的方法，优雅而简单的实现了服务调用。
+
+**Feign与OpenFeign的区别**：
+
+| Feign                                                        | OpenFeign                                                    |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Feign是SpringCloud组件中的一个轻量级RestFul的HTTP服务客户端；Feign内置了Ribbon，用来做客户端负载均衡，去调用服务注册中心的服务。Feign的使用方式是：使用Feign的注解定义接口，调用这个接口，就可以调用服务注册中心的服务。 | OpenFeign是SpringCloud在Feign的基础上支持了SpringMVC的注解，如@RequestMapping等等，OpenFeign的@FeignClient可以解析SpringMVC的@RequestMapping注解下的接口，并通过动态代理的方式产生实现类，实现类中做负载均衡并调用其他服务。 |
+| <dependency><br/>    <groupId>org.springframework.cloud</groupId><br/>    <artifactId>spring-cloud-starter-feign</artifactId><br/></dependency> | <dependency><br/>    <groupId>org.springframework.cloud</groupId><br/>    <artifactId>spring-cloud-starter-openfeign</artifactId><br/></dependency> |
+
+#### 7.1.9.1 负载均衡服务调用
+
+**采用OpenFeign实现服务调用的步骤**：
+
+1. 引入依赖
+
+2. 主启动类上添加@EnableFeignClients
+
+3. 编写服务消费者的service层接口：使用@FeignClient注解（**OpenFeign底层采用Ribbon，自带负载均衡配置项，负载均衡切换方法与Ribbon相同**）
+
+   ```java
+   @Service
+   @FeignClient(value = "CLOUD-PAYMENT-SERVICE")
+   public interface PaymentFeignService {
+       @GetMapping(value = "/payment/get/{id}")
+       public CommonResult<Payment> getPaymentById(@PathVariable("id") Long id);
+   }
+   ```
+
+4. 编写服务消费者的controller
+
+#### 7.1.9.2 超时控制
+
+超时控制：
+
+- OpenFeign默认等待1秒钟，服务端处理超时，会导致Feign客户端报错`java.net.SocketTimeoutException: Read timed out`
+
+- 在配置文件中设置超时控制
+
+  ```yml
+  # 设置Feign客户端超时时间（OpenFeign默认支持ribbon）
+  ribbon:
+  # 指的是建立连接所用的时间，适用于网络状况正常的情况下，两端连接所用的时间
+    ReadTimeout: 5000
+    # 指的是建立连接后从服务器读取到可用资源所用的时间
+    ConnectTimeout: 5000
+  ```
+
+#### 7.1.9.3 OpenFeign日志增强
+
+日志增强：OpenFeign提供了日志打印功能，可以通过配置来调整日志级别，从而了解OpenFeign中HTTP请求的细节。简言之，**对Feign接口的调用情况进行监控和输出**。OpenFeign的日志级别：
+
+- NONE：默认的，不显示任何日志
+- BASIC：仅记录请求方法、URL、响应状态码及执行时间
+- HEADERS：除了BASIC中定义的信息之外，还有请求和响应的头信息
+
+- FULL：除了HEADERS中定义的信息之外，还有请求和响应的正文及元数据
+
+开启日志增强的步骤：
+
+1. 创建配置类
+
+   ```java
+   @Configuration
+   public class FeignConfig {
+       @Bean
+       Logger.Level feignLoggerLevel(){
+           return Logger.Level.FULL;
+       }
+   }
+   ```
+
+2. 配置yml
+
+   ```yml
+   logging:
+     level:
+       # OpenFeign日志以什么级别监控哪个接口
+       ccom.zcprog.springcloud.service.PaymentFeignService: debug
+   ```
+
+### 7.1.10 Hystrix服务降级
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10669,6 +11154,7 @@ Nginx的安装步骤如下：**Nginx1.8需要搭配CentOS 7安装，在CentOS 8�
     1. 查看开放的端口号：`firewall-cmd --list-all`
     2. 增加开放的端口号：`sudo firewall-cmd --add-port=80/tcp --permanent`
     3. 重启防火墙：`firewall-cmd --reload`
+    4. 启动防火墙：`systemctl start firewalld.service`
 
 > 参考博客文章：[编译安装Nginx 1.8.1及配置](https://www.cnblogs.com/zhang-shijie/p/5294162.html)、[Nginx启动成功，浏览器不能访问](https://www.cnblogs.com/chenleideblog/p/10499807.html)
 

@@ -11,5 +11,7 @@ public class OutTest {
     public static void main(String[] args) {
         Out.Inner inner = new Out.Inner();
         inner.print();
+
+        Out2.Inner2 inner2 = new Out2().new Inner2();
     }
 }

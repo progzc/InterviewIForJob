@@ -48,6 +48,36 @@ public class StudentSerializable {
     }
 
     /**
+     * 1.通过序列化与反序列化创建对象：写入写出在内存中
+     */
+    @Test
+    public void test4() throws IOException, ClassNotFoundException {
+        Student student = new Student();
+        student.setId(1);
+        student.setName("张三");
+
+        Address addr = new Address();
+        addr.setName("北京市海淀区xx街道");
+        student.setAddress(addr);
+        System.out.println(student);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+
+        oos.writeObject(student);
+        oos.close();
+        baos.close();
+
+        byte[] bytes = baos.toByteArray();
+        ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+        ObjectInputStream ois = new ObjectInputStream(bais);
+        Student copy = (Student) ois.readObject();
+        System.out.println(copy);
+        ois.close();
+        bais.close();
+    }
+
+    /**
      * 3.通过反射创建对象
      */
     @Test

@@ -60,6 +60,7 @@ public class StudentSerializable {
         addr.setName("北京市海淀区xx街道");
         student.setAddress(addr);
         System.out.println(student);
+        System.out.println(student.getAddress());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -73,6 +74,7 @@ public class StudentSerializable {
         ObjectInputStream ois = new ObjectInputStream(bais);
         Student copy = (Student) ois.readObject();
         System.out.println(copy);
+        System.out.println(copy.getAddress());
         ois.close();
         bais.close();
     }

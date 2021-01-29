@@ -1,6 +1,6 @@
 @startuml
 /'通用形状接口'/
-class Shape{
+abstract class Shape{
   + int x;
   + int y;
   + String color;

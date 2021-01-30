@@ -1154,7 +1154,7 @@ public class Car {
 
 ![image-20201211174210511](README.assets/image-20201211174210511.png)
 
-### ### 适配器模式
+### ### 适配器模式⭐
 
 **适配器模式**：一种结构型设计模式， 它能使接口不兼容的对象能够相互合作。
 
@@ -1247,7 +1247,7 @@ public class Car {
 
 ![image-20201212211612089](README.assets/image-20201212211612089.png)
 
-### ### 代理模式
+### ### 代理模式⭐
 
 **代理模式**：一种结构型设计模式， 让你能够提供对象的替代品或其占位符。 代理控制着对于原对象的访问， 并允许在将请求提交给对象前后进行一些处理。
 
@@ -1498,7 +1498,12 @@ public class Car {
 
 **进程**：程序执行的过程，是一个动态的概念。进程是系统资源分配的单位，一个进程中可以包含多个线程。
 
+- 进程是操作系统分配资源的最小单元。
+- 一个程序至少有一个进程，一个进程至少有一个线程。
+
 **线程**：线程是CPU调度和执行的单位。Java默认有2个线程（main和gc）。Java本身并不能真正开启线程，底层通过native本地方法使用C语言开启线程。
+
+- 线程是操作系统调度的最小单元。
 
 **并发**：CPU一核，模拟出来多条线程，快速交替。（查看CPU的核数：`Runtime.getRuntime().availableProcessors()`）。并发编程的本质是充分利用CPU的资源。
 
@@ -1582,13 +1587,6 @@ public class Car {
 # 5.2 获取线程状态的方法：thread.getState()
 # 5.3 设置/获取线程的优先级：setPriority(int xxx),getPriority(),默认优先级是5
 ```
-
-**wait/sleep的区别**：
-
-1. 来自不同的类：wait来自Object类；sleep来自Thread类，企业开发中一般不会用sleep进行休眠，而会使用`TimeUnit.SECONDS.sleep(20);`。
-2. 关于锁的释放：wait会释放锁；sleep不会释放锁。
-3. 使用范围不同：wait必须在同步代码块中使用；sleep可以在任何地方使用。
-4. 是否需要捕获异常：wait不需要捕获异常；sleep需要捕获异常。
 
 **守护线程**：
 
@@ -4580,7 +4578,7 @@ static final int hash(Object key) {
 
 #### 4.1.6.3 死循环问题
 
-在多线程下使用HashMap可能会由于rehash造成元素之间形成一个循环链表，导致HashMap在get元素时出现死循环问题。不过，好在JDK1.8后解决这个问题。但是正如Sun设计的初衷一样，多线程下应该使用ConcurrentHashMap来代替HashMap。
+在多线程下使用HashMap可能会由于rehash造成元素之间形成一个循环链表，导致HashMap在get元素时出现死循环问题。不过，好在JDK1.8后解决这个问题（JDK8依然存在该问题）。但是正如Sun设计的初衷一样，多线程下应该使用ConcurrentHashMap来代替HashMap。
 
 ### 4.1.7 ConcurrentHashMap/Hashtable
 
@@ -4592,7 +4590,10 @@ static final int hash(Object key) {
 
 - **实现线程安全的方式不同**：
   - JDK1.7时，ConcurrentHashMap采用**分段锁**策略对整个桶数进行了分割分段（Segment，Segment是一种可重入锁），每一把锁只锁容器其中一部分数据，多线程访问容器里不同数据段的数据，就不会存在锁竞争，提高并发访问率；JDK1.8时，抛弃了Segment的概念，而是直接用**Node数组+链表+红黑树**的数据结构来实现，并发控制使用**synchronized+CAS**来操作。
+    - JDK1.8的实现降低了锁的粒度，JDK1.7版本锁的粒度是基于Segment的，包含多个HashEntry，而JDK1.8锁的粒度就是HashEntry（首节点）。
   - Hashtable使用同步方法（在方法上添加synchronized关键字）保证线程安全（"**全表锁**"），效率非常低下（例如：当put的时候，也不能get）。
+
+> 参考博客文章：[ConcurrentHashMap底层实现原理(JDK1.7 & 1.8)](https://www.jianshu.com/p/865c813f2726)
 
 ### 4.1.8 Comparable/Comparator
 
@@ -4842,9 +4843,7 @@ final void checkForComodification() {
    }
    ```
 
-
-
-> [ArrayList源码分析](https://www.cnblogs.com/zhangyinhua/p/7687377.html)、[LinkedList源码分析](https://www.cnblogs.com/zhangyinhua/p/7688304.html)、[HashMap源码分析](https://www.cnblogs.com/zhangyinhua/p/7698642.html)、[Vector和Stack源码分析](https://www.cnblogs.com/zhangyinhua/p/7688722.html)、[深入理解Java集合框架](https://zhuanlan.zhihu.com/p/24687801)、[哈希表解决冲突的两种方式](https://blog.csdn.net/zkangaroo/article/details/64918956)、[JDK1.8ArrayList主要方法和扩容机制(源码解析)](https://blog.csdn.net/u010890358/article/details/80515284)、[Java8系列之重新认识HashMap](https://zhuanlan.zhihu.com/p/21673805)、[HashMap的7种遍历方式与性能分析](https://mp.weixin.qq.com/s/Zz6mofCtmYpABDL1ap04ow)、[HashMap的死循环](https://coolshell.cn/articles/9606.html)、[LinkedHashMap源码详细分析](https://www.imooc.com/article/22931)、[Java Array to List Examples](https://javadevnotes.com/java-array-to-list-examples)
+> [ArrayList源码分析](https://www.cnblogs.com/zhangyinhua/p/7687377.html)、[LinkedList源码分析](https://www.cnblogs.com/zhangyinhua/p/7688304.html)、[HashMap源码分析](https://www.cnblogs.com/zhangyinhua/p/7698642.html)、[Vector和Stack源码分析](https://www.cnblogs.com/zhangyinhua/p/7688722.html)、[深入理解Java集合框架](https://zhuanlan.zhihu.com/p/24687801)、[哈希表解决冲突的两种方式](https://blog.csdn.net/zkangaroo/article/details/64918956)、[JDK1.8ArrayList主要方法和扩容机制(源码解析)](https://blog.csdn.net/u010890358/article/details/80515284)、[Java8系列之重新认识HashMap](https://zhuanlan.zhihu.com/p/21673805)、[HashMap的7种遍历方式与性能分析](https://mp.weixin.qq.com/s/Zz6mofCtmYpABDL1ap04ow)、[HashMap的死循环](https://coolshell.cn/articles/9606.html)、[LinkedHashMap源码详细分析](https://www.imooc.com/article/22931)、[Java Array to List Examples](https://javadevnotes.com/java-array-to-list-examples)、[fail-fast和fail-safe](https://www.cnblogs.com/u013533289/p/11637885.html)
 
 # 5 常用的工具类/包
 
@@ -14493,6 +14492,7 @@ volatile是java虚拟机提供的轻量级的同步机制：
 你在哪些地方用到过volatile?
 
 - 单例模式双重检查加锁（不加valetile可能会导致空指针异常，使用双重检查是为了提高性能问题（当对象创建完成后，不再进入同步状态））
+- 用于状态标记量
 - 读写锁手写缓存
 - JUC包大量的使用了volatile
 
@@ -15067,9 +15067,15 @@ public class CyclicBarrierDemo {
 }
 ```
 
+CyclicBarrier与CountDownLatch比较：
+
+1. CountDownLatch：一个线程(或者多个)，等待另外N个线程完成某个事情之后才能执行；CyclicBarrier：N个线程相互等待，任何一个线程完成之前，所有的线程都必须等待。
+2. CountDownLatch一次性的；CyclicBarrier可以重复使用。
+3. CountDownLatch基于AQS；CyclicBarrier基于锁和Condition。本质上都是依赖于volatile和CAS实现的。
+
 ## 16.36 Semaphore(信号量)
 
-**Semaphore**：信号量，主要用于两个目的。**一个是用于多个共享资源的互斥使用，另一个是用于并发线程数的控制**。若Semaphore的构造器的permits参数设置为1，则Semaphore会退化成synchronized。
+**Semaphore**：信号量，主要用于两个目的。**一个是用于多个共享资源的互斥使用，另一个是用于并发线程数的控制**。若Semaphore的构造器的permits参数设置为1，则Semaphore会退化成synchronized。**Semaphore可以用于实现数据库连接池**。
 
 - 信号量的创建：`Semaphore(int permits)（默认是非公平锁）`、`Semaphore(int permits, boolean fair)`
 - 加一：`semaphore.acquire();`
@@ -15119,13 +15125,16 @@ public class SemaphoreDemo {
 
 **阻塞队列接口的实现类**：
 
-1. **ArrayBlockingQueue**：由数组结构组成的有界阻塞队列。
-2. **LinkedBlockingQueue**：由链表结构组成的有界（但大小默认值为Integer.MAX_VALUE）阻塞队列。
-3. **SynchronousQueue**：不存储元素的阻塞队列，也即**单个元素的队列**。
-4. PriorityBlockingQueue：支持**优先级排序的无界阻塞队列**。
-5. DelayQueue：使用优先级队列实现的**延迟无界阻塞队列**。
-6. LinkedTransferQueue：由链表结构组成的**无界阻塞队列**。
-7. LinkedBlockingDeque：由链表结构组成的**双向阻塞队列**。
+1. **ArrayBlockingQueue**：由数组结构组成的有界阻塞队列。（可以设置公平/非公平，默认非公平）
+2. **LinkedBlockingQueue**：由链表结构组成的有界（但大小默认值为Integer.MAX_VALUE）阻塞队列。（两个独立锁ReentrantLock提高并发）
+3. **SynchronousQueue**：不存储元素的阻塞队列，也即**单个元素的队列**。（不存储数据，可用于传递数据）
+4. PriorityBlockingQueue：支持**优先级排序的无界阻塞队列**。（compareTo排序实现优先级排序，或指定Comparator定制排序）
+5. DelayQueue：使用优先级队列实现的**延迟无界阻塞队列**。（缓存失效、定时任务）
+   - 应用场景：
+     - 缓存系统的设计：可以用 DelayQueue 保存缓存元素的有效期，使用一个线程循环查询DelayQueue，一旦能从DelayQueue中获取元素时，表示缓存有效期到了。
+     - 定时任务调度： 使用DelayQueue保存当天将会执行的任务和执行时间，一旦从DelayQueue中获取到任务就开始执行，从比如TimerQueue 就是使用DelayQueue实现的。
+6. LinkedTransferQueue：由链表结构组成的**无界阻塞队列**。（多了tryTransfer和transfer方法）
+7. LinkedBlockingDeque：由链表结构组成的**双向阻塞队列**。（双端队列多了一个操作队列的入口）
 
 ![image-20210104155117230](README.assets/image-20210104155117230.png)
 
@@ -15142,7 +15151,7 @@ public class SemaphoreDemo {
 | 抛出异常 | 当阻塞队列满时，再往队列里add插入元素会会抛出IllegalStateException；<br />当阻塞队列空时，再往队列里remove移除元素会抛出NoSuchElementException；<br />当阻塞队列空时，再从队列里element获取元素会抛出NoSuchElementException。 |
 | 特殊值   | 插入方法，成功返回true，失败返回false；<br />移除方法，成功返回出队列的元素，队列里面没有就返回null。 |
 | 一直阻塞 | 当阻塞队列满时，生产者线程继续往队列里put元素，队列会一直阻塞生产线程直到put数据或响应中断退出；<br />当阻塞队列空时，消费者线程试图从队列里take元素，队列会一直阻塞消费者线程直到队列可用。 |
-| 超时退出 | 当阻塞队列满时，队列会阻塞生产者线程一定的时间，超时后生产者线程会退出。 |
+| 超时退出 | 当阻塞队列满时，队列会阻塞生产者线程一定的时间，超时后返回失败；<br />当阻塞队列空时，队列会阻塞消费者线程一定的时间，超时后返回失败。 |
 
 **阻塞队列的使用场景**：
 
@@ -15185,7 +15194,6 @@ public class SemaphoreDemo {
     
     class ShareData1 {
         private int number = 0;
-    
         public synchronized void increment() {
             //1 判断
             while (number == 5) {
@@ -15221,10 +15229,10 @@ public class SemaphoreDemo {
         }
     }
     ```
-
-  - 传统版本2：Lock+condition.await+condition.singalAll
-
-    ```java
+    
+- 传统版本2：Lock+condition.await+condition.singalAll
+  
+  ```java
     // 传统版本的生产者消费者模式：使用Lock+Condition实现
     // 实现多个生产者和消费者对资源类的消费和生产，资源类的最大生产数量为1
     public class ProdConsTradiDemo2 {
@@ -15303,10 +15311,10 @@ public class SemaphoreDemo {
         }
     }
     ```
-
-  - 阻塞队列版本：
-
-    ```java
+  
+- 阻塞队列版本：
+  
+  ```java
     // 使用阻塞队列实现生产者消费者模式
     public class ProdConsBlockQueueDemo {
         public static void main(String[] args) {
@@ -15384,7 +15392,7 @@ public class SemaphoreDemo {
         }
     }
     ```
-
+  
 - 线程池
 
 - 消息中间件
@@ -15586,7 +15594,7 @@ Runnable和Callable接口的区别：
 
 - **方法名**不同：Runnable接口是run方法，Callable接口是call方法。
 - 是否有**返回值**：Runnable接口的run方法无返回值，而Callable接口的call方法有返回值。
-- 是否抛出**异常**：Runnable接口的run方法不跑出异常，而Callable接口的call方法抛出Exception异常。
+- 是否抛出**异常**：Runnable接口的run方法不抛出异常，而Callable接口的call方法抛出Exception异常。
 
 ```java
 // 通过执行FutureTask的run方法，实现执行Callable的call方法，这体现了一种适配器的设计模式
@@ -15649,6 +15657,8 @@ Executor框架：
        - `static ExecutorService newCachedThreadPool(ThreadFactory threadFactory);`
 
      ![image-20210105130132817](README.assets/image-20210105130132817.png)
+     
+     ![image-20210129170742081](README.assets/image-20210129170742081.png)
 
    - 通过ThreadPoolExecutor类
 
@@ -15756,7 +15766,7 @@ public class DeadLockDemo {
    # Linux下，查看进程：ps -l
    
    # Windows下的java运行程序，有类似于Linux下ps的命令：jps
-   # 简记：jsp = java ps
+   # 简记：jsp = JVM ps
    # Windows下查看java进程：jps -l
    ```
 
@@ -16364,6 +16374,13 @@ GC算法（引用计数/复制/标记清除/标记整理）是内存回收的方
 ![image-20210106215459673](README.assets/image-20210106215459673.png)
 
 ## 16.55 CPU占用过高的定位分析思路
+
+**Linux怎么查找哪个线程使用的CPU时间最长**？
+
+1. 找出cpu耗用厉害的进程pid：`top`，然后按下shift+p查找出cpu利用最厉害的pid号
+2. 根据上面第一步拿到的pid号：`top -H -p pid号`。然后按下shift+p，查找出cpu利用率最厉害的线程号
+3. 将获取到的线程号（10进制）转换成小写16进制
+4. 使用jstack定位哪段代码出了问题：`jstack 进程ID|grep 16进制线程ID小写英文 -A60`
 
 **CPU占用过高怎么解决**？
 
@@ -16984,7 +17001,7 @@ Socket与Servlet区别的区别：
 - 优缺点：
 
   - 优点：
-    - 毫秒数在高温哦，自增序列在低位，整个ID都是趋势递增的。
+    - 毫秒数在高位，自增序列在低位，整个ID都是趋势递增的。
     - 不依赖数据库等第三方系统，以服务的方式部署，稳定性更高，生成ID的性能也是非常高的。
     - 可以根据自身业务特性分配bit位，非常灵活。
 
@@ -16997,6 +17014,419 @@ Socket与Servlet区别的区别：
 - 美团：[美团Leaf](https://github.com/Meituan-Dianping/Leaf/blob/master/README_CN.md)、[Leaf-美团技术文章](https://tech.meituan.com/2017/04/21/mt-leaf.html)
 - 百度：[百度UidGenerator](https://github.com/baidu/uid-generator)
 
+## 16.71 静态内部类和成员内部类
+
+静态内部类和成员内部类的区别：
+
+（1）静态内部类的使用：
+
+```java
+/**
+ * 静态内部类：与外部类相互独立
+ * 1.创建静态内部类的对象：Out.Inner inner = new Out.Inner();
+ * 2.静态内部类访问外部类：
+ * --（1）可以直接访问外部类的静态变量和静态方法，即使是private修饰的
+ * --（2）可以通过外部类的实例（不能直接）访问外部类的非静态变量和非静态方法，即使是private修饰的
+ * 3.外部类访问静态内部类：
+ * --（1）可以通过静态内部类（不能直接）访问其静态变量和静态方法，即使是private修饰的
+ * --（2）可以通过静态内部类的实例（不能直接）访问其非静态变量和非静态方法，即使是private修饰的
+ */
+public class Out {
+    private static int a = new Inner().d;
+    private int b = Inner.c;
+    private int e = new Inner().d;
+
+    public static class Inner {
+        private static int c;
+        private int d;
+
+        public void print() {
+            System.out.println(a);
+//            System.out.println(b); // 编译报错
+            System.out.println(new Out().b);
+        }
+    }
+}
+```
+
+（2）成员内部类的使用：
+
+```java
+/**
+ * 成员内部类：
+ * 1.创建成员内部类的对象：Out2.Inner2 inner2 = new Out2().new Inner2();
+ * 2.成员内部类不能定义静态方法和变量（final修饰的除外）
+ * (因为成员内部类是非静态的，类初始化的时候先初始化静态成员;
+ * 如果允许成员内部类定义静态变量，那么成员内部类的静态变量初始化顺序是有歧义的)
+ * 3.成员内部类访问外部类：
+ * --（1）可以直接访问外部类的静态变量和静态方法，即使是private修饰的
+ * --（2）可以直接访问外部类的非静态变量和非静态方法，即使是private修饰的
+ * 4.外部类访问成员内部类：
+ * --（1）可以通过成员内部类的实例（不能直接）访问其非静态变量和非静态方法，即使是private修饰的
+ */
+public class Out2 {
+    private static int a = new Out2().new Inner2().c;
+    private int b = new Inner2().c;
+
+    public class Inner2 {
+        private int c;
+
+        public void print() {
+            System.out.println(a);
+            System.out.println(b);
+        }
+    }
+}
+```
+
+## 16.72 实现深拷贝的两种方式（原型模式）
+
+方式一：所有嵌套对象均需实现`java.lang.Cloneable`接口，并重写`java.lang.Object#clone`方法。
+
+方式二：实现`java.io.Serializable`接口，通过在内存中进行序列化与反序列化实现深拷贝，推荐使用这种方式实现深拷贝。
+
+```java
+@Test
+public void test4() throws IOException, ClassNotFoundException {
+    Student student = new Student();
+    student.setId(1);
+    student.setName("张三");
+
+    Address addr = new Address();
+    addr.setName("北京市海淀区xx街道");
+    student.setAddress(addr);
+    System.out.println(student);
+    System.out.println(student.getAddress());
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    ObjectOutputStream oos = new ObjectOutputStream(baos);
+
+    oos.writeObject(student);
+    oos.close();
+    baos.close();
+
+    byte[] bytes = baos.toByteArray();
+    ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+    ObjectInputStream ois = new ObjectInputStream(bais);
+    Student copy = (Student) ois.readObject();
+    System.out.println(copy);
+    System.out.println(copy.getAddress());
+    ois.close();
+    bais.close();
+}
+```
+
+## 16.73 中断线程的几种方法
+
+中断线程的几种方法：
+
+1. 使用run方法：已废弃。
+
+2. 使用退出标志。
+
+   ```java
+   public class ThreadInterruptTest1 {
+       public static volatile boolean exit = false;//退出标志
+   
+       public static void main(String[] args) {
+           new Thread(() -> {
+               System.out.println("线程启动了");
+               while (!exit) {
+                   try {
+                       Thread.sleep(1000);
+                   } catch (InterruptedException e) {
+                       e.printStackTrace();
+                   }
+               }
+               System.out.println("线程结束了");
+           }).start();
+           try {
+               Thread.sleep(1000 * 5);
+           } catch (InterruptedException e) {
+               e.printStackTrace();
+           }
+           exit = true;//5秒后更改退出标志的值,没有这段代码，线程就一直不能停止
+       }
+   }
+   ```
+
+3. 使用interrupt方法（实例方法）：**只是改变中断状态，不会中断一个正在运行的线程**。
+
+   更确切地说，如果线程被Object.wait、Thread.join或Thread.sleep三种方法之一阻塞，此时调用该线程的interrupt()方法，那么该线程将抛出一个InterruptedException中断异常（该线程必须事先预备好处理此异常），从而提早地终结被阻塞状态。如果线程没有被阻塞，这时调用interrupt()将不起作用，直到执行到wait()、sleep()或join()时，才马上会抛出 InterruptedException。
+
+   - **使用interrupt() + InterruptedException来中断线程**
+
+   ```java
+   public class ThreadInterruptTest2 {
+       public static void main(String[] args) {
+           Thread thread = new Thread(() -> {
+               System.out.println("线程启动了");
+               try {
+                   Thread.sleep(1000 * 100);
+               } catch (InterruptedException e) {
+                   e.printStackTrace();
+               }
+               System.out.println("线程结束了");
+           });
+           thread.start();
+   
+           try {
+               Thread.sleep(1000 * 5);
+           } catch (InterruptedException e) {
+               e.printStackTrace();
+           }
+           thread.interrupt();//作用是：在线程阻塞时抛出一个中断信号，这样线程就得以退出阻塞的状态
+       }
+   }
+   ```
+
+   ![image-20210129174540776](README.assets/image-20210129174540776.png)
+
+   - **使用interrupt() + isInterrupted()中断线程**：isInterrupted()是类方法
+
+     三个方法：
+
+     - interrupt()方法：**实例方法**，此方法不会中断一个正在运行的线程，它的作用是：在线程受到阻塞时抛出一个中断信号，这样线程就得以退出阻塞的状态。
+
+       ```java
+       public class ThreadInterruptTest5 {
+           public static void main(String[] args) {
+               Thread thread = new Thread() {
+                   @Override
+                   public void run() {
+                       System.out.println("线程启动了");
+                       //对于这种情况，即使线程调用了intentrupt()方法并且isInterrupted()，但线程还是会继续运行，根本停不下来！
+                       while (true) {
+                           System.out.println(isInterrupted());//调用interrupt之后为true
+                       }
+                   }
+               };
+               thread.start();
+               //注意：此方法不会中断一个正在运行的线程，它的作用是：在线程受到阻塞时抛出一个中断信号，这样线程就得以退出阻塞的状态
+               thread.interrupt();
+               while (true) {
+                   System.out.println("是否isInterrupted：" + thread.isInterrupted());//true
+               }
+           }
+       }
+       ```
+
+     - isInterrupted()方法：**实例方法**，测试线程是否已经中断，但是不能清除状态标识。
+
+     - interrupted()方法：**类方法**，测试当前线程是否已经中断。如果连续调用该方法，则第二次调用将返回false。在api文档中说明interrupted()方法具有清除状态的功能。执行后具有将状态标识清除为false的功能
+
+   ```java
+   public class ThreadInterruptTest3 {
+       public static void main(String[] args) {
+           Thread thread = new Thread() {
+               @Override
+               public void run() {
+                   System.out.println("线程启动了");
+                   // 或while (!Thread.currentThread().isInterrupted())
+                   while (!isInterrupted()) {
+                       System.out.println(isInterrupted());//调用 interrupt 之后为true
+                   }
+                   System.out.println("线程结束了");
+               }
+           };
+           thread.start();
+   
+           try {
+               Thread.sleep(2000);
+           } catch (InterruptedException e) {
+               e.printStackTrace();
+           }
+           thread.interrupt();
+           System.out.println("线程是否被中断：" + thread.isInterrupted());//true
+       }
+   }
+   ```
+
+   ![image-20210129175632243](README.assets/image-20210129175632243.png)
+
+> 参考博客文章：**[java 中断线程的几种方式](https://www.cnblogs.com/myseries/p/10918819.html)**
+
+## 16.74 notify和notifyAll的区别
+
+**notify和notifyAll的区别**：谨慎使用notify，因为可能导致死锁。
+
+- 如果线程调用了对象的 wait()方法，那么线程便会处于该对象的**等待池**中，等待池中的线程不会去竞争该对象的锁。
+- 当有线程调用了对象的 notifyAll()方法（唤醒所有 wait 线程）或 notify()方法（只随机唤醒一个 wait 线程），被唤醒的的线程便会进入该对象的**锁池**中，锁池中的线程会去竞争该对象锁。也就是说，调用了notify后只要一个线程会由等待池进入锁池，而notifyAll会将该对象等待池内的所有线程移动到锁池中，等待锁竞争。
+- 优先级高的线程竞争到对象锁的概率大，假若某线程没有竞争到该对象锁，它还会留在锁池中，唯有线程再次调用 wait()方法，它才会重新回到等待池中。而竞争到对象锁的线程则继续往下执行，直到执行完了 synchronized 代码块，它会释放掉该对象锁，这时锁池中的线程会继续竞争该对象锁。
+
+## 16.75 sleep()和wait()的区别
+
+**sleep和wait的区别**：
+
+1. 来自不同的类：wait来自Object类；sleep来自Thread类，企业开发中一般不会用sleep进行休眠，而会使用`TimeUnit.SECONDS.sleep(20);`。
+2. 关于锁的释放：wait会释放锁；sleep不会释放锁。
+3. 使用范围不同：wait必须在同步代码块中使用；sleep可以在任何地方使用。
+   - 为什么wait和notify要在同步代码块中使用？
+     - 若不在同步代码块中使用，会抛出illegalMonitorStateException异常
+     - 避免wait和notify之间产生竞态条件
+4. 是否需要捕获异常：wait不需要捕获异常；sleep需要捕获异常。
+
+## 16.76 泛型方法的调用
+
+需要注意泛型方法与泛型类的不同，关于泛型方法的调用：
+
+```java
+public class GenericityMethod {
+    public static void main(String[] args) {
+        String result1 = GenericityMethod.<String>test1("调用静态泛型方法1");
+        // 泛型方法的类型推断
+        String result2 = GenericityMethod.test1("调用静态泛型方法2");
+        System.out.println(result1);
+        System.out.println(result2);
+
+        GenericityMethod gm = new GenericityMethod();
+        String result3 = gm.test2("调用非静态泛型方法1");
+        // 泛型方法的类型推断
+        String result4 = gm.<String>test2("调用非静态泛型方法2");
+        System.out.println(result3);
+        System.out.println(result4);
+    }
+
+    public static <T> T test1(T arg) {
+        return arg;
+    }
+
+    public <T> T test2(T arg) {
+        return arg;
+    }
+}
+```
+
+## 16.77 乐观锁/悲观锁/自旋锁/自适应自旋/锁消除/锁粗化/轻量级锁/偏向锁
+
+**乐观锁**：乐观锁是一种乐观思想，即认为读多写少，遇到并发写的可能性低，每次去拿数据的时候都认为别人不会修改，所以不会上锁，但是在更新的时候会判断一下在此期间别人有没有去更新这个数据，采取在写时先读出当前版本号，然后加锁操作（比较跟上一次的版本号，如果一样则更新），如果失败则要重复读-比较-写的操作。java中的乐观锁基本都是通过 CAS 操作实现的，CAS是一种更新的原子操作，比较当前值跟传入值是否一样，一样则更新，否则失败。
+
+**悲观锁**：悲观锁是就是悲观思想，即认为写多读少，遇到并发写的可能性高，每次去拿数据的时候都认为别人会修改，所以每次在读写数据的时候都会上锁，这样别人想读写这个数据就会block直到拿到锁。java中的悲观锁就是Synchronized；AQS框架下的锁则是先尝试CAS乐观锁去获取锁，获取不到，才会转换为悲观锁，如RetreenLock。
+
+**自旋锁**：如果持有锁的线程能在很短时间内释放锁资源，那么那些等待竞争锁的线程就不需要做内核态和用户态之间的切换进入阻塞挂起状态，它们只需要等一等（自旋），等持有锁的线程释放锁后即可立即获取锁，这样就避免用户线程和内核的切换的消耗；如果持有锁的线程执行的时间超过自旋等待的最大时间仍没有释放锁，就会导致其它争用锁的线程在最大等待时间内还是获取不到锁，这时争用线程会停止自旋进入阻塞状态。
+
+- 线程自旋是需要消耗CPU的，说白了就是让CPU在做无用功，如果一直获取不到锁，那线程也不能一直占用CPU自旋做无用功，所以需要设定一个自旋等待的最大时间。
+
+**自适应自旋**：自旋的时间不是固定的，而是由前一次在同一个锁上的自旋时间及锁的拥有者的状态来决定的。如果在同一个锁对象上，自旋等待刚刚成功获得过锁，并且持有锁的线程正在运行中，那么虚拟机会认为这次自旋也很有可能再次成功，进而允许自旋等待相对更长的时间；如果对于某个锁，自旋很少成功获得过锁，那在以后要获取这个锁时将有可能直接省略掉自旋过程，以避免浪费处理器资源。
+
+- JDK1.6中默认开启了自旋锁：`-XX:+UseSpinning`
+- 设置自旋的次数：`-XX:PreBlockSpin=10`，JDK1.7后，去掉了此参数，由JVM控制。
+
+**锁消除**：虚拟机（进行逃逸分析）对被检测到不可能存在共享数据竞争的锁进行消除。
+
+**锁粗化**：如果虚拟机探测到有这样一串零碎的操作都对同一个对象加锁，将会把加锁同步的范围扩展（粗化）到整个操作序列的外部。
+
+```java
+// 一段看起来没有同步的代码
+public String concatString(String s1, String s2, String s3){
+    return s1 + s2 + s3;
+}
+// 编译器会将上一段代码转化为下面的代码，JDK1.5会采用StringBuffer进行拼接，JDK1.6会采用StringBuilder进行拼接
+// StringBuffer的append方法是同步的，虚拟机会对连续的三个连续的append方法进行锁粗化
+public String concatString(String s1, String s2, String s3){
+    StringBuffer sb = new StringBuffer();
+    sb.append(s1);
+    sb.append(s2);
+    sb.append(s3);
+    return sb.toString();
+}
+```
+
+**轻量级锁**：在无竞争的情况下（**针对大部分情况下锁的持有时间很短**）使用CAS操作去消除同步使用的互斥量。**轻量级锁是为了在线程交替执行同步块时提高性能**。
+
+**偏向锁**：消除数据在无竞争情况下（**针对大部分情况下锁总是由同一线程多次获得**）的同步原语，进一步提高程序的运行性能。即在无竞争的情况下把整个同步都消除掉，连CAS操作都不去做了。**偏向锁则是在只有一个线程执行同步块时进一步提高性能**。
+
+- 启动偏向锁：`-XX:+UseBiasedLocking`，默认开启
+
+- 锁的递进：锁消除-->偏向锁-->轻量级锁-->自适应自旋锁-->自旋锁-->锁粗化
+- **synchronized锁的竞争升级（单向）**：无锁状态-->偏向锁-->轻量级锁-->重量级锁
+- 锁的优化措施：
+  - 较少锁持有时间
+  - 减小锁的粒度（例如：读写锁）
+  - 锁分离（例如：读写锁）
+  - 锁粗化：虚拟机会针对连续对同一个对象加锁这种情况进行优化（切忌在循环体中加锁）
+  - 锁消除：虚拟机（进行逃逸分析）对被检测到不可能存在共享数据竞争的锁进行消除
+
+## 16.78 java内存模型
+
+Java内存模型：
+
+1. 所有变量（包括实例变量与类变量，不包含局部变量、方法参数）都存储在主内存中（主内存类比于物理内存）。
+2. 每条线程都有自己的工作内存，线程的工作内存中保存了被该线程使用的变量的主内存副本，线程对变量的所有操作（读取、赋值）都必须在工作内存中进行，而不能直接读写主内存中的数据。
+3. 不同线程之间无法直接访问对方工作内存中的变量，线程间变量值的传递均需要通过主内存来完成；但volatile修饰的变量例外
+
+4. 内存间交互的8种操作：每种操作均是原子性的；read和load、store和write需要成对出现
+   - 锁定（lock）-->解锁（unlock）
+   - 读取（read）-->载入（load）-->使用（use）-->赋值（assign）-->存储（store）-->写入（write）
+
+5. java内存模型围绕在并发过程中如何处理的三个特征：
+   - 原子性：可以保证原子性的1个关键字是synchronized（对应的JVM层面的字节码指令是monitorenter、monitorexit）
+   - 可见性：可以保证可见性的3个关键字是volatile、synchronized、final
+   - 有序性：可以保证有序性的2个关键字是volatile、synchronized
+
+6. 先行发生原则
+
+## 16.79 jps/jstat/jinfo/jmap/jhat/jstack/jconsole/jvisualvm
+
+1. jps：虚拟机进程状况工具
+   - `jps -l`：输出主类的全名，如果进程是jar包，则输出jar包路径
+   - `jps -v`：输出虚拟机进程启动时的JVM参数
+   - `jps -m`：输出虚拟机进程启动时传递给主类main()函数的参数
+   - `jps -q`：只输出进程id，省略主类的名称
+
+2. jstat：虚拟机统计信息（主要分为类加载、垃圾收集、运行期编译状况）监视工具
+   - `jstat -gc 27032 250 20 `：查询进程27032的垃圾收集（堆和方法区）情况，每250ms查询一次，共查询20次
+   - `jstat -gcutil 27032 `：显示堆和方法区的使用情况的百分占比
+   - `jstat -class 27032`：类加载统计
+   - `jstat -compiler 27032`：编译统计
+   - `jstat -gcmetacapacity 27032`：元空间统计
+
+3. jinfo：java配置信息工具
+
+   - `jindo -flags 27032`：查看虚拟机配置信息，如使用哪种回收器、参数配置。
+
+   - `jinfo -flag +PrintGCDetails 27032 `：配置开启PrintGCDetails
+   - `jinfo -flag PrintGCDetails 27032`：查看是否已打开PrintGCDetails
+   - `jinfo -flag HeapDumpOnOutOfMemoryError 27032`：查看是否内存溢出后是否会自动生成堆转储文件，默认未开启
+
+4. jmap：java内存映像工具
+
+   - `jmap -dump:format=b,file=example.dump 27032`：生成堆转储快照
+
+   - `jmap -heap 27032`：显示java堆详细信息，如使用哪种回收器、参数配置、分代状况等
+   - `jmap -histo 27032`：显示堆中对象统计信息，包括类、实例数量、合计容量
+
+5. jhat：虚拟机堆转储快照分析工具，搭配jmap使用（比较简陋）
+   - `jhat example.dump`：内置了一个HTTP/Web服务器，生成堆快照分析结果
+   - 推荐使用Memory Analyzer Tool、IBM HeapAnalyzer等工具
+
+6. jstack：java堆栈跟踪工具，生成当前时刻的线程快照
+   - `jstack -l 27032`：除堆栈外，显示关于锁的附加信息（可以排查死锁问题）
+
+7. jconsole：可以打开Java监视和管理控制台
+   - 可以在**线程**页签查看是否存在死锁
+
+8. jvisualvm：可以打开Java VisualVM可视化分析工具
+   - 可以在**线程**页签查看是否存在死锁
+
+## 16.80 wait/notify/notifyAll/sleep/join/yield 
+
+线程通信的方法：
+
+1.  来自`java.lang.Object`：wait（立即阻塞）、notify、notifyAll
+2. 来自`java.lang.Thread`：sleep（立即阻塞，类方法）、join（立即阻塞）、yield（让出时间片，类方法）
+
+## 16.81 不可变类
+
+**创建不可变类的条件**：
+
+1. 将类声明为final，所以它不能被继承
+2. 将所有的成员声明为private的，这样就不允许直接访问这些成员
+3. 对变量不要提供setter方法；提供getter方法，但不要直接返回对象本身，而是返回**深拷贝**对象（**避免成员变量逃逸**）
+4. 将所有可变的成员声明为final，这样只能对它们赋值一次（非必须）
+5. 通过构造器初始化所有成员，进行**深拷贝**
+
+## 16.82 代理模式/静态代理/动态代理/Cglib代理
 
 
 
@@ -17004,6 +17434,9 @@ Socket与Servlet区别的区别：
 
 
 
+
+
+> 参考博客文章：[jstat命令详解](https://www.cnblogs.com/sxdcgaq8080/p/11089841.html)
 
 # 17 Undertow+JMeter压力测试
 

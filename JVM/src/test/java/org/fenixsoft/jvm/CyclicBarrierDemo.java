@@ -3,7 +3,7 @@ package org.fenixsoft.jvm;
 import java.util.concurrent.CyclicBarrier;
 
 /**
- * @Description 栅栏测试
+ * @Description 栅栏的循环使用测试
  * @Author zhaochao
  * @Date 2021/1/4 14:53
  * @Email zcprog@foxmail.com

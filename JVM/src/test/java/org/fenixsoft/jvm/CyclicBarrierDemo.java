@@ -11,7 +11,9 @@ import java.util.concurrent.CyclicBarrier;
  */
 public class CyclicBarrierDemo {
     public static void main(String[] args) {
-        CyclicBarrier cyclicBarrier = new CyclicBarrier(7);
+        CyclicBarrier cyclicBarrier = new CyclicBarrier(7, () -> {
+            System.out.println("-----------------加法计数器到0---------------");
+        });
         for (int i = 1; i <= 7; i++) {
             final int tempInt = i;
             new Thread(() -> {

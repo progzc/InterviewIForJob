@@ -5,7 +5,7 @@ package com.zcprog.basic;
  * @Author zhaochao
  * @Date 2021/1/31 17:12
  * @Email zcprog@foxmail.com
- * @Version V1.0
+ * @Version V1.0InvocationHandler
  */
 public class SystemTest {
     public static void main(String[] args) {

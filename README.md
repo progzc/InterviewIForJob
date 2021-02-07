@@ -1,4 +1,4 @@
-# Java学习总结
+Java学习总结
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -1384,7 +1384,7 @@ public class Car {
 
 ![image-20201220180945111](README.assets/image-20201220180945111.png)
 
-### ### 状态模式
+### ### 状态模式⭐
 
 **状态模式**：一种行为设计模式， 让你能在一个对象的内部状态变化时改变其行为， 使其看上去就像改变了自身所属的类一样。
 
@@ -5398,12 +5398,12 @@ StringUtils.trimToEmpty("    abc    ") = "abc"
 2. `DESC`：降序。
 3. `ASC`：升序（很少使用，因为升序是默认的）。
 4. MySQL中默认字典排序中的A和a视为相同，但是数据库管理员可以变更这种行为。
-5. 顺序问题：ORDER BY 需位于FROM之后，LIMIT 需位于ORDER BY之后，即`FROM...ORDER BY...LIMIT...`。
+5. 顺序问题：ORDER BY 需位于FROM之后，LIMIT需位于ORDER BY之后，即`FROM...ORDER BY...LIMIT...`。
 
 ### 6.1.5 where过滤
 
 1. 顺序问题：`FROM...where...ORDER BY...LIMIT...`。
-2. 过滤：也可以再应用层过滤数据。
+2. 过滤：也可以在应用层过滤数据。
 3. 关于!=与<>：
 4. BETWEEN...AND：包含开始值与结束值。
 5. IS NULL： NULL与不匹配含义不同。
@@ -5495,11 +5495,15 @@ StringUtils.trimToEmpty("    abc    ") = "abc"
    CurTime()  返回当前时间
    Date()  返回日期时间的日期部分（很重要）
    Time()  返回日期事件的时间部分（很重要）
-   DateDiff()  计算两个日期之差
    Date_Format()  返回一个格式化的日期或时间串
    Year()  返回一个日期的年份部分（很重要）
    Month()  返回一个日期的月份部分（很重要）
    MySQL默认使用的日期格式为yyyy-mm-dd
+   -- 以下函数使用频率较高
+   now()：显示当前年份、月份、日期、小时、分钟和秒
+   current_date()：仅显示当前年份、月份、日期
+   datadiff(A,B)：确定两个日期之间的差异、通常用于计算年龄
+   subtimes(A,B)：确定两次之间的差异
    ```
 
 3. 数值处理函数：
@@ -5576,7 +5580,7 @@ StringUtils.trimToEmpty("    abc    ") = "abc"
 4. 进行全文本搜索：`SELECT...FROM...WHERE Match(字段名) Against('指定要搜索的表达式')`
 5. 除非使用BINARY方式，否则全文本搜索不区分大小写。
 6. 使用查询拓宽：`SELECT...FROM...WHERE Match(字段名) Against('指定要搜索的表达式' WITH QUERY EXPANSION)`。（使用查询拓展时，MySQL会进行两遍扫描来完成搜索：第一遍找出与搜索条件匹配的所有行，第二遍使用所有有用的词再次进行全文本搜索）。
-7. 布尔文本搜索：`SELECT...FROM...WHERE Match(字段名) Against('指定要搜索的表达式,包含布尔操作符+(包含词)>(包含且增加等级值)-(排除词)<(排除且减少等级值)~(取消一个词的排序值)和*(截断操作符，类似于词尾的通配符)' IN BOOLEAN MODE)`。
+7. 布尔文本搜索：`SELECT...FROM...WHERE Match(字段名) Against('指定要搜索的表达式,包含布尔操作符+(包含词)>(包含且增加等级值)-(排除词)<(排除且减少等级值)~(取消一个词的排序值)和(截断操作符，类似于词尾的通配符)' IN BOOLEAN MODE)`。
 
 **全文本搜索的注意事项**：
 
@@ -5769,6 +5773,18 @@ END; # 若此前未关闭游标，到END这里，MySQL会自动帮助关闭游�
    - DELETE触发器：（例：逻辑删除）
    - UPDATE触发器：（例：自动填充更新时间）
 
+```sql
+-- 例子：自动给zcprog数据库中的article表中的记录插入创建时间
+DELIMITER $$
+CREATE
+    TRIGGER `zcprog`.`auto_insert_datetime` BEFORE INSERT
+    ON `zcprog`.`article`
+    FOR EACH ROW BEGIN
+		SET new.create_time=NOW();
+    END$$
+DELIMITER ;
+```
+
 **注意事项**：
 
 1. 每个表每个事件每次只允许一个触发器（因此，每个表最多支持6个触发器，每条INSERT/UPDATE/DELETE的之前和之后）。
@@ -5875,6 +5891,22 @@ MVCC只在可重复读和提交读两个隔离级别下工作。
 - 采用MVCC来支持高并发，实现了四个标准的隔离级别，默认级别是可重复读，并且通过间隙锁策略防止幻读的出现。
 - InnoDB表是基于聚族索引建立的。
 
+存储引擎的对比：
+
+![image-20210201000006051](README.assets/image-20210201000006051.png)
+
+MyISAM与InnoDB的区别：
+
+1. InnoDB支持事务，MyISAM不支持，对于InnoDB每一条SQL语言都默认封装成事务，自动提交，这样会影响速度，所以最好把多条
+   SQL语言放在begin和commit之间，组成一个事务。
+2. InnoDB支持外键，而MyISAM不支持。对一个包含外键的InnoDB表转为MYISAM会失败。
+3. InnoDB是聚集索引，数据文件是和索引绑在一起的，必须要有主键，通过主键索引效率很高。但是辅助索引需要两次查询，先查询到
+   主键，然后再通过主键查询到数据。因此，主键不应该过大，因为主键太大，其他索引也都会很大。而MyISAM是非聚集索引，数据文
+   件是分离的，索引保存的是数据文件的指针。主键索引和辅助索引是独立的。
+4. InnoDB不保存表的具体行数，执行select count(*) from table时需要全表扫描。而MyISAM用一个变量保存了整个表的行数，执行上
+   述语句时只需要读出该变量即可，速度很快。
+5. Innodb不支持全文索引，而MyISAM支持全文索引，查询效率上MyISAM要高。
+
 #### 6.2.5.2 MyISAM
 
 **MyISAM的特性**：非事务型引擎
@@ -5913,12 +5945,13 @@ MVCC只在可重复读和提交读两个隔离级别下工作。
    - 应该使用MySQL内建的类型而不是字符串来存储日期和时间；
    - 应该用整型存储IP地址...
 3. **尽量避免NULL（最后指定列为NOT NULL，除非真的需要存储NULL值）**。
+   
    - 可为NULL的列使得索引、索引统计和值比较都更复杂；
    - 可为NULL的列会使用更多的存储空间；
    - 通常把可为NULL的列改为NOT NULL带来的性能提升比较小，调优时没有必要首先修改掉这种情况，除非确定这会导致问题；
    - 若计划在列上建索引，应尽量避免设计成可为NULL的列；
-   - 有一点例外：InnoDB使用单独的位(bit)存储NULL值，故对于稀疏数据有很好的空间效率。
-
+- 有一点例外：InnoDB使用单独的位(bit)存储NULL值，故对于稀疏数据有很好的空间效率。
+  
 4. **选择合理的数据类型**
 
    4.1 整数类型
@@ -6649,8 +6682,105 @@ ACOS( COS(latA) * COS(latB) * COS(lonA-lonB) + SIN(latA) * SIN(latB) ) * R
 
 1. 先建一个索引过过滤出近似值。
 2. 再使用精确条件匹配所有的记录并移除不满足条件的记录。
-
 3. 根据毕达哥拉斯定理来计算地理位置空间距离。
+
+## 6.3 SQL笔试题
+
+### 6.3.1 三大排名函数
+
+1. `dense_rank()`：语法结构为`dense_rank() over(partition by 分组列 order by 排序列 desc)`
+
+2. `row_number()`：语法结构为`row_number() over(partition by 分组列 order by 排序列 desc)`
+
+3. `rank()`：语法结构为`row_number() over(partition by 分组列 order by 排序列 desc)`
+   - 在使用`dense_rank()`、`row_number()`、`rank()`函数的时候，over()里头的分组以及排序的执行晚于where、group by、order by的执行。
+
+三种排名函数的区别：以给定的五个成绩为例（99，99，85，80，75）
+
+| 函数名       | 关键词 | 作用                                                         | 排序输出效果  |
+| ------------ | ------ | ------------------------------------------------------------ | ------------- |
+| dense_rank() | 连续   | 当出现并列结果时，下一个排名应该是下一个连续的整数值，名次之间没有间隔 | 1，1，2，3，4 |
+| row_number() | 行号   | 按顺序输出表的行号                                           | 1，2，3，4，5 |
+| rank()       | 间隔   | 当出现并列结果时，下一个排名应该像后递增一位，名次之间有间隔 | 1，1，3，4，5 |
+
+> 参考题目：[分数排名问题](https://leetcode-cn.com/problems/rank-scores/)
+
+### 6.3.2 使用IFNULL和LIMIT子句
+
+IFNULL(expression, alt_value)：用于判断第一个表达式是否为NULL，如果为NULL则返回第二个参数的值，如果不为NULL则返回第一个参数的值。
+
+解决第N高的问题：
+
+- 方法一：使用IFNULL+LIMIT
+- 方法二：使用临时表+LIMIT
+- 方法三：使用DISTINCT+LIMIT
+
+> 参考题目：[第二高的薪水](https://leetcode-cn.com/problems/second-highest-salary/solution/di-er-gao-de-xin-shui-by-leetcode/)
+
+### 6.3.3 自定义函数
+
+定义变量的几种方式：
+
+1. 用户定义的变量（前缀为@）
+2. 局部变量（无前缀）
+3. 服务器系统变量（以@@为前缀）
+
+`:=`与`=`的区别：
+
+- :=主要用在select中显示行号（循环赋值）
+- =主要用于set中赋值
+
+> 参考题目：[第N高的薪水](https://leetcode-cn.com/problems/nth-highest-salary/)
+
+### 6.3.4 join多表连接
+
+join=inner join=from table1, table2
+
+> 参考题目：[连续出现的数字](https://leetcode-cn.com/problems/consecutive-numbers/)、[超过经理收入的员工](https://leetcode-cn.com/problems/employees-earning-more-than-their-managers/)、[上升的温度](https://leetcode-cn.com/problems/rising-temperature/)
+
+### 6.3.5 查找重复的列
+
+解决查找重复项的问题：
+
+- 方法一：使用join自联结
+- 方法二：使用group by+临时表
+- 方法三：使用group by +having（推荐）
+
+> 参考题目：[查找重复的电子邮箱](https://leetcode-cn.com/problems/duplicate-emails/)
+
+### 6.3.6 in和not in
+
+解决存在/不存在问题：
+
+- 存在：in
+- 不存在：not in
+- **两个字段的in**
+
+> 参考题目：[从不订购的客户](https://leetcode-cn.com/problems/customers-who-never-order/)、**[部门工资最高的员工](https://leetcode-cn.com/problems/department-highest-salary/)**、
+
+### 6.3.7 delete的语法
+
+delete的新的用法：`DELETE t1 FROM t1 LEFT JOIN t2 ON t1.id=t2.id WHERE t2.id IS NULL;`，官方sql中，`DELETE p1`就表示从p1表中删除满足`WHERE`条件的记录。
+
+> 参考题目：[删除重复的电子邮箱](https://leetcode-cn.com/problems/delete-duplicate-emails/)
+
+### 6.3.8 日期函数
+
+日期相差1：datediff(date1,date2)=1
+
+> 参考题目：[上升的温度](https://leetcode-cn.com/problems/rising-temperature/)
+
+
+
+
+
+## 6.4 中间件MyCat
+
+分库（垂直拆分）分表（水平拆分）
+
+
+
+
 
 > 参考博客文章**：[《MySQL必知必会》-已读完](www.highperfmySQL)**、[《正则表达式必知必会》]()、**[关于MySQL可重复读的理解](https://blog.csdn.net/qq_32573109/article/details/98610368)**、**[《高性能MySQL》-已读完前六章]()**、[数据库之六大范式详解](https://blog.csdn.net/weixin_43433032/article/details/89293663)、[MySQL中key和index的区别](https://www.cnblogs.com/zjfjava/p/6922494.html)、[MySQL EXPLAIN type类型说明](https://blog.csdn.net/qq_27676247/article/details/79387637)
 
@@ -7168,7 +7298,7 @@ Ribbon在工作时分为两步：
    logging:
      level:
        # OpenFeign日志以什么级别监控哪个接口
-       ccom.zcprog.springcloud.service.PaymentFeignService: debug
+       com.zcprog.springcloud.service.PaymentFeignService: debug
    ```
 
 ### 7.1.10 Hystrix服务降级/熔断/限流
@@ -7225,13 +7355,13 @@ Hystrix的使用：
    eureka:
      client:
        register-with-eureka: true # 表示向注册中心注册自己
-       fetch-registry: true #表示自己就是注册中心，职责是维护服务实例，并不需要去检索服务
+       fetch-registry: true # 表示需要去检索服务
        service-url:
          #设置与eureka server交互的地址查询服务和注册服务都需要依赖这个地址
    #      defaultZone: http://eureka7001.com:7001/eureka/,http://eureka7002.com:7002/eureka/ # 集群模式
          defaultZone: http://eureka7001.com:7001/eureka/ # 单机模式
    #  server:
-   #    enable-self-preservation: false
+   #    enable-self-preservation: false # 关闭自我保护
    ```
 
 3. 在启动类上使用@EnableEurekaClient注解
@@ -7248,7 +7378,7 @@ Hystrix的使用：
 
 **服务端进行服务降级的步骤**：
 
-1. 启动类上添加@EnableCircuitBreaker、@EnableEurekaClient
+1. 启动类上添加@EnableCircuitBreaker（或使用@EnableHystrix，@EnableHystrix本质是对@EnableCircuitBreaker的封装）、@EnableEurekaClient
 
 2. Service方法上使用@HystrixCommand（**其对热部署支持不太友好，有时需要重新启动**）
 
@@ -7266,7 +7396,7 @@ Hystrix的使用：
    ```yml
    feign:
      hystrix:
-       enabled: true
+       enabled: true # 开启feign的hystrix支持
    ```
 
 2. 在启动类上添加@EnableHystrix、@EnableFeignClients
@@ -7298,7 +7428,7 @@ Hystrix的使用：
    @HystrixCommand
    ```
 
-6. 为了实现代码解耦，可以采在第4步的@FeignClient注解中添加fallback属性（该属性指定的类实现了该Service接口，重写的方法都是降级方法），指定降级方法。**这样处理之后，可以取消代替第3步和第5步**。
+6. 为了实现代码解耦，可以采用在第4步的@FeignClient注解中添加fallback属性（该属性指定的类实现了该Service接口，重写的方法都是降级方法），指定降级方法。**这样处理之后，可以取消代替第3步和第5步**。
 
    ```java
    @FeignClient(value = "CLOUD-PROVIDER-HYSTRIX-PAYMENT", fallback = PaymentFallbackServer.class)
@@ -7306,17 +7436,19 @@ Hystrix的使用：
 
 #### 7.1.10.2 服务熔断
 
-**熔断机制**：是应对雪崩效应的一种微服务链路保护机制。当扇出链路的某个微服务出错不可用或者响应时间太长时，会进行服务的降级，进而熔断该节点微服务的调用，快速返回错误的响应信息；当检测到该节点微服务调用相应正常后，恢复调用链路；在SpringCloud里，熔断机制通过Hystrix实现，Hystrix会监控微服务间调用的情况，当失败的调用到一定阈值（**缺省是5秒内20次调用失败**），就会启动熔断机制（使用注解@HystrixCommand）。
+**熔断机制**：是应对雪崩效应的一种微服务链路保护机制。当扇出链路的某个微服务出错不可用或者响应时间太长时，会进行服务的降级，进而熔断该节点微服务的调用，快速返回错误的响应信息；当检测到该节点微服务调用相应正常后，恢复调用链路；在SpringCloud里，熔断机制通过Hystrix实现，Hystrix会监控微服务间调用的情况，当失败的调用到一定阈值（**缺省是最近10秒内20次调用50%失败**），就会启动熔断机制（使用注解@HystrixCommand）。
 
 **服务熔断的设置**：
 
 ```java
 // 服务熔断
+// 在HystrixCommandProperties.java包含了所有默认配置
 @HystrixCommand(fallbackMethod = "paymentCircuitBreaker_fallback", commandProperties = {
         @HystrixProperty(name = "circuitBreaker.enabled", value = "true"),  //是否开启断路器
-        @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "10"),   //请求次数
-        @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "10000"),  //时间范围
-        @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "60"), //失败率达到多少后跳闸
+        @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "10"),   //请求次数（默认值为20）
+        @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "5000"),  //全开到半开的时间（默认为5000）
+        @HystrixProperty(name = "metrics.rollingStats.timeInMilliseconds", value = "10000"),  //滚动时间窗口范围（默认为10000）
+        @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "60"), //失败率达到多少后跳闸（默认为50%）
 })
 ```
 
@@ -7328,7 +7460,7 @@ Hystrix的使用：
 
 **熔断器在什么情况下开始起作用**：涉及到断路器的3个重要参数（快照时间窗、请求总数阈值、错误百分比阈值）
 
-- **快照时间窗**：断路器确定是否打开需要统计一些请求和错误数据，而统计的时间范围就是快照时间窗，**默认为最近的10秒**
+- **快照时间窗**：断路器确定是否打开需要统计一些请求和错误数据，而统计的时间范围就是快照时间窗，**默认为最近的10秒**。
 - **请求总数阈值**：在快照时间窗内，必须满足请求总数阈值才有资格熔断。**默认为20次**，意味着在10秒内，如果该Hystrix命令的调用次数不足20次，即使所有的请求都超时或其他原因失败，断路器都不会打开。
 - **错误百分比阈值**：当请求总数在快照时间窗口内超过了阈值，比如发生了20次调用，如果在这20次调用中，有10次发生了超时异常，也就是超过50%的错误百分比，在**默认设定50%阈值**情况下，这时候就会将断路器打开。
 
@@ -7496,7 +7628,7 @@ Hystrix的工作流程图如下：
 1. 路由（Route）：路由是构建网关的基本模块，它由ID、目标URI、一系列的断言和过滤器组成，如果断言为true则匹配该路由。
 2. 断言（Predicate）：参考的是java8的java.util.function.Predicate开发人员可以匹配HTTP请求中的所有内容（例如请求头或请求参数），如果请求与断言相匹配则进行路由。
 
-3. 过滤（Filter）：指的是Spring框架中GatewayFilter的实例，使用过滤器，可以在请求被路由前或者之后对请求进行修改。
+3. 过滤器（Filter）：指的是Spring框架中GatewayFilter的实例，使用过滤器，可以在请求被路由前或者之后对请求进行修改。
 
 **Gateway的工作流程**：路由转发（包含断言）和执行过来长期链。
 
@@ -7529,13 +7661,13 @@ Hystrix的工作流程图如下：
        gateway:
          routes:
            - id: payment_routh # 路由的ID，没有固定规则但要求唯一，建议配合服务名
-             uri: http://localhost:8001 #匹配后提供服务的路由地址
+             uri: http://localhost:8001 # 匹配后提供服务的路由地址
              predicates:
-               - Path=/payment/get/** #断言,路径相匹配的进行路由
+               - Path=/payment/get/** # 断言,路径相匹配的进行路由
            - id: payment_routh2
              uri: http://localhost:8001
              predicates:
-               - Path=/payment/lb/** #断言,路径相匹配的进行路由
+               - Path=/payment/lb/** # 断言,路径相匹配的进行路由
    eureka:
      instance:
        hostname: cloud-gateway-service
@@ -7699,7 +7831,7 @@ public class MyLogGateWayFilter implements GlobalFilter, Ordered {
 
 ### 7.1.12 Config分布式服务配置
 
-提供类似SpringCloud Config功能的还有阿里巴巴的**Eureka**、携程的**Apollo**。
+提供类似SpringCloud Config功能的还有阿里巴巴的**Necos**、携程的**Apollo**。
 
 [官方地址](https://docs.spring.io/spring-cloud-config/docs/current/reference/html/)
 
@@ -7776,6 +7908,7 @@ SpringCloud Config服务端的使用：
 - **/{label}/{application}-{profile}.yml**
 
   ```yml
+  # 推荐采用这种方法配置文件读取规则
   http://config-3344.com:3344/main/config-dev.yml
   ```
 
@@ -7884,7 +8017,7 @@ rabbitmqctl set_permissions -p / admin “.*” “.*” “.*” # 给admin用�
 rabbitmqctl change_password  admin  'Newpassword' # 修改admin用户密码
 ```
 
-**SpringCloud Bus**：用来将分布式系统的节点与轻量级消息系统链接起来的框架（与SpringCloud Config结合可以实现配置的分布式动态刷新），它整合了Java的事件处理机制和消息中间件的功能，SpringCloud Bus目前支持RabbitMQ和Kafka。
+**SpringCloud Bus**：用来将分布式系5统的节点与轻量级消息系统链接起来的框架（与SpringCloud Config结合可以实现配置的分布式动态刷新），它整合了Java的事件处理机制和消息中间件的功能，SpringCloud Bus目前支持RabbitMQ和Kafka。
 
 ![image-20210116110023647](README.assets/image-20210116110023647.png)
 
@@ -8255,7 +8388,7 @@ curl http://localhost:3344/actuator/bus-refresh/config-client:3355 -X POST
 
 [官方地址](https://nacos.io/zh-cn/)、[Spring官网](https://spring-cloud-alibaba-group.github.io/github-pages/greenwich/spring-cloud-alibaba.html#_spring_cloud_alibaba_nacos_discovery)
 
-Nacos：Dynamic Naming and Configuration Service，前四个字母分别为Naming和Configuration的前两个字母，最后的s为Service。Nacos是一个更易于构建云原生应用的动态服务发现，配置管理和服务管理中心。**简言之，Nacos就是注册中心+配置中心的组合，即Nacos=Nacos = Eureka+Config+Bus**。
+Nacos：Dynamic Naming and Configuration Service，前四个字母分别为Naming和Configuration的前两个字母，最后的s为Service。Nacos是一个更易于构建云原生应用的动态服务发现，配置管理和服务管理中心。**简言之，Nacos就是注册中心+配置中心的组合，即Nacos= Eureka+Config+Bus**。
 
 #### 7.1.17.1 服务注册与发现
 
@@ -8632,7 +8765,7 @@ Sentinel的基本使用步骤：
      - 线程数：当调用该api的线程数达到阈值时，进行限流
    - 是否集群：未选中表示不需要集群
    - 流控模式：
-     - 直接：api达到限流条件时，直接限流（限流后，
+     - 直接：api达到限流条件时，直接限流
      - 关联：当关联的资源达到阈值时，就限流自己
      - 链路：只记录指定链路上的流量（指定资源从入口资源进来的流量，如果达到阈值，就进行限流），属于api级别的针对来源
    - 流控效果：
@@ -8667,7 +8800,7 @@ Sentinel的基本使用步骤：
 
    **系统规则一般较少使用，因为不符合web应用的初衷**。
 
-   系统保护规则是从应用级别的入口流量进行控制，从单台机器的load、CPU 使用率、平均RT、入口QPS和并发线程数等几个维度监控应用指标，让系统尽可能跑在最大吞吐量的同时保证系统整体的稳定性。
+   系统保护规则是从应用级别的入口流量进行控制，从单台机器的load、CPU使用率、平均RT、入口QPS和并发线程数等几个维度监控应用指标，让系统尽可能跑在最大吞吐量的同时保证系统整体的稳定性。
 
    系统保护规则是应用整体维度的，而不是资源维度的，并且**仅对入口流量生效**。入口流量指的是进入应用的流量（`EntryType.IN`），比如Web服务或 Dubbo服务端接收的请求，都属于入口流量。
 
@@ -9042,7 +9175,7 @@ CREATE TABLE t_account(
 
 #### 7.2.2.1 启动类配置
 
-**启动类使用注解**：@SpringBootApplication=@SpringBootConfiguration+@EnableAutoConfiguration+@ComponentScan
+**启动类使用注解**：@SpringBootApplication=@SpringBootConfiguration（标注当前类是配置类）+@EnableAutoConfiguration（启用自动配置功能）+@ComponentScan（组件扫描）
 
 - 默认扫描的包：启动类所在包及其下面的所有子包。
 - 手动配置扫描的包：
@@ -9160,6 +9293,8 @@ SpringBoot支持使用`spring-boot-devtools`（**本质是Restart**，并非真�
 1. 引入依赖，请查看官网。
 2. 项目或者页面修改以后，使用`Ctrl+F9`。
 
+另一种进行热重启的方法是使用springload。
+
 #### 7.2.5.1 热加载
 
 使用**JRebel**可以实现真正意义上的热更新（**本质是Reload**），但该软件是付费的， JRebel的安装和使用请查看[JRebel插件使用详解](https://blog.csdn.net/lianghecai52171314/article/details/105637251)。安装完JRebel并启用之后，当修改完java代码，可以通过`Ctrl+shift+F9`进行热更新（不需要重启，直接进行重载可以节省大量时间）。
@@ -9168,7 +9303,7 @@ SpringBoot支持使用`spring-boot-devtools`（**本质是Restart**，并非真�
 
 ### 7.2.6 配置文件（yml）
 
-**YAML（YAML Ain't Markup Language）用法如下**：
+**YAML（YAML Ain't Markup Language）用法如下**：.yml格式不支持@PropertySource注解导入配置
 
 1. key: value（kv之间有空格）
 2. 大小写敏感
@@ -11136,7 +11271,7 @@ http://localhost:8080/actuator/metrics/jvm.buffer.memory.used
 
 
 
-# 8 算法解题
+# 8 Algorithm
 
 队列：`offer：入队`、`poll：出队`。
 
@@ -12500,6 +12635,7 @@ LPUSH key value [value...]  # 将一个值或者多个值插入到链表的头�
 RPUSH key value [value...]  # 将一个值或者多个值插入到链表的尾部(右)
 LRANGE key start stop  # 截取哪几个value（LRANGE key 0 -1 截取链表的所有元素）（不会改变链表）
 LPOP key  # 移除链表的头部元素(第一个元素)
+BLPOP key timeout # LPOP的阻塞版本
 RPOP key  # 移除链表的尾部元素(最后一个元素)
 LINDEX key index  # 获取链表中索引位index(index从0开始)的元素
 LLEN key  # 返回链表的长度
@@ -12592,7 +12728,6 @@ GEOHASH key member1 member2  # 将二维的经纬度转换为一维的字符串�
 # GEO底层的实现原理其实就是ZSet，可以使用Zset命令来操作GEO
 ZRANGE key 0 -1  # 查看地图中的所有元素
 ZREM key member  # 移除地图中的某个元素
-
 
 # 使用场景：
 # 1. 朋友的定位
@@ -13077,7 +13212,8 @@ Redis是内存数据库，如果不将内存中的数据库状态保存到磁盘
    - RDB的数据不实时，同时使用两者时服务器重启也只会查找AOF文件，那要不要只使用AOF呢？建议不要，因为RDB更适合用于备份数据库（AOF在不断变化不好备份）、快速重启，而且不会有AOF可能潜在的Bug，留着作为一个万一的手段。
 
 5. 性能建议：
-   - 因为RDB文件只用作后备用途，建议只在Slave上持久化RDB文件，而且只要15分钟备份一次就够了，只需要save 900 1这条规则。
+   - 因为RDB文件只用作后备用途，建议只在**Slave上持久化RDB**文件，而且只要15分钟备份一次就够了，只需要save 900 1这条规则。
+     - 如果在Master上持久化RDB文件，当快照比较大时对性能影响非常大，会间断性暂停服务。
    - 如果使用AOF，好处是在最恶劣情况下也只会丢失不超过两秒的数据，启动脚本较简单只load自己的AOF文件就可以了，代价一是带来了持续的IO，二是AOF rewrite的最后将rewrite过程中产生的新数据写到新文件造成的阻塞几乎是不可避免的。只要硬盘许可，应该尽量减少AOF rewrite的频率。AOF重写的基础大小默认值64M太小了，可以设到5G以上，默认超过原大小100%时重写可以改到适当的数值。
    - 如果不使用AOF，仅靠master-slave-replication实现高可用也可以，能省掉一大笔IO，也减少了rewrite时带来的系统波动。代价是如果master/slave同时挂掉，会丢失十几分钟的数据，启动脚本也要比较两个master/slave中的RDB文件，载入较新的那个，微博就是这种架构。
 
@@ -13317,7 +13453,7 @@ info replication  # 查看当前库主从复制的信息
 
 ### 12.2.3 发布订阅模式
 
-**发布订阅模式（Publish/Subscribe）**：一个生产者+路由器+多个消费者（都会收到消息）（需要设置FANOUT类型的交换机）。
+**发布订阅模式（Publish/Subscribe）**：一个生产者+路由器+多个消费者（都会收到消息）（**需要设置FANOUT类型的交换机**）。
 
 - P：生产者，也就是要发送消息的程序，但是不再发送到队列中，而是发给X（交换机）。
 - C：消费者，消息的接收者，会一直等待消息到来。
@@ -13349,7 +13485,7 @@ info replication  # 查看当前库主从复制的信息
 
 ### 12.2.4 路由模式
 
-**路由模式（Routing）**：一个生产者+路由器+多个消费者（定向）（需要设置DIRECT类型的交换机）。
+**路由模式（Routing）**：一个生产者+路由器+多个消费者（定向）（**需要设置DIRECT类型的交换机**）。
 
 - P：生产者，向Exchange发送消息，发送消息时，会指定一个routingKey。
 - X： Exchange（交换机），接收生产者的消息，然后把消息递交给与routingKey完全匹配的队列。
@@ -13375,7 +13511,7 @@ info replication  # 查看当前库主从复制的信息
 
 ### 12.2.5 通配符模式
 
-**通配符模式（Topics）**：一个生产者+路由器+多个消费者（通配符）（需要设置TOPIC类型的交换机）。
+**通配符模式（Topics）**：一个生产者+路由器+多个消费者（通配符）（**需要设置TOPIC类型的交换机**）。
 
 - 通配符模式的routingKey一般都是由一个或多个单词组成，多个单词之间以"."分隔，例如：`item.insert`，通配符规则如下：
   - #：匹配一个或多个单词（例如：`item.#`能够匹配`item.insert.abc`或者`item.insert`）。
@@ -13447,10 +13583,10 @@ Producer-->RabbitMq broker-->Exchange-->Queue-->Consumer
 
 - 根据情况确认（AcknowledgeMode.AUTO）：
 - 手动确认（AcknowledgeMode.MANUAL）：均表示消息已经被处理。
-  - basic.ack：用于肯定确认，表示消息已经被正确处理。
-  - basic.nack：用于否定确认、表示消息没有被正确处理。
-    - `channel.basicNack(deliveryTag, false, true)`：第一个参数依然是当前消息到的数据的唯一id；第二个参数是指是否针对多条消息；如果是true，也就是说一次性针对当前通道的消息的tagID小于当前这条消息的，都拒绝确认；三个参数是指是否重新入列，也就是指不确认的消息是否重新丢回到队列里面去。**使用不确认后重新入列这个确认模式要谨慎，因为这里也可能因为考虑不周出现消息一直被重新丢回去的情况，导致积压。**
-  - basic.reject：用于否定确认，表示消息没有被正确处理（与basic.nack相比有一个限制：一次只能拒绝单条消息 ）。
+  - basicAck：用于肯定确认，表示消息已经被正确处理。
+  - basicNack：用于否定确认、表示消息没有被正确处理。
+    - `channel.basicNack(deliveryTag, false, true)`：第一个参数依然是当前消息的数据的唯一id；第二个参数是指是否针对多条消息；如果是true，也就是说一次性针对当前通道的消息的tagID小于当前这条消息的，都拒绝确认；第三个参数是指是否重新入列，也就是指不确认的消息是否重新丢回到队列里面去。**使用不确认后重新入列这个确认模式要谨慎，因为这里也可能因为考虑不周出现消息一直被重新丢回去的情况，导致积压。**
+  - basicReject：用于否定确认，表示消息没有被正确处理（与basicNack相比有一个限制：一次只能拒绝单条消息 ）。
     - `channel.basicReject(deliveryTag, true)`：拒绝消费当前消息，如果第二参数传入true，就是将数据重新丢回队列里，那么下次还会消费这消息。设置false，就是告诉服务器，我已经知道这条消息数据了，因为一些原因拒绝它，而且服务器也把这个消息丢掉就行， 下次不想再消费这条消息了。使用拒绝后重新入列这个确认模式要谨慎，因为一般都是出现异常的时候，catch异常再拒绝入列，选择是否重新入列。**如果使用不当会导致一些每次都被你重入列的消息一直消费-入列-消费-入列这样循环，会导致消息积压**。
 
 ### 12.4.3 消费端限流
@@ -15229,7 +15365,7 @@ public class SemaphoreDemo {
         }
     }
     ```
-    
+  
 - 传统版本2：Lock+condition.await+condition.singalAll
   
   ```java
@@ -15310,7 +15446,7 @@ public class SemaphoreDemo {
             }
         }
     }
-    ```
+  ```
   
 - 阻塞队列版本：
   
@@ -15391,7 +15527,7 @@ public class SemaphoreDemo {
             this.FLAG = false;
         }
     }
-    ```
+  ```
   
 - 线程池
 
@@ -15786,9 +15922,9 @@ public class DeadLockDemo {
 **哪些对象可以作为GC Roots的根**？
 
 1. 虚拟机栈（栈帧中的局部变量区，也称作局部变量表）中引用的对象。
-2. 方法区中的类静态属性引用的对象。
-3. 方法区中常量引用的对象。
-4. 本地方法栈中JNI（Native方法）引用的对象。
+2. 本地方法栈中JNI（Native方法）引用的对象。
+3. 方法区中的类静态属性引用的对象。
+4. 方法区中常量引用的对象。
 
 ## 16.44 JVM参数类型
 
@@ -15867,7 +16003,7 @@ public class HelloGC {
 
 - `-Xms`：等价于`-XX:InitialHeapSize`，初始大小堆内存，默认为物理内存1/64。
 - `-Xmx`：等价于`-XX:MaxHeapSize`，最大分配堆内存，默认为物理内存1/4。
-- `-XX:MaxDirectMemorySize`：最大本地直接内存大小，默认为物理内存的1/2（**存疑?**)。
+- `-XX:MaxDirectMemorySize`：最大本地直接内存大小，默认为0。
 - `-Xss`：等价于`-XX:ThreadStackSize`，设置单个线程栈的大小，一般默认为512k~1024k，window下依赖于虚拟内存的大小。
 - `-Xmn`：设置年轻代的大小，一般不需要调整(`年轻代:老年代=1:2`、年轻代中`Eden:S0:S1=8:1:1`）。
 - `-XX:MetaspaceSize`：`-Xms10m -Xmx10m -XX:MetaspaceSize=1024m -XX:+PrintFlagsFinal`。
@@ -16749,31 +16885,53 @@ redis内存打满后**会出现OOM**。
 **三种不同的删除策略如下**：若一个键是过期的，那么到了过期时间后键并不会立即就从内存中被删除。
 
 1. **定时删除**：为key设置过期时间，到期立即删除。
+   
    - 能保证内存中数据的最大新鲜度，但是对CPU不友好（会产生大量的性能消耗，同时也会影响数据的读取操作），用处理器性能换取存储时间（拿时间换空间）。
+   
 2. **惰性删除**：数据到达过期时间，不做处理；等下次访问该数据时，若未过期，返回数据，若发现已经过期，删除并返回不存在；若过期后一直未访问，过期数据会一直滞留在内存中，产生类似于"内存泄漏"的问题。
-   - 惰性删除对memory不友好，用存储空间换取CPU性能（拿空间换时间）。
-
+   
+- 惰性删除对memory不友好，用存储空间换取CPU性能（拿空间换时间）。
+  
 3. **定期删除**：是定时删除和惰性删除的折衷，每隔一段时间执行一次删除过期键（随机抽样）操作，难点在于如何确定删除操作执行的**时长**和**频率**来减少删除操作对CPU时间的影响。
+   
+   ```sql
+   -- 配置Redis定期删除的频率：每秒执行10次
+   hz 10
+   -- 执行过程如下
+   -- 1. 在 Redis 启动的时候读取配置文件 hz 的值，默认为 10
+   -- 2. 每秒执行 hz 次，
+   ----a. 每次执行会一次执行：serverCron()--> databaseCron()--> activeExpireCyle()三个函数
+   -- 3. activeExpireCyle() 对每个 expires[*]（过期库，*代表对应的数据库，一共0~15个，每一个过期库都会和 Redis 的数据库对应）进行逐一检查，每次执行250ms/hz，默认情况就是 25ms
+   -- 4. 对某个expires[*]检测时，随机挑选 N（默认 20）个key检查
+   ----a. 如果key超时，删除 key
+   ----b. 如果一轮中删除的 key 的数量>N*25%，循环该过程
+   ----c. 如果一轮中删除的 key 的数量<N*25%，检查下一个expires[*]
+   ```
+   
    - 定期**抽样**key，判断是否过期（过期就删除），存在"漏网之鱼"。
 
-**为了解决三种删除策略的弊端，redis引入了缓存淘汰策略**：
+总结：Redis采用的是**惰性删除+定期删除**两种策略结合使用。
+
+**为了解决三种删除策略的弊端，redis引入了缓存淘汰策略**：逐出算法（LRU/LFU/Random/TTL）
 
 redis缓存策略：在`redis.config`配置文件中设置`maxmemory-policy 淘汰策略`，默认的淘汰策略是`noeviction`，生产上一般使用`allkeys-lru`。总结：**两个维度**（过期键中筛选和所有键中筛选）以及**四个方面**（lru、lfu、random、ttl）
 
 1. noeviction：不会驱逐任何key（默认）。
 2. volatile-ttl：删除马上要过期的key。
-3. **allkeys-lru**：对所有key使用**LRU算法（Least Recently Used最近最少使用）**进行删除。
-4. volatile-lru；对所有设置了过期时间的key使用**LRU算法（Least Recently Used最近最少使用）**进行删除。
+3. **allkeys-lru**：对所有key使用**LRU算法（Least Recently Used最近最少使用，针对时间）**进行删除。
+4. volatile-lru；对所有设置了过期时间的key使用**LRU算法（Least Recently Used最近最少使用，针对时间）**进行删除。
 5. allkeys-random：对所有key随机删除。
 6. volatile-random：对所有设置了过期时间的key随机删除。
-7. allkeys-lfu：对所有key使用**LFU算法（Least Frequently Used最不经常使用）**进行删除。
-8. volatile-lfu：对所有设置了过期时间的key使用**LFU算法（Least Frequently Used最不经常使用）**进行删除。
+7. allkeys-lfu：对所有key使用**LFU算法（Least Frequently Used最不经常使用，针对访问次数）**进行删除。
+8. volatile-lfu：对所有设置了过期时间的key使用**LFU算法（Least Frequently Used最不经常使用，针对访问次数）**进行删除。
 
 配置方法：
 
 - 在`redis.config`配置文件中：设置`maxmemory-policy allkeys-lru`。
 - 在命令行中配置：`config set maxmemory-policy allkeys-lru`。
 - 用命令行查看：`config get maxmemory-policy`或`info memory`。
+
+> 参考博客文章：[雨雀-Redis删除/淘汰策略](https://www.yuque.com/nashihuakai/qlwgtg/kalb6f)、[Redis配置文件参数详解](https://www.cnblogs.com/caonw/p/11727417.html)
 
 ## 16.66 LRU算法的实现
 
@@ -17409,6 +17567,8 @@ Java内存模型：
 8. jvisualvm：可以打开Java VisualVM可视化分析工具
    - 可以在**线程**页签查看是否存在死锁
 
+> 参考博客文章：[jstat命令详解](https://www.cnblogs.com/sxdcgaq8080/p/11089841.html)
+
 ## 16.80 wait/notify/notifyAll/sleep/join/yield 
 
 线程通信的方法：
@@ -17426,6 +17586,25 @@ Java内存模型：
 4. 将所有可变的成员声明为final，这样只能对它们赋值一次（非必须）
 5. 通过构造器初始化所有成员，进行**深拷贝**
 
+## 16.82 竞争条件
+
+**竞态条件**：当两个线程竞争同一资源时，如果对资源的访问顺序敏感，就称存在竞态条件。导致竞态条件发生的代码区称作临界区。
+
+**临界区解决方法有三种**：使用synchronized、使用Lock显式锁实现、使用volatile+CAS
+
+实例：
+
+```java
+class Counter { 
+    protected long count = 0; 
+    public void add(long value) { 
+        this.count = this.count + value; 
+    }
+}
+```
+
+观察线程A和B交错执行会发生什么，两个线程分别加了2和3到count变量上，两个线程执行结束后count变量的值应该等于5。然而由于两个线程是交叉执行的，两个线程从内存中读出的初始值都是0。然后各自加了2和3，并分别写回内存。最终的值并不是期望的5，而是最后写回内存的那个线程的值，上面例子中最后写回内存的是线程A，但实际中也可能是线程B。如果没有采用合适的同步机制，线程间add()方法就是一个临界区，它会产生竞态条件。
+
 ## 16.82 代理模式/静态代理/动态代理/Cglib代理
 
 
@@ -17436,7 +17615,455 @@ Java内存模型：
 
 
 
-> 参考博客文章：[jstat命令详解](https://www.cnblogs.com/sxdcgaq8080/p/11089841.html)
+
+
+## 16.83 JDK/JRE/JVM之间的关系
+
+JDK/JRE/JVM三者之间的关系如下：
+
+![image-20210131172951638](README.assets/image-20210131172951638.png)
+
+## 16.84 关于ThreadLocal
+
+
+
+
+
+
+
+## 16.85 B-Tree/B+Tree/聚集索引/辅助索引/磁盘块/页块
+
+
+
+> 参考博客文章：[BTree和B+Tree详解](https://blog.csdn.net/hao65103940/article/details/89032538)、
+
+
+
+## 16.86 数据库的三大范式
+
+数据库的三大范式：不可拆分、消除依赖、消除依赖
+
+1. 第一范式：确保每列保持原子性，即列不可再分（如**中国北京市**应该分割成**中国+北京市**两列）
+
+   ![image-20210203092605859](README.assets/image-20210203092605859.png)
+
+2. 第二范式：确保表中的每列都和主键相关
+
+   ![image-20210203092745295](README.assets/image-20210203092745295.png)
+
+3. 第三范式：确保每列都和主键列**直接**相关，不存在对非主键列的传递依赖
+
+   ![image-20210203093019182](README.assets/image-20210203093019182.png)
+
+## 16.87 MySQL如何保证一致性、原子性、持久性
+
+MySQL如何保证一致性、原子性、持久性？
+
+1. 保证一致性：数据库+应用层
+   - 数据库：一致性是目的，原子性、隔离性、持久性是手段
+   - 应用层：程序逻辑
+2. 保证原子性：利用Innodb的undo log日志（类似于Seata的undo_log表，查询前镜像）
+3. 保证持久性：利用Innodb的redo log日志（类似于Seata的undo_log表，查询后镜像）
+
+> 参考博客文章：**[详细分析MySQL事务日志(redo log和undo log)](https://www.cnblogs.com/f-ck-need-u/archive/2018/05/08/9010872.html)**、[MySQL如何保证一致性、原子性、持久性](https://cloud.tencent.com/developer/article/1600883)
+
+## 16.88 写SQL的几点注意事项
+
+写SQL的几点注意事项：
+
+1. 查询语句中不要使用select *。
+2. 尽量减少子查询，使用关联查询（left join、right join、inner join）替代。
+   - 利用自联结（join，即inner join）可以解决很多排序、去重、筛选问题。
+3. 减少使用IN或者NOT IN，使用exists，not exists或者关联查询语句替代（exists的条件就像一个bool条件，当能返回结果集则为true，不能返回结果集则为 false）。
+   - MySQL中的in语句是把外表和内表作hash连接，而exists语句是对外表作loop循环，每次loop循环再对内表进行查询。一直大家都认为exists比in语句的效率要高，这种说法其实是不准确的。需要根据环境区分使用：
+     - 如果查询的两个表大小相当，那么用in和exists差别不大
+     - 如果两个表中一个较小，一个是大表，则子查询表大的用exists，子查询表小的用in
+4. or的查询尽量用union或者union all代替(在确认没有重复数据或者不用剔除重复数据时，union all会更好)。
+5. 应尽量避免在where子句中使用!=或<>操作符，否则将引擎放弃使用索引而进行全表扫描。
+6. 应尽量避免在where子句中对字段进行null值判断，否则将导致引擎放弃使用索引而进行全表扫描，如：select id from t where num
+   is null可以在num上设置默认值0，确保表中num列没有null值，然后这样查询：select id from t where num=0。
+7. 禁止不带任何限制数据范围条件的查询语句（例：当用户在查询订单历史的时候，我们可以控制在一个月的范围内）。
+8. 合理选择使用枚举，如："省份"、"性别"最好使用ENUM类型存储。
+9. 不要忘记引号，会因隐式类型转换导致索引失效，导致查询效率降低；另一方面，索引失效又会导致行锁升级为表锁。
+
+> 参考博客：**[Mysql中用exists代替in](https://www.cnblogs.com/xianlei/p/8862313.html)**
+
+## 16.89 drop/delete/truncate
+
+SQL中drop/delete/truncate的区别：
+
+- 是否删除表的结构：delete和truncate只删除表的数据而不删除表的结构，drop会删除表的数据和结构
+- 删除速度：drop> truncate >delete
+- 是否与事务相关：
+  - delete语句是DML，这个操作会放到Rollback Segement中，事务提交之后才生效；若有触发器，则会被触发。
+  - truncate、drop是DDL，这个操作立即生效，原数据不放到Rollback Segment中，不能回滚；操作不能触发触发器。
+
+## 16.90 MySQL的默认隔离级别？MySQL如何解决幻读问题？
+
+MySQL的默认隔离级别：Repeatable-Read，可重复度
+
+MySQL如何解决幻读问题：next-key锁
+
+- next-key锁包含两部分：记录锁（行锁）+间隙锁
+  - 记录锁，即行锁：加在索引上的锁（若索引失效会导致行锁升级为表锁）
+  - 间隙锁：加在索引之间
+
+> 参考博客文章：[MySQL是如何解决幻读的](https://www.cnblogs.com/wudanyang/p/10655180.html)
+
+## 16.100 MySQL中如何优化大表
+
+**优化大表的思路**：SQL语句及索引的优化、数据库表结构的优化、系统配置的优化、硬件的优化。
+
+MySQL中表的记录在500万条以下时，性能很好，当记录超过500万条时，性能会随着记录的增加急剧下降。优化大表的措施：
+
+1. 读写分离：主库负责写，从库负责读。
+2. 垂直拆分（分表）：将一个表拆分为多个表
+   - 优点：垂直拆分可以使列数据变小，在查询时减少读取的磁盘块数，减少I/O次数。
+   - 缺点：主键会出现冗余，导致应用层涉及到较多的join查询。
+
+3. 水平拆分（分布式）：保持数据表结构不变，通过某种策略存储**数据分片**（如限制单表的最大记录为200万条），这样每一片数据分散到不同的表或库中，达到了**分布式**的目的。
+   - 优点：为了支持高并发，水平拆分时，需要进行分库（表不要存放在一台机器上）
+   - 缺点：带来分布式事务的解决难题
+
+数据库分片（水平拆分/垂直拆分，即分库分表）的两种常见解决方案：
+
+1. 客户端代理：通过修改或封装JDBC层来实现，如阿里巴巴的TDDL（Taobao Distributed Data Layer）
+2. 中间件代理：在应用和数据中间加了一个代理层，分片逻辑统一维护在中间件服务中，如MyCat、Atlas
+
+## 16.101 视图/存储过程/函数/触发器
+
+视图：逻辑上存在、物理上不存在的表，对视图的增删改不会隐藏基本表的数据
+
+存储过程：类似于批处理脚本，可以返回记录集
+
+函数：自定义函数，可返回值
+
+触发器：解决自动填充问题、自定义哈希索引算法。
+
+## 16.102 数据库并发策略/锁种类
+
+数据库并发处理策略：
+
+1. 乐观锁：典型代表是Innodb引擎，行锁
+
+   ```sql
+   -- oracle中使用for update显示添加行锁
+   INSERT|UPDATE|DELETE|SELECT ... FOR UPDATE
+   ```
+
+2. 悲观锁：典型代表是MyISAM，表锁（并发环境下要弃用）
+
+3. 时间戳：不加锁，通过时间戳来控制并发出现的问题
+
+MySQL中锁的种类：
+
+1. 表锁
+2. 页锁：很可能会导致死锁
+3. 行锁
+
+## 16.103 交叉连接/内连接/外连接
+
+交叉连接：不带任何条件（不带条件的自连接属于交叉连接）
+
+内连接：只有条件的交叉连接（带条件的自连接属于内连接）
+
+外连接：包括左外连接、右外连接
+
+## 16.104 DDL/DML/DCL/DQL
+
+DDL：数据库定义（增、删、改），create table、drop table、alter table、craete index、drop index
+
+DML：数据库操纵（增、删、改），insert、delete、update
+
+DCL：数据库控制，grant、rollback、commit
+
+DQL：数据库查询，select、from、where、group by、order by
+
+## 16.105 Spring Bean的生命周期
+
+Spring中Bean的生命周期如下：
+
+1. 
+
+
+
+
+
+
+
+
+
+## 16.106 如何使Spring中单例Bean线程安全
+
+Spring中单例Bean是线程安全吗？
+
+Spring中单例Bean并非是线程安全的，若需要使单例Bean在多线程下安全，有两种方法：
+
+1. 可以将Bean的作用域设置为prototype
+2. 使用ThreadLocal来解决多线程下的变量的安全性
+
+## 16.107 怎么重载的Spring Bean的生命周期方法
+
+重载Spring Bean的生命周期方法：
+
+- @PostConstruct：相当于XML配置文件中init-method指定初始化方法。
+- @PreDestroy：相当于XML配置文件中destroy-method指定初始化方法。
+
+## 16.108 切面/通知/切点/连接点/切点表达式
+
+Spring AOP的总结：
+
+1. 主要概念：
+
+   - 切面（@Aspect）：切面是通知和切点的集合，通知（**在何时，完成什么工作**）和切点（**在何处**）共同定义了切面的全部功能，**即切面中定义在何时、何处完成什么工作**。
+   - 通知（@Around/@Before/@After/@AfterReturning/@AfterThrowing）：切面的工作被称为通知。
+   - 切点（@Pointcut(""切点表达式)）：如果说通知定义了"**干什么**"和"**何时**"。那么切点就定义了"**何处**"。切点会匹配通知所要织入的一个或者多个连接点。
+   - 连接点：程序中可以插入切面的地方（切点必然属于连接点，连接点只有当被置入时才是切点）。
+
+   ```java
+   // Spring AOP使用示例
+   @Component
+   @Aspect
+   public class SecurityAspect {
+       @Autowired
+       private AuthService authService;
+       
+       //匹配com.aop.service.impl.ProductServiceImpl类下的方法名以delete开头、参数类型为Long的public方法
+       @Pointcut("execution(public * com.aop.service.impl.ProductServiceImpl.delete*(Long))")
+       public void matchCondition() {}
+   
+       //使用matchCondition这个切入点进行增强
+       @Before("matchCondition()")
+       public void before() {
+           System.out.println("before 前置通知......");
+           authService.checkAccess();
+       }
+   }
+   ```
+
+2. 其他概念：
+
+   - 关注点：应用中一个模块的行为，一个关注点可能会被定义成一个我们想实现的一个功能。
+
+   - 横切关注点：是一个关注点，此关注点是整个应用多个模块都会使用的功能，并影响整个应用（如日志，安全和数据传输）。
+
+   - 引入：允许我们向现有的类中添加方法或属性。
+
+   - 织入：将切面应用到目标对象来创建代理对象的过程（织入可以在**编译时**，**加载时**，或**运行时**完成）。
+
+3. 切点表达式：
+
+   - execution表达式：
+
+     ```java
+     // execution表达式的语法如下：
+     execution(modifiers-pattern? ret-type-pattern declaring-type-pattern? name-pattern(param-pattern) throws-pattern?)
+     
+     // ?：表示该项可省略,否则代表不可省略
+     // *通配符：该通配符主要用于匹配单个单词，或者是以某个词为前缀或后缀的单词
+     // ..通配符：该通配符表示0个或多个项，主要用于declaring-type-pattern和param-pattern中，如果用于declaring-type-pattern中，则表示匹配当前包及其子包，如果用于param-pattern中，则表示匹配0个或多个参数
+         
+     // modifiers-pattern: 方法的可见性，如public,protected，可省略
+     // ret-type-pattern：方法的返回值类型，如int,void等
+     // declaring-type-pattern：方法所在类的全路径名，如com.spring.Aspect，可省略
+     // name-pattern：方法名类型，如buisinessService()
+     // param-pattern：方法的参数类型，如java.lang.String
+     // throws-pattern：方法抛出的异常类型，如java.lang.Exception，可省略
+         
+     // 示例
+     // 表示匹配返回值为任意类型，在com.spring.service.BusinessObject类中，并且参数个数为零的方法
+     execution(* com.spring.service.BusinessObject.*())
+     // 表示匹配返回值为任意类型，在com.spring.service包中，以Business为前缀的类，并且是类中参数个数为零方法
+     execution(* com.spring.service.Business*.*())
+     // 表示匹配返回值为任意类型，在com.spring.service包及其子包下的任意类的名称为businessService的方法，而且该方法不能有任何参数
+     execution(* com.spring.service..*.businessService())
+     // 表示匹配返回值为任意类型，在com.spring.service.BusinessObject包下的businessService方法，且方法的第一个参数是String类型
+     execution(* com.spring.service.BusinessObject.businessService(java.lang.String,..))
+     ```
+
+   - within表达式（匹配包类型）
+
+     ```java
+     //匹配ProductServiceImpl类里面的所有方法
+     @Pointcut("within(com.aop.service.impl.ProductServiceImpl)")
+     public void matchType() {}
+     
+     //匹配com.aop.service包及其子包下所有类的方法
+     @Pointcut("within(com.aop.service..*)")
+     public void matchPackage() {}
+     ```
+
+   - this/target/bean表达式（匹配对象类型）
+
+     ```java
+     //匹配AOP对象的目标对象为指定类型的方法，即ProductServiceImpl的aop代理对象的方法
+     @Pointcut("this(com.aop.service.impl.ProductServiceImpl)")
+     public void matchThis() {}
+     
+     //匹配实现ProductService接口的目标对象
+     @Pointcut("target(com.aop.service.ProductService)")
+     public void matchTarget() {}
+     
+     //匹配所有以Service结尾的bean里面的方法
+     @Pointcut("bean(*Service)")
+     public void matchBean() {}
+     ```
+
+   - args表达式（匹配参数）
+
+     ```java
+     //匹配第一个参数为Long类型的方法
+     @Pointcut("args(Long, ..) ")
+     public void matchArgs() {}
+     ```
+
+   - @annotation/@within/@target/@args表达式（匹配注解）
+
+     ```java
+     //匹配标注有AdminOnly注解的方法
+     @Pointcut("@annotation(com.aop.annotation.AdminOnly)")
+     public void matchAnno() {}
+     
+     //匹配标注有Beta的类底下的方法，要求annotation的Retention级别为CLASS
+     @Pointcut("@within(com.google.common.annotations.Beta)")
+     public void matchWithin() {}
+     
+     //匹配标注有Repository的类底下的方法，要求annotation的Retention级别为RUNTIME
+     @Pointcut("@target(org.springframework.stereotype.Repository)")
+     public void matchTarget() {}
+     
+     //匹配传入的参数类标注有Repository注解的方法
+     @Pointcut("@args(org.springframework.stereotype.Repository)")
+     public void matchArgs() {}
+     ```
+
+4. Spring AOP中的代理
+
+   - Spring AOP：使用@EnableAspectJAutoProxy启动，proxyTargetClass属性为true，则强制选用Cglib代理；默认为false，表示选用JDK代理。
+
+     - **Sping5.x中**：
+       - 当被代理的对象实现了接口，默认会采用JDK动态代理（使用Proxy和InvocationHandler两个类）
+       - 当被代理的对象未实现接口，则会切换为使用Cglib代理
+     - **Spring Boot2.x中**：
+       - 为了解决使用JDK动态代理可能导致的类型转化异常，默认使用Cglib代理
+       - 若需要默认使用JDK动态代理，可以通过设置`spring.aop.proxy-target-class=false`
+
+     - Cglib代理（**通过字节码技术底层继承被代理类来实现，若被代理类使用final修饰，则代理会失败**）和JDK代理（**反射技术**）的效率比较
+
+       - Cglib代理创建的代理对象在实际运行时**性能**要比JDK代理高
+       - Cglib代理在创建代理对象时所**花费时间**比JDK代理多
+       - 选用：对于Singleton的代理对象或者具有实例池的代理，因为无需频繁的创建代理对象，所以比较适合采用Cglib动态代理，反之则比较适用JDK动态代理。
+
+     - Spring中的自动代理类
+
+       ![image-20210204180635360](README.assets/image-20210204180635360.png)
+
+     ```java
+     // Spring AOP中的DefaultAopProxyFactory源码
+     public class DefaultAopProxyFactory implements AopProxyFactory, Serializable {
+     	@Override
+     	public AopProxy createAopProxy(AdvisedSupport config) throws AopConfigException {
+     		// 判断配置是否有效，配置中有代理类信息，判断有没有用户自己定义的解析接口
+     		if (config.isOptimize() || config.isProxyTargetClass() || hasNoUserSuppliedProxyInterfaces(config)) {
+     			Class<?> targetClass = config.getTargetClass();
+     			if (targetClass == null) {
+     				throw new AopConfigException("TargetSource cannot determine target class: " +
+     						"Either an interface or a target is required for proxy creation.");
+     			}
+     			// 如果被代理的对象是接口或者Proxy的类，返回默认的JDK动态代理对象
+     			if (targetClass.isInterface() || Proxy.isProxyClass(targetClass)) {
+     				return new JdkDynamicAopProxy(config);
+     			}
+     			// 如果该对象没有实现接口就使用Cglib就行代理
+     			return new ObjenesisCglibAopProxy(config);
+     		}
+     		else {
+     			return new JdkDynamicAopProxy(config);
+     		}
+     	}
+         
+     	private boolean hasNoUserSuppliedProxyInterfaces(AdvisedSupport config) {
+     		Class<?>[] ifcs = config.getProxiedInterfaces();
+     		return (ifcs.length == 0 || (ifcs.length == 1 && SpringProxy.class.isAssignableFrom(ifcs[0])));
+     	}
+     }
+     ```
+
+   - Spring + AspectJ：使用静态代理，在编译时增强，需要特定的编译器。
+
+     - 下载[aspectj-1.9.6.jar](https://www.eclipse.org/downloads/download.php)，安装aspectj
+     - 在IDEA中配置本地的aspectj的jar包，将IDEA的编译模式设置为Ajc
+     - mavon中引入aspectjweaver和aspectjrt的坐标
+
+> 参考博客文章：[Spring AOP用法详解](https://www.cnblogs.com/liantdev/p/10125284.html)、**[Spring AOP切点表达式用法总结](https://www.cnblogs.com/zhangxufeng/p/9160869.html)**、[Spring AOP](https://blog.csdn.net/qq_41981107/article/details/87920537)、[比较分析Spring AOP和AspectJ之间的差别](https://blog.csdn.net/a128953ad/article/details/50509437)、[Spring和SpringBoot中AOP的代理模式](https://blog.csdn.net/weixin_41325595/article/details/103576207)、[从@EnableAspectJAutoProxy分析Spring AOP原理](https://blog.csdn.net/zhoushimiao1990/article/details/89853368)、[Spring AOP中强制使用CGLIB代理](https://blog.csdn.net/dushenzhi/article/details/52663310)、**[Spring AOP中的JDK和CGLib动态代理哪个效率更高？](https://blog.csdn.net/xlgen157387/article/details/82497594)**、[AspectJ静态代理的使用](https://blog.csdn.net/yellow__star/article/details/102510545)
+
+## 16.109 SpringBoot有哪几种读取配置的方式
+
+SpringBoot有如下几种读取配置的方式：@PropertySource、@Value、@Environment、@ConfigurationProperties
+
+## 16.110 Eureka和Zookeeper用作服务注册与发现的区别
+
+Eureka和Zookeeper用作服务注册与发现的区别：
+
+- **实现思想不同**
+  - Zookeeper采用了CP（一致性和分区容错性）机制：当master节点因网络故障与其他节点失去联系时，剩余节点会重新选择leader。
+  - Eureka采用了AP（高可用和分区容错性）机制：可以容忍注册中心返回的是几分钟之前的信息，但不能容忍直接宕掉。
+
+- **节点类型不同**
+  - Zookeeper节点分为Leader和Follower，当Leader挂掉后，需要重新选举Leader。
+  - Eureka各个节点平等，几个节点挂掉后，剩余的节点仍然正常提供注册和查询服务。
+
+- **处理分区问题的方式不同**
+  - Zookeeper采取**选举机制**（过半存活原则）解决分区问题：选取leader的时间过长（30s~120s），选举期间Zookeeper不可用，会导致服务瘫痪。
+  - Eureka采取**自我保护机制**解决分区问题：若在15分钟内超过85%的节点没有正常的心跳，那么Eureka就认为客户端与注册中心发生了故障，不再从注册列表中移除因为长时间没有收到心跳而应该过期的服务。
+
+- 类型不同
+  - Zookeeper只是一个进程。
+  - Eureka本质是一个工程。
+
+## 16.111 服务熔断和降级的区别
+
+**服务雪崩**：服务A调用服务B，由于服务B的响应超时（可能是处理时间过长，也可能是网络故障）导致大量请求堆积到服务A上，导致服务A也不可用，这种现象称为雪崩。
+
+**服务熔断**：服务A调用服务B，当服务B在一定时间内超时的次数达到一定比例时，会导致服务B不可用。
+
+- 服熔断的三种状态机：
+  - Closed：熔断器关闭状态，调用失败次数积累，到了阈值（或一定比例）则启动熔断机制。
+  - Open：熔断器打开状态，此时对下游的调用都内部直接返回错误，不走网络，但设计了一个时钟选项，默认的时钟达到了一定时间（这个时间一般设置成平均故障处理时间，也就是MTTR），到了这个时间，进入半熔断状态。
+  - Half-Open：半熔断状态，允许定量的服务请求，如果调用都成功（或一定比例）则认为恢复了，关闭熔断器，否则认为还没好，又回到熔断器打开状态。
+
+**服务降级**：服务A调用服务B，由于服务B的调用负荷条件满足时（如QPS过高），会对服务B进行降级（调用其他方法或返回默认值）。
+
+**服务熔断和服务降级的比较**：
+
+- 相同点
+  - 目的一致：都是从可用性可靠性着想，为防止系统的整体缓慢甚至崩溃，采用的技术手段。
+  - 最终表现类似：对于两者来说，最终让用户体验到的是某些功能暂时不可达或不可用。
+  - 粒度均是服务级别：当然，业界也有不少更细粒度的做法，比如做到数据持久层（允许查询，不允许增删改）。
+  - 自治性要求很高：熔断模式一般都是服务基于策略的自动触发，降级虽说可人工干预，但在微服务架构下，完全靠人显然不可能，开关预置、配置中心都是必要手段。
+- 不同点
+  - 触发原因不同：服务熔断一般是某个服务（下游服务）故障引起，而服务降级一般是从整体负荷考虑。
+  - 管理目标层次不同：熔断其实是一个框架级的处理，每个微服务都需要（无层级之分），而降级一般需要对业务有层级之分（比如降级一般是从最外围服务开始）。
+
+## 16.112 RPC和REST调用的区别
+
+RPC和REST调用的区别：
+
+- 实现原理不同：RPC（面向方法）基于TCP协议；REST（面向资源）基于HTTP协议。RPC的服务提供方和调用方之间依赖性强；而REST是轻量级的接口，服务的提供和调用不存在代码之间的耦合。
+
+- 使用场景不同：
+  - RPC适用于内网服务调用，对外提供服务请走REST
+  - IO密集的服务调用用RPC（长连接），低频服务用REST（短连接）
+
+> 参考博客文章：[服务之间的调用之RPC/Restful深入理解](https://blog.csdn.net/u014590757/article/details/80233901)、[SpringCloud相关](https://yanglinwei.blog.csdn.net/article/details/106408086)
+
+
+
+
+
+
+
+
 
 # 17 Undertow+JMeter压力测试
 

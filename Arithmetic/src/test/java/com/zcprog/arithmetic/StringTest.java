@@ -38,4 +38,10 @@ public class StringTest {
         System.out.println(Integer.MAX_VALUE / 2);  // 1073741823
         System.out.println(Integer.MIN_VALUE / 2); // -1073741824
     }
+
+    @Test
+    public void test5() {
+        System.out.println(Arrays.toString(" ".split("\\s+"))); // []
+        System.out.println(" ".split("\\s+").length); // 0
+    }
 }

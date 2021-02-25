@@ -12,13 +12,14 @@ import java.util.List;
  */
 public class LeetCode_0216_CombinationSum_iii {
     public static void main(String[] args) {
-        int k = 3;
-        int n = 9;
+        int k = 9;
+        int n = 45;
         System.out.println(combinationSum3(k, n));
     }
 
     public static List<List<Integer>> combinationSum3(int k, int n) {
         List<List<Integer>> ans = new ArrayList<>();
+        if (k > 9 || n < 6) return ans;
         List<Integer> list = new ArrayList<>();
         dfs(n, k, 1, ans, list);
         return ans;
@@ -30,7 +31,7 @@ public class LeetCode_0216_CombinationSum_iii {
             return;
         }
         if (n < 0) return;
-        for (int i = m; i < 9; i++) {
+        for (int i = m; i <= 9; i++) {
             list.add(i);
             dfs(n - i, k, i + 1, ans, list);
             list.remove(list.size() - 1);

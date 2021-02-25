@@ -21,7 +21,6 @@ public class LeetCode_0077_Combinations {
         List<List<Integer>> ans = new ArrayList<>();
         List<Integer> list = new ArrayList<>();
         if (n <= 0 || k <= 0 || k > n) return ans;
-        int[] nums = new int[n];
         dfs(n, ans, list, 1, k);
         return ans;
     }

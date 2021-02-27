@@ -1,5 +1,8 @@
 package com.zcprog.hw;
 
+import java.util.Arrays;
+import java.util.Comparator;
+
 /**
  * @Description 最大数(比较法)
  * @Author zhaochao
@@ -7,9 +10,6 @@ package com.zcprog.hw;
  * @Email zcprog@foxmail.com
  * @Version V1.0
  */
-
-import java.util.Arrays;
-import java.util.Comparator;
 
 /**
  * 给定一组非负整数 nums，重新排列它们每个数字的顺序（每个数字不可拆分）使之组成一个最大的整数。

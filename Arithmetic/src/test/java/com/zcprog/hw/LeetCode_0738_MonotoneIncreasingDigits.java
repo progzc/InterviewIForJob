@@ -11,7 +11,8 @@ public class LeetCode_0738_MonotoneIncreasingDigits {
     public static void main(String[] args) {
 //        int N = 10;
 //        int N = 1234;
-        int N = 332;
+//        int N = 332;
+        int N = 23329;
         System.out.println(monotoneIncreasingDigits(N));
     }
 

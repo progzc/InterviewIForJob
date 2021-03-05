@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.LongAdder;
  * @Version V1.0
  */
 public class LongAdderTest {
-
     int num = 0;
     AtomicInteger atomicInteger = new AtomicInteger();
     LongAdder longAdder = new LongAdder();

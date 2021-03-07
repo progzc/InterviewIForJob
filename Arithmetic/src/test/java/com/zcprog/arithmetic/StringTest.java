@@ -56,4 +56,14 @@ public class StringTest {
         System.out.println(str_1 == str_3); // false
         System.out.println(str_1.intern() == str_3); // true
     }
+
+    @Test
+    public void test7() {
+        StringBuilder sb = new StringBuilder("abcd"); // 构造器super(str.length() + 16);
+        // sb的长度并非为数组初始化的长度
+        // 获取sb的长度的时间复杂度为O(1)
+        // 按照2n+2进行扩容: newCapacity = (value.length << 1) + 2;
+        System.out.println(sb.length());
+    }
+
 }

@@ -44,4 +44,16 @@ public class StringTest {
         System.out.println(Arrays.toString(" ".split("\\s+"))); // []
         System.out.println(" ".split("\\s+").length); // 0
     }
+
+    @Test
+    public void test6() {
+        String str_1 = new String("ab");
+        String str_2 = new String("ab");
+        String str_3 = "ab";
+        System.out.println(str_1 == str_2); // false
+        System.out.println(str_1 == str_2.intern()); // false
+        System.out.println(str_1.intern() == str_2.intern()); // true
+        System.out.println(str_1 == str_3); // false
+        System.out.println(str_1.intern() == str_3); // true
+    }
 }

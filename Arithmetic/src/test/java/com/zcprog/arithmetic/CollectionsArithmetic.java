@@ -93,5 +93,33 @@ public class CollectionsArithmetic {
         System.out.println(list); // [3, 4, 5, 6, 7, 8, 9, 1, 2]
     }
 
+    @Test
+    public void min() {
+        // 最小值
+        String min = Collections.min(Arrays.asList("5", "2", "1", "3"));
+        System.out.println(min); // 1
+    }
 
+    @Test
+    public void max() {
+        // 最大值
+        String max = Collections.max(Arrays.asList("5", "2", "1", "3"));
+        System.out.println(max); // 5
+    }
+
+    @Test
+    public void replace() {
+        List<String> list = Arrays.asList("7", "4", "8", "8");
+        // 元素替换
+        Collections.replaceAll(list, "8", "9");
+        System.out.println(list); // [7, 4, 9, 9]
+    }
+
+    @Test
+    public void subOfIndex() {
+        List<String> list = Arrays.asList("7", "4", "8", "3", "9");
+        // 连续集合位置判断
+        int idx = Collections.indexOfSubList(list, Arrays.asList("8", "3"));
+        System.out.println(idx);
+    }
 }

@@ -20,6 +20,7 @@ public class Exchange_BubbleSort {
      * 冒泡排序法
      * 时间复杂度：O(n^2)
      * 空间复杂度：O(1)
+     * 稳定
      */
     public static void sort(int[] nums) {
         int len = nums.length;

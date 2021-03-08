@@ -66,4 +66,27 @@ public class StringTest {
         System.out.println(sb.length());
     }
 
+    @Test
+    public void test8() {
+        String s = new String("1");  // 在常量池中已经有了
+        s.intern(); // 将该对象放入到常量池。但是调用此方法没有太多的区别，因为已经存在了1
+        String s2 = "1";
+        System.out.println(s == s2); // false
+
+        String s5 = new String("2") + new String("2");
+        s5 = s5.intern();
+        String s6 = "22";
+        System.out.println(s5 == s6); // true
+
+        //-----------------------------------------------------------------------------
+        String s3 = new String("b") + new String("b");
+        s3.intern();
+        String s4 = "bb";
+        System.out.println(s3 == s4); // true
+
+        String s7 = new String("c") + new String("c");
+        String s8 = "cc";  // 在常量池中生成的字符串
+        s7.intern();  // 然后s7就会从常量池中找，发现有了，就什么事情都不做
+        System.out.println(s7 == s8); // false
+    }
 }

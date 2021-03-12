@@ -45,8 +45,10 @@ public class LockUpdate {
             }
         }).start();
     }
+
+    static class User {
+
+    }
 }
 
-class User {
 
-}

@@ -52,25 +52,27 @@ public class ZsetTest {
             System.out.println(ans.pollFirst());
         }
     }
+
+    static class Data {
+        public int score;
+        public String key;
+        public String value;
+
+        public Data(int score, String key, String value) {
+            this.score = score;
+            this.key = key;
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return "Data{" +
+                    "score=" + score +
+                    ", key='" + key + '\'' +
+                    ", value='" + value + '\'' +
+                    '}';
+        }
+    }
 }
 
-class Data {
-    public int score;
-    public String key;
-    public String value;
 
-    public Data(int score, String key, String value) {
-        this.score = score;
-        this.key = key;
-        this.value = value;
-    }
-
-    @Override
-    public String toString() {
-        return "Data{" +
-                "score=" + score +
-                ", key='" + key + '\'' +
-                ", value='" + value + '\'' +
-                '}';
-    }
-}

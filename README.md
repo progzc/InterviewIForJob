@@ -17271,6 +17271,8 @@ public class Out2 {
 }
 ```
 
+> 参考博客文章：[静态内部类的加载时机](https://www.cnblogs.com/zouxiangzhongyan/p/10762540.html)
+
 ## 16.72 实现深拷贝的两种方式（原型模式）
 
 方式一：所有嵌套对象均需实现`java.lang.Cloneable`接口，并重写`java.lang.Object#clone`方法。
@@ -18140,7 +18142,11 @@ RPC和REST调用的区别：
 
   ![image-20210223191113770](README.assets/image-20210223191113770.png)
 
+> 参考博客文章：[十大经典排序算法](https://www.cnblogs.com/onepixel/articles/7674659.html#!comments)
+
 - Redis底层的数据结构
+
+- 怎么设计一个zset数据结构？
 
   
 
@@ -18163,6 +18169,107 @@ RPC和REST调用的区别：
 
 
 > 参考博客文章：[Java的Arrays.sort()方法到底用的是什么排序算法](https://www.cnblogs.com/baichunyu/p/11935995.html)、[Object类的hashcode()方法源码分析](https://blog.csdn.net/changrj6/article/details/100043822)
+
+- MySQL中ACID事务特性的实现原理？
+  - 通过原子性/隔离性/持久性+业务代码逻辑**保证一致性**。
+  - 利用InnoDB的undo_log回滚日志来**保证原子性**。
+  - 利用InnoDB的redo_log（体积小，刷盘快；在末尾追加，属于顺序IO）+binlog日志来**保证持久性**。
+  - 利用InnoDB的锁（行锁+间隙锁）+MVCC（多版本并发控制）**保证隔离性**。
+
+> 参考博客文章：**[MySQL中事务ACID实现原理](https://www.cnblogs.com/rjzheng/p/10841031.html)**
+
+- MySQL的死锁问题？
+
+  - 关键的配置：
+    - innodb_lock_wait_timeout
+    - wait-for graph算法
+
+  - 行锁：共享锁、排他锁
+
+    - 共享锁（读锁）：lock in share mode
+
+    - 排他锁（写锁）：for update
+
+      ```sql
+      select * from t for update 会等待行锁释放之后，返回查询结果。
+      select * from t for update nowait 不等待行锁释放，提示锁冲突，不返回结果
+      select * from t for update wait 5 等待5秒，若行锁仍未释放，则提示锁冲突，不返回结果
+      select * from t for update skip locked 查询返回查询结果，但忽略有行锁的记录
+      ```
+
+  -  行锁的分类：
+    - Record lock：索引记录锁，只锁对应的索引中的某个索引记录。
+    - Gap lock：间隙锁，只锁对应的索引至某个索引项记录之前的间隙，InnoDB使用间隙锁在Repeatable-Read的事务隔离级别下避免发生幻读。
+    - Next key lock：锁住对应的索引中某个索引记录以及此记录之前的间隙。Next key lock=Record lock+Gap lock
+
+  - 注意事项：
+
+    - 行锁必须有索引（一般是主键）才能实现，否则会自动锁全表，那么就不是行锁
+
+      ```sql
+      -- 由于InnoDB预设是Row-Level Lock，所以只有「明确」的指定主键，MySQL才会执行Row lock (只锁住被选取的资料例) ，否则MySQL将会执行Table Lock (将整个资料表单给锁住)。
+      
+      -- 举个例子: 假设有个表单products ，里面有id跟name二个栏位，id是主键。
+      -- 例1: (明确指定主键，并且有此笔资料，Row lock)
+      SELECT * FROM products WHERE id='3' FOR UPDATE;
+      SELECT * FROM products WHERE id='3' and type=1 FOR UPDATE;
+      -- 例2: (明确指定主键，若查无此笔资料，无lock)
+      SELECT * FROM products WHERE id='-1' FOR UPDATE;
+      -- 例3: (无主键，table lock)
+      SELECT * FROM products WHERE name='Mouse' FOR UPDATE;
+      -- 例4: (主键不明确，table lock)
+      SELECT * FROM products WHERE id<>'3' FOR UPDATE;
+      -- 例5: (主键不明确，table lock)
+      SELECT * FROM products WHERE id LIKE '3' FOR UPDATE;
+      -- 注: FOR UPDATE仅适用于InnoDB，且必须在交易区块(BEGIN/COMMIT)中才能生效。
+      ```
+
+    - 两个事务不能锁同一个索引
+
+    - insert/delete/update在事务中都会自动默认加上排它锁，select默认加上共享锁
+
+  - MySQL 如何处理死锁？有如下两种方式：由于性能原因，一般都是使用死锁检测来进行处理死锁。
+
+    - 等待，直到超时（innodb_lock_wait_timeout=50s）
+    - 发起死锁检测，主动回滚一条事务，让其他事务继续执行（innodb_deadlock_detect=on）
+
+  - 怎样避免产生死锁：
+    - 使用事务，不使用`lock tables`。
+    - 保证没有长事务。
+    - 操作完之后立即提交事务，特别是在交互式命令行中。
+    - 如果在用 `(SELECT ... FOR UPDATE or SELECT ... LOCK IN SHARE MODE)`，尝试降低隔离级别。
+    - 修改多个表或者多个行的时候，将修改的顺序保持一致。
+    - 创建索引，可以使创建的锁更少。
+    - 最好不要用 `(SELECT ... FOR UPDATE or SELECT ... LOCK IN SHARE MODE)`。
+    - 如果上述都无法解决问题，那么尝试使用 `lock tables t1, t2, t3` 锁多张表。
+
+> 参考博客文章：[MySQL InnoDB引擎的行锁和表锁](https://blog.csdn.net/luzhensmart/article/details/81675527?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.control&dist_request_id=1328642.24613.16156254318796483&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.control)、[MySQL死锁(锁与事务)](https://www.cnblogs.com/111testing/p/11371236.html)、[行锁与表锁详解](https://blog.csdn.net/nicajonh/article/details/78814987)、[MySQL死锁-产生原因和解决方法](https://blog.csdn.net/tr1912/article/details/81668423)、[MySQL死锁系列-常见加锁场景分析](https://www.cnblogs.com/sunlong88/p/13389895.html)
+
+- 进程间通信的方式有哪些？
+  - 管道：半双工+父子进程
+  - FIFO：不相关的进程也可以进行数据交换
+  - 消息队列：一个消息链表存储在内核中
+  - 信号量：提供了一个不同进程或者进程的不同线程之间访问同步的手段
+  - 共享内存：允许多个进程共享一个给定的存储区，但要保证同步
+  - UNIX域套接字：
+  - 套接字（Socket）：
+
+> 参考博客文章：[进程间的通信方式有哪些?](https://blog.csdn.net/hyb612/article/details/89629189)
+
+- 如何将一条SQL语句用JDK1.8中的流操作代替？
+
+  例如：SQL语句`SELECT avg(age) FROM person GROUP BY age ORDER BY age DESC `
+
+  ```java
+  // 使用Java流操作处理如下
+  
+  ```
+
+
+
+
+
+
 
 ## 16.114 常考容器类源码
 
@@ -18239,7 +18346,7 @@ HashMap结构：JDK1.7是数组+链表，JDK1.8是数组+单向链表/（红黑�
 
 
 
-
+> 参考博客文章：[AQS源码视频解析](https://www.bilibili.com/video/BV19J411Q7R5)
 
 ### 16.114.7 ReentrantReadWriteLock
 
@@ -18264,6 +18371,31 @@ HashMap结构：JDK1.7是数组+链表，JDK1.8是数组+单向链表/（红黑�
 
 
 ### 16.114.10 CyclicBarrier
+
+
+
+
+
+
+
+### 16.114.11 synchronized锁升级过程
+
+对象在内存中的存储结构：
+
+1. 对象头
+   - 标记字段（4/8字节）：哈希值、GC分代、偏向锁标志位、锁标志位
+   - 类型指针（4/8字节）:
+   - 数组长度（4/8字节）：
+2. 实例数据：
+3. 填充数据：对象在内存中存储的字节数必须是8的整数倍。
+
+锁的升级过程：**无锁**——**偏向锁**——锁撤销——锁膨胀——**轻量级锁**（自旋锁/自适应自旋锁）——**重量级锁**。
+
+> 参考博客文章：[synchronized的锁升级过程](https://www.cnblogs.com/myseries/p/12213997.html)
+
+### 16.114.12 LongAdder
+
+核心思想：分段的CAS
 
 
 

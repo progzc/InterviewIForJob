@@ -14,13 +14,16 @@ public class KS_ReverseList {
         root.next.next = new ListNode(3);
         root.next.next.next = new ListNode(4);
         root.next.next.next.next = new ListNode(5);
-        ListNode ans = reverse(root);
+        ListNode ans = reverse2(root);
         while (ans != null) {
             System.out.println(ans.val);
             ans = ans.next;
         }
     }
 
+    /**
+     * 迭代解法
+     */
     public static ListNode reverse(ListNode root) {
         if (root == null) return root;
         ListNode pre = root;
@@ -35,6 +38,17 @@ public class KS_ReverseList {
             cur = temp;
         }
         return pre;
+    }
+
+    /**
+     * 递归解法
+     */
+    public static ListNode reverse2(ListNode root) {
+        if (root == null || root.next == null) return root;
+        ListNode next = reverse2(root.next);
+        root.next.next = root;
+        root.next = null;
+        return next;
     }
 
     static class ListNode {
